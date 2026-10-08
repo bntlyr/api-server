@@ -2,6 +2,7 @@ import type {
   ChangeMaterialLotStatusInput,
   DiscardMaterialInventoryInput,
   ManualInMaterialInput,
+  ManualOutMaterialInput,
   TransferMaterialLocationInput,
 } from "../../../../generated/graphql/types.js";
 
@@ -17,6 +18,20 @@ export function generateTransactionNo(prefix = "MTX"): string {
 }
 
 export function validateManualInInput(input: ManualInMaterialInput): string | null {
+  if (input.materialInventoryLotId && input.materialInventoryLotId > 0) {
+    if (!input.quantity || input.quantity <= 0) {
+      return "Quantity must be greater than 0";
+    }
+    if (!input.reason || input.reason.trim() === "") {
+      return "Reason for manual in is required";
+    }
+    const allowedStatuses = ["AVAILABLE", "PENDING", "DEFECTIVE"];
+    if (input.status && !allowedStatuses.includes(input.status)) {
+      return `Status must be one of: ${allowedStatuses.join(", ")}`;
+    }
+    return null;
+  }
+
   if (!input.materialId || input.materialId <= 0) {
     return "Valid Material ID is required";
   }
@@ -38,6 +53,19 @@ export function validateManualInInput(input: ManualInMaterialInput): string | nu
   const allowedStatuses = ["AVAILABLE", "PENDING", "DEFECTIVE"];
   if (!allowedStatuses.includes(input.status)) {
     return `Status must be one of: ${allowedStatuses.join(", ")}`;
+  }
+  return null;
+}
+
+export function validateManualOutInput(input: ManualOutMaterialInput): string | null {
+  if (!input.materialInventoryLotId || input.materialInventoryLotId <= 0) {
+    return "Valid Material Inventory Lot ID is required";
+  }
+  if (!input.quantity || input.quantity <= 0) {
+    return "Quantity must be greater than 0";
+  }
+  if (!input.reason || input.reason.trim() === "") {
+    return "Reason for manual out is required";
   }
   return null;
 }

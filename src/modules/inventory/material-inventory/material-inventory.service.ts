@@ -11,6 +11,7 @@ import type {
   ChangeMaterialLotStatusInput,
   DiscardMaterialInventoryInput,
   ManualInMaterialInput,
+  ManualOutMaterialInput,
   MaterialInventoryLotConnection,
   MaterialInventoryLotFilterInput,
   MaterialInventoryOperationPayload,
@@ -30,6 +31,7 @@ import {
   validateChangeStatusInput,
   validateDiscardInput,
   validateManualInInput,
+  validateManualOutInput,
   validateTransferLocationInput,
 } from "./helpers/material-inventory.helper.js";
 import { MaterialInventoryLoader } from "./material-inventory.loader.js";
@@ -329,68 +331,92 @@ export class MaterialInventoryService {
       const txNo = generateTransactionNo("MIN");
 
       const result = await this.prisma.$transaction(async (tx) => {
-        // 1. Upsert lot bucket
-        const lot = await tx.materialInventoryLot.upsert({
-          where: {
-            materialId_lotNo_receivingReportNo_areaId_locationId: {
-              materialId: input.materialId,
-              lotNo: input.lotNo.trim(),
-              receivingReportNo: input.receivingReportNo?.trim() ?? "",
-              areaId: input.areaId,
-              locationId: input.locationId,
+        let lot;
+        if (input.materialInventoryLotId && input.materialInventoryLotId > 0) {
+          const existingLot = await tx.materialInventoryLot.findUnique({
+            where: { id: input.materialInventoryLotId },
+          });
+          if (!existingLot) {
+            throw new Error(`Material Inventory Lot with ID ${input.materialInventoryLotId} not found`);
+          }
+          lot = await tx.materialInventoryLot.update({
+            where: { id: existingLot.id },
+            data: {
+              [qtyField]: { increment: qty },
+              ...(input.purchaseOrderNo ? { purchaseOrderNo: input.purchaseOrderNo.trim() } : {}),
+              ...(input.invoiceNo ? { invoiceNo: input.invoiceNo.trim() } : {}),
+              ...(input.supplierId ? { supplierId: input.supplierId } : {}),
+              ...(input.incomingDate ? { incomingDate: new Date(input.incomingDate) } : {}),
+              ...(input.manufactureDate ? { manufactureDate: new Date(input.manufactureDate) } : {}),
+              ...(input.expirationDate ? { expirationDate: new Date(input.expirationDate) } : {}),
+              ...(input.qcSampling ? { qcSampling: input.qcSampling.trim() } : {}),
+              reason: input.reason.trim(),
+              updatedBy: userId !== "SYSTEM" ? userId : null,
             },
-          },
-          update: {
-            [qtyField]: { increment: qty },
-            ...(input.purchaseOrderNo ? { purchaseOrderNo: input.purchaseOrderNo.trim() } : {}),
-            ...(input.invoiceNo ? { invoiceNo: input.invoiceNo.trim() } : {}),
-            ...(input.supplierId ? { supplierId: input.supplierId } : {}),
-            ...(input.incomingDate ? { incomingDate: new Date(input.incomingDate) } : {}),
-            ...(input.manufactureDate ? { manufactureDate: new Date(input.manufactureDate) } : {}),
-            ...(input.expirationDate ? { expirationDate: new Date(input.expirationDate) } : {}),
-            ...(input.qcSampling ? { qcSampling: input.qcSampling.trim() } : {}),
-            reason: input.reason.trim(),
-            updatedBy: userId !== "SYSTEM" ? userId : null,
-          },
-          create: {
-            materialId: input.materialId,
-            lotNo: input.lotNo.trim(),
-            areaId: input.areaId,
-            locationId: input.locationId,
-            [qtyField]: qty,
-            receivingReportNo: input.receivingReportNo?.trim() ?? "",
-            purchaseOrderNo: input.purchaseOrderNo?.trim() ?? null,
-            invoiceNo: input.invoiceNo?.trim() ?? null,
-            supplierId: input.supplierId ?? null,
-            incomingDate: input.incomingDate ? new Date(input.incomingDate) : null,
-            manufactureDate: input.manufactureDate ? new Date(input.manufactureDate) : null,
-            expirationDate: input.expirationDate ? new Date(input.expirationDate) : null,
-            qcSampling: input.qcSampling?.trim() ?? null,
-            reason: input.reason.trim(),
-            createdBy: userId !== "SYSTEM" ? userId : null,
-          },
-        });
+          });
+        } else {
+          lot = await tx.materialInventoryLot.upsert({
+            where: {
+              materialId_lotNo_receivingReportNo_areaId_locationId: {
+                materialId: input.materialId!,
+                lotNo: input.lotNo!.trim(),
+                receivingReportNo: input.receivingReportNo?.trim() ?? "",
+                areaId: input.areaId!,
+                locationId: input.locationId!,
+              },
+            },
+            update: {
+              [qtyField]: { increment: qty },
+              ...(input.purchaseOrderNo ? { purchaseOrderNo: input.purchaseOrderNo.trim() } : {}),
+              ...(input.invoiceNo ? { invoiceNo: input.invoiceNo.trim() } : {}),
+              ...(input.supplierId ? { supplierId: input.supplierId } : {}),
+              ...(input.incomingDate ? { incomingDate: new Date(input.incomingDate) } : {}),
+              ...(input.manufactureDate ? { manufactureDate: new Date(input.manufactureDate) } : {}),
+              ...(input.expirationDate ? { expirationDate: new Date(input.expirationDate) } : {}),
+              ...(input.qcSampling ? { qcSampling: input.qcSampling.trim() } : {}),
+              reason: input.reason.trim(),
+              updatedBy: userId !== "SYSTEM" ? userId : null,
+            },
+            create: {
+              materialId: input.materialId!,
+              lotNo: input.lotNo!.trim(),
+              areaId: input.areaId!,
+              locationId: input.locationId!,
+              [qtyField]: qty,
+              receivingReportNo: input.receivingReportNo?.trim() ?? "",
+              purchaseOrderNo: input.purchaseOrderNo?.trim() ?? null,
+              invoiceNo: input.invoiceNo?.trim() ?? null,
+              supplierId: input.supplierId ?? null,
+              incomingDate: input.incomingDate ? new Date(input.incomingDate) : null,
+              manufactureDate: input.manufactureDate ? new Date(input.manufactureDate) : null,
+              expirationDate: input.expirationDate ? new Date(input.expirationDate) : null,
+              qcSampling: input.qcSampling?.trim() ?? null,
+              reason: input.reason.trim(),
+              createdBy: userId !== "SYSTEM" ? userId : null,
+            },
+          });
+        }
 
-        // 2. Create immutable transaction record
         const transaction = await tx.materialInventoryTransaction.create({
           data: {
             transactionNo: txNo,
             transactionType: "MANUAL_IN",
+            direction: "INBOUND",
             transactionDate: new Date(),
-            materialId: input.materialId,
+            materialId: lot.materialId,
             materialInventoryLotId: lot.id,
             lotNo: lot.lotNo,
-            toAreaId: input.areaId,
-            toLocationId: input.locationId,
+            toAreaId: lot.areaId,
+            toLocationId: lot.locationId,
             toStatus: input.status,
             quantity: qty,
             balanceAfter: Number(lot[qtyField]),
             reason: input.reason.trim(),
             remarks: input.remarks?.trim() ?? null,
             referenceNo:
-              input.receivingReportNo?.trim() ??
-              input.purchaseOrderNo?.trim() ??
-              input.invoiceNo?.trim() ??
+              lot.receivingReportNo ||
+              lot.purchaseOrderNo ||
+              lot.invoiceNo ||
               null,
             createdBy: userId !== "SYSTEM" ? userId : null,
           },
@@ -407,7 +433,108 @@ export class MaterialInventoryService {
         method: "GRAPHQL_MUTATION",
         tableName: "MaterialInventoryLot",
         recordId: String(result.lot.id),
-        description: `Manual In ${input.quantity} of Lot ${input.lotNo} as ${input.status}`,
+        description: `Manual In ${input.quantity} of Lot ${result.lot.lotNo} as ${input.status}`,
+        values: result as any,
+        ipAddress,
+        userAgent,
+      });
+
+      return {
+        lot: result.lot as any,
+        destinationLot: null,
+        transaction: result.transaction as any,
+        userErrors: [],
+      };
+    } catch (error) {
+      return {
+        lot: null,
+        destinationLot: null,
+        transaction: null,
+        userErrors: [createError((error as Error).message)],
+      };
+    }
+  }
+
+  // ----------------------------------------------------
+  // MUTATION: 1b. Manual-Out (Deducts strictly from AVAILABLE)
+  // ----------------------------------------------------
+  async manualOut(
+    input: ManualOutMaterialInput,
+    context?: any,
+  ): Promise<MaterialInventoryOperationPayload> {
+    const validationError = validateManualOutInput(input);
+    if (validationError) {
+      return {
+        lot: null,
+        destinationLot: null,
+        transaction: null,
+        userErrors: [createError(validationError, undefined, "INVALID_INPUT")],
+      };
+    }
+
+    try {
+      const { userId, ipAddress, userAgent } = extractContextInfo(context);
+      const qty = new Prisma.Decimal(input.quantity);
+      const txNo = generateTransactionNo("MOUT");
+
+      const result = await this.prisma.$transaction(async (tx) => {
+        const currentLot = await tx.materialInventoryLot.findUnique({
+          where: { id: input.materialInventoryLotId },
+        });
+
+        if (!currentLot) {
+          throw new Error(`Material Inventory Lot with ID ${input.materialInventoryLotId} not found`);
+        }
+
+        const availableQty = new Prisma.Decimal(currentLot.availableQty);
+        if (availableQty.lessThan(qty)) {
+          throw new Error(
+            `Insufficient AVAILABLE quantity for manual out. Requested: ${input.quantity}, Available: ${availableQty.toString()}`,
+          );
+        }
+
+        const updatedLot = await tx.materialInventoryLot.update({
+          where: { id: input.materialInventoryLotId },
+          data: {
+            availableQty: { decrement: qty },
+            reason: input.reason.trim(),
+            updatedBy: userId !== "SYSTEM" ? userId : null,
+          },
+        });
+
+        const transaction = await tx.materialInventoryTransaction.create({
+          data: {
+            transactionNo: txNo,
+            transactionType: "MANUAL_OUT",
+            direction: "OUTBOUND",
+            transactionDate: new Date(),
+            materialId: updatedLot.materialId,
+            materialInventoryLotId: updatedLot.id,
+            lotNo: updatedLot.lotNo,
+            fromAreaId: updatedLot.areaId,
+            fromLocationId: updatedLot.locationId,
+            fromStatus: "AVAILABLE",
+            quantity: qty,
+            balanceAfter: Number(updatedLot.availableQty),
+            reason: input.reason.trim(),
+            remarks: input.remarks?.trim() ?? null,
+            referenceNo: input.referenceNo?.trim() ?? updatedLot.receivingReportNo ?? null,
+            createdBy: userId !== "SYSTEM" ? userId : null,
+          },
+        });
+
+        return { lot: updatedLot, transaction };
+      });
+
+      this.loader.clear(result.lot.id);
+
+      await this.auditService.log({
+        userId: userId ?? "SYSTEM",
+        action: "MATERIAL_INVENTORY_MANUAL_OUT",
+        method: "GRAPHQL_MUTATION",
+        tableName: "MaterialInventoryLot",
+        recordId: String(result.lot.id),
+        description: `Manual Out ${input.quantity} from Lot ${result.lot.lotNo}`,
         values: result as any,
         ipAddress,
         userAgent,

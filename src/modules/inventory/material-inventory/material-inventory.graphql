@@ -9,6 +9,7 @@ enum MaterialInventoryStatus {
 
 enum MaterialInventoryTxType {
   MANUAL_IN
+  MANUAL_OUT
   TRANSFER_LOCATION
   STATUS_CHANGE
   DISCARD
@@ -202,12 +203,13 @@ input MaterialInventorySummaryFilterInput {
 }
 
 input ManualInMaterialInput {
-  materialId: Int!
-  lotNo: String!
+  materialInventoryLotId: Int
+  materialId: Int
+  lotNo: String
   status: MaterialInventoryStatus!
   quantity: Float!
-  areaId: Int!
-  locationId: Int!
+  areaId: Int
+  locationId: Int
   reason: String!
   receivingReportNo: String
   purchaseOrderNo: String
@@ -217,6 +219,14 @@ input ManualInMaterialInput {
   manufactureDate: DateTime
   expirationDate: DateTime
   qcSampling: String
+  remarks: String
+}
+
+input ManualOutMaterialInput {
+  materialInventoryLotId: Int!
+  quantity: Float!
+  referenceNo: String
+  reason: String!
   remarks: String
 }
 
@@ -323,6 +333,7 @@ extend type Query {
 
 extend type Mutation {
   manualInMaterialInventory(input: ManualInMaterialInput!): MaterialInventoryOperationPayload!
+  manualOutMaterialInventory(input: ManualOutMaterialInput!): MaterialInventoryOperationPayload!
   transferMaterialLocation(input: TransferMaterialLocationInput!): MaterialInventoryOperationPayload!
   changeMaterialLotStatus(input: ChangeMaterialLotStatusInput!): MaterialInventoryOperationPayload!
   discardMaterialInventory(input: DiscardMaterialInventoryInput!): MaterialInventoryOperationPayload!
