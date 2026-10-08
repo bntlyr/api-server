@@ -76,15 +76,17 @@ if (existsSync(prismaFilePath)) {
 }
 
 // 3. Remove generated GraphQL base schema
-const baseSchemaPath1 = resolve(process.cwd(), `src/generated/graphql/schemas/${modelKebab}.graphql`);
-const baseSchemaPath2 = resolve(process.cwd(), `src/generated/graphql/schemas/${modelPascal}.graphql`);
-if (existsSync(baseSchemaPath1)) {
-  unlinkSync(baseSchemaPath1);
-  console.log(`📄 Removed src/generated/graphql/schemas/${modelKebab}.graphql`);
-}
-if (existsSync(baseSchemaPath2)) {
-  unlinkSync(baseSchemaPath2);
-  console.log(`📄 Removed src/generated/graphql/schemas/${modelPascal}.graphql`);
+const schemaCandidates = [
+  resolve(process.cwd(), `src/generated/graphql/schemas/${modelKebab}.generated.graphql`),
+  resolve(process.cwd(), `src/generated/graphql/schemas/${modelPascal}.generated.graphql`),
+  resolve(process.cwd(), `src/generated/graphql/schemas/${modelKebab}.graphql`),
+  resolve(process.cwd(), `src/generated/graphql/schemas/${modelPascal}.graphql`),
+];
+for (const schemaPath of schemaCandidates) {
+  if (existsSync(schemaPath)) {
+    unlinkSync(schemaPath);
+    console.log(`📄 Removed ${schemaPath}`);
+  }
 }
 
 // 4. Remove module directory in src/modules/<modelKebab>/

@@ -238,9 +238,9 @@ type Mutation {
 }
 `;
 
-const schemaFilePath = resolve(generatedSchemaDir, `${kebabName}.graphql`);
+const schemaFilePath = resolve(generatedSchemaDir, `${kebabName}.generated.graphql`);
 writeFileSync(schemaFilePath, graphqlContent, "utf-8");
-console.log(`📄 Generated base schema at src/generated/graphql/schemas/${kebabName}.graphql`);
+console.log(`📄 Generated base schema at src/generated/graphql/schemas/${kebabName}.generated.graphql`);
 
 // 3. Module directory structure: src/modules/<kebabName>/ (with resolvers/ and helpers/ subdirectories)
 const moduleDir = resolve(process.cwd(), `src/modules/${kebabName}`);

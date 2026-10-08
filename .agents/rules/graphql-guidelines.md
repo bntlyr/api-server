@@ -23,9 +23,9 @@ Every domain entity in `src/modules/<entity>/` must follow this layout:
 - Mutation methods (`update`, `delete`, `restore`) in `<entity>.service.ts` call `loader.clear(id)` to invalidate DataLoader caches immediately.
 
 ## Generated Schemas & Gitignore
-- Base GraphQL schemas are auto-generated from Prisma models into `src/generated/graphql/schemas/<entity>.graphql`.
-- All `src/generated/` files are gitignored. Do not edit generated base schemas directly.
-- Use `<entity>.typedefs.extend.graphql` for schema extensions and relationships.
+- Base GraphQL schemas are auto-generated from Prisma models into `src/generated/graphql/schemas/<entity>.generated.graphql`.
+- All `src/generated/` and `*.generated.graphql` files are auto-generated and gitignored. **NEVER edit generated base schemas (`*.generated.graphql`) directly.**
+- Use `<entity>.typedefs.extend.graphql` for schema extensions, custom inputs, and relationships.
 
 ## Typesafety & Codegen
 - Run `npm run codegen` to generate TypeScript types into `src/generated/graphql/types.ts`.
