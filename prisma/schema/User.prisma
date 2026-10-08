@@ -1,16 +1,27 @@
 model User {
-  id        String    @id @default(uuid())
-  username  String    @unique
-  email     String    @unique
-  name      String?
-  password  String // Bcrypt with 12 salt rounds
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id           String    @id @default(uuid())
+  username     String    @unique
+  email        String    @unique
+  name         String?
+  employeeId   String?
+  employeeName String?
+  emailAddress String?
+  cellphone    String?
+  validFrom    DateTime?
+  lastLoginTS  DateTime?
+  superAdmin   Boolean   @default(false)
+  password     String // Bcrypt with 12 salt rounds
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
 
   sessions               Session[]
   userPages              UserPage[]
   notificationRecipients NotificationRecipient[]
 
+  statusCodeId Int?
+  statusCode   StatusCode? @relation(fields: [statusCodeId], references: [id])
+
+  @@index([statusCodeId])
   @@index([deletedAt])
 }

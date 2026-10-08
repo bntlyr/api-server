@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { NestFactory } from "@nestjs/core";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -7,19 +8,21 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // 1. Security Headers via Helmet (configured to allow Apollo Sandbox in dev)
+  const isDev = process.env.NODE_ENV !== "production";
   app.use(
     helmet({
       crossOriginEmbedderPolicy: false,
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: [`'self'`, "https://apollo-server-landing-page.cdn.apollographql.com"],
-          scriptSrc: [`'self'`, `'unsafe-inline'`, `'unsafe-eval'`, "https://apollo-server-landing-page.cdn.apollographql.com"],
-          styleSrc: [`'self'`, `'unsafe-inline'`, "https://fonts.googleapis.com", "https://apollo-server-landing-page.cdn.apollographql.com"],
-          imgSrc: [`'self'`, "data:", "https://apollo-server-landing-page.cdn.apollographql.com"],
-          fontSrc: [`'self'`, "https://fonts.gstatic.com"],
-          frameSrc: ["https://sandbox.embed.apollographql.com"],
-        },
-      },
+      contentSecurityPolicy: isDev
+        ? false
+        : {
+            directives: {
+              defaultSrc: [`'self'`],
+              scriptSrc: [`'self'`],
+              styleSrc: [`'self'`, `'unsafe-inline'`],
+              imgSrc: [`'self'`, "data:"],
+              fontSrc: [`'self'`],
+            },
+          },
     }),
   );
 

@@ -43,7 +43,16 @@ export class UserService {
         isNumericId: false,
       });
 
-      const where = buildPrismaWhere(filter, ["id", "username", "email", "name"]);
+      const where = buildPrismaWhere(filter, [
+        "id",
+        "username",
+        "email",
+        "name",
+        "employeeId",
+        "employeeName",
+        "emailAddress",
+        "cellphone",
+      ]);
 
       const [items, totalCount] = await Promise.all([
         this.prisma.user.findMany({
@@ -99,6 +108,14 @@ export class UserService {
           email: input.email,
           name: input.name ?? null,
           password: hashedPassword,
+          employeeId: input.employeeId ?? null,
+          employeeName: input.employeeName ?? null,
+          emailAddress: input.emailAddress ?? null,
+          cellphone: input.cellphone ?? null,
+          validFrom: input.validFrom ? new Date(input.validFrom) : null,
+          lastLoginTS: input.lastLoginTS ? new Date(input.lastLoginTS) : null,
+          superAdmin: input.superAdmin ?? false,
+          statusCodeId: input.statusCodeId ?? null,
         },
       });
 
@@ -109,7 +126,15 @@ export class UserService {
         tableName: "User",
         recordId: user.id,
         description: `Created user ${user.username}`,
-        values: { id: user.id, username: user.username, email: user.email, name: user.name },
+        values: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          name: user.name,
+          employeeId: user.employeeId,
+          superAdmin: user.superAdmin,
+          statusCodeId: user.statusCodeId,
+        },
         ipAddress,
         userAgent,
       });
@@ -149,6 +174,14 @@ export class UserService {
           ...(input.username ? { username: input.username } : {}),
           ...(input.email ? { email: input.email } : {}),
           ...(input.name !== undefined ? { name: input.name ?? null } : {}),
+          ...(input.employeeId !== undefined ? { employeeId: input.employeeId ?? null } : {}),
+          ...(input.employeeName !== undefined ? { employeeName: input.employeeName ?? null } : {}),
+          ...(input.emailAddress !== undefined ? { emailAddress: input.emailAddress ?? null } : {}),
+          ...(input.cellphone !== undefined ? { cellphone: input.cellphone ?? null } : {}),
+          ...(input.validFrom !== undefined ? { validFrom: input.validFrom ? new Date(input.validFrom) : null } : {}),
+          ...(input.lastLoginTS !== undefined ? { lastLoginTS: input.lastLoginTS ? new Date(input.lastLoginTS) : null } : {}),
+          ...(input.superAdmin !== undefined ? { superAdmin: Boolean(input.superAdmin) } : {}),
+          ...(input.statusCodeId !== undefined ? { statusCodeId: input.statusCodeId } : {}),
           ...(hashedPassword ? { password: hashedPassword } : {}),
         },
       });
@@ -162,7 +195,15 @@ export class UserService {
         tableName: "User",
         recordId: user.id,
         description: `Updated user ${user.username}`,
-        values: { id: user.id, username: user.username, email: user.email, name: user.name },
+        values: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          name: user.name,
+          employeeId: user.employeeId,
+          superAdmin: user.superAdmin,
+          statusCodeId: user.statusCodeId,
+        },
         ipAddress,
         userAgent,
       });

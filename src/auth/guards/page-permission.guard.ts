@@ -40,6 +40,11 @@ export class PagePermissionGuard implements CanActivate {
       throw new ForbiddenException("Authentication required for this operation");
     }
 
+    // SuperAdmin has full authorization across all pages and actions
+    if (user.superAdmin) {
+      return true;
+    }
+
     const perm = user.permissions.find(
       (p) => p.url.toLowerCase() === requirement.pageUrl.toLowerCase(),
     );

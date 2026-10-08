@@ -1,3 +1,4 @@
+import { StatusCodeLoader } from "../status-code/status-code.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../prisma/index.js";
 import { AuthModule } from "../../auth/auth.module.js";
@@ -10,6 +11,7 @@ import { UserRelationResolver } from "./resolvers/user.relation.js";
 @Module({
   imports: [PrismaModule, AuthModule],
   providers: [
+    StatusCodeLoader,
     UserLoader,
     UserService,
     UserQueryResolver,

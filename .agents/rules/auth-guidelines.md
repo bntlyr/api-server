@@ -18,5 +18,6 @@ description: Authentication, session management, single active device enforcemen
 
 ## Authorization & RBAC
 - User page permissions are defined in `UserPage` (`canView`, `canModify`, `canUnassign`).
+- **Super Admin Bypass**: If `user.superAdmin` is `true`, all page and action permission checks (`PagePermissionGuard`) are bypassed with full access rights.
 - Protect routes and GraphQL resolvers using `JwtAuthGuard` and `PagePermissionGuard`.
 - Use the `@CurrentUser()` decorator or context user to retrieve authenticated session state.

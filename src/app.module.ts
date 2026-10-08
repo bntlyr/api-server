@@ -1,3 +1,4 @@
+import { StatusCodeModule } from "./modules/status-code/status-code.module.js";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
 import { Module } from "@nestjs/common";
 import { GraphQLModule } from "@nestjs/graphql";
@@ -44,6 +45,7 @@ import { JavaServiceModule } from "./java-service/java-service.module.js";
         },
       }),
     }),
+      StatusCodeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

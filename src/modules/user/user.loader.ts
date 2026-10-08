@@ -17,11 +17,29 @@ export class UserLoader {
     },
   );
 
+    public readonly byStatusCodeId = new DataLoader<number, PrismaUser[]>(
+    async (statusCodeIds: readonly (number)[]) => {
+      const rows = await this.prisma.user.findMany({
+        where: { statusCodeId: { in: [...statusCodeIds] } },
+      });
+      const groupMap = new Map<number, PrismaUser[]>();
+      for (const row of rows) {
+        if (row.statusCodeId != null) {
+          const list = groupMap.get(row.statusCodeId) ?? [];
+          list.push(row);
+          groupMap.set(row.statusCodeId, list);
+        }
+      }
+      return statusCodeIds.map((id) => groupMap.get(id) ?? []);
+    },
+  );
+
   clear(id?: string) {
     if (id != null) {
       this.byId.clear(id);
     } else {
       this.byId.clearAll();
+    if (this.byStatusCodeId) this.byStatusCodeId.clearAll();
     }
   }
 }

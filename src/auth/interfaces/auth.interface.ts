@@ -4,6 +4,7 @@ export interface JwtUserPayload {
   username: string;
   email: string;
   sessionId: number;
+  superAdmin?: boolean;
 }
 
 export interface UserPagePermission {
@@ -15,6 +16,7 @@ export interface UserPagePermission {
 
 export interface AuthenticatedUser extends JwtUserPayload {
   name?: string | null;
+  superAdmin?: boolean;
   permissions: UserPagePermission[];
 }
 

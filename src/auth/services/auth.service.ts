@@ -101,6 +101,12 @@ export class AuthService {
       throw new Error("Invalid username/email or password");
     }
 
+    // Update last login timestamp
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginTS: new Date() },
+    });
+
     // 3. Create session and tokens
     const result = await this.createSessionAndTokens(
       user,
@@ -157,6 +163,7 @@ export class AuthService {
       username: user.username,
       email: user.email,
       sessionId: session.id,
+      superAdmin: user.superAdmin,
     });
 
     return {
@@ -168,6 +175,7 @@ export class AuthService {
         username: user.username,
         email: user.email,
         name: user.name,
+        superAdmin: user.superAdmin,
         permissions,
       },
     };
@@ -245,12 +253,13 @@ export class AuthService {
     return {
       ...payload,
       name: user.name,
+      superAdmin: user.superAdmin,
       permissions,
     };
   }
 
   private async createSessionAndTokens(
-    user: { id: string; username: string; email: string; name: string | null },
+    user: { id: string; username: string; email: string; name: string | null; superAdmin?: boolean },
     userAgent: string,
     ipAddress?: string,
     deviceIdentifier?: string,
@@ -312,6 +321,7 @@ export class AuthService {
       username: user.username,
       email: user.email,
       sessionId: session.id,
+      superAdmin: user.superAdmin,
     });
 
     const permissions = await this.getUserPermissions(user.id);
@@ -325,6 +335,7 @@ export class AuthService {
         username: user.username,
         email: user.email,
         name: user.name,
+        superAdmin: user.superAdmin,
         permissions,
       },
     };
