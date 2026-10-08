@@ -1,0 +1,15 @@
+model MachineType {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deletedAt DateTime?
+  deletedBy String?
+
+  machines Machine[]
+
+  @@index([deletedAt])
+}

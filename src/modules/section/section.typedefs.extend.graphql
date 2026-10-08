@@ -1,0 +1,31 @@
+extend type Section {
+  positions: [Position!]!
+}
+
+extend type Section {
+  users: [User!]!
+}
+
+extend type Section {
+  machines: [Machine!]!
+}
+
+extend type Section {
+  materials: [Material!]!
+}
+
+extend type Section {
+  processes: [Process!]!
+}
+
+extend type Section {
+  defaultRouteSteps: [DefaultRouteStep!]!
+}
+
+extend type Section {
+  itemRouteSteps: [ItemRouteStep!]!
+}
+
+extend type Section {
+  fabRouteSteps: [FabRouteStep!]!
+}

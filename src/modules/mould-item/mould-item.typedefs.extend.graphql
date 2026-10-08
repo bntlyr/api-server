@@ -1,0 +1,12 @@
+extend type MouldItem {
+  mould: Mould
+  item: Item
+}
+
+extend type Mould {
+  mouldItems: [MouldItem!]!
+}
+
+extend type Item {
+  mouldItems: [MouldItem!]!
+}

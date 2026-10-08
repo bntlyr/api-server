@@ -1,0 +1,42 @@
+extend type Process {
+  section: Section
+}
+
+extend type Process {
+  parameters: [Parameter!]!
+}
+
+extend type Process {
+  itemPictures: [ItemPicture!]!
+}
+
+extend type Process {
+  processIterations: [ProcessIteration!]!
+}
+
+extend type Process {
+  processMachinings: [ProcessMachining!]!
+}
+
+extend type Process {
+  defaultRouteSteps: [DefaultRouteStep!]!
+}
+
+extend type Process {
+  itemRouteSteps: [ItemRouteStep!]!
+}
+
+extend type Process {
+  fabRouteSteps: [FabRouteStep!]!
+}
+
+extend input CreateProcessInput {
+  machineIds: [Int!]
+  iterations: [String!]
+}
+
+extend input UpdateProcessInput {
+  machineIds: [Int!]
+  iterations: [String!]
+}
+

@@ -1,0 +1,7 @@
+extend type DefaultRoute {
+  itemType: ItemType
+}
+
+extend type DefaultRoute {
+  defaultRouteSteps: [DefaultRouteStep!]!
+}

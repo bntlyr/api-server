@@ -1,0 +1,22 @@
+model DefaultRouteMachining {
+  id Int @id @default(autoincrement())
+
+  defaultRouteStepId Int
+  defaultRouteStep   DefaultRouteStep @relation(fields: [defaultRouteStepId], references: [id])
+
+  machineId Int
+  machine   Machine @relation(fields: [machineId], references: [id])
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@unique([defaultRouteStepId, machineId])
+  @@index([defaultRouteStepId])
+  @@index([machineId])
+  @@index([deletedAt])
+}

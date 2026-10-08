@@ -1,0 +1,70 @@
+model Item {
+  id            Int     @id @default(autoincrement())
+  itemCode      String
+  itemName      String
+  japaneseName  String?
+  colorCode     String
+  color         String
+  specification String
+  endUser       String  @default("")
+  description   String?
+  itemImage     String? // store file path 
+
+  stdItemWt   Decimal  @default(0) @db.Decimal(9, 2)
+  castingWt   Decimal  @default(0) @db.Decimal(9, 2)
+  castingTemp Decimal? @db.Decimal(9, 2)
+  mouldTemp   Decimal? @db.Decimal(9, 2)
+
+  cost          Decimal @default(0) @db.Decimal(12, 2)
+  sellingPrice  Decimal @default(0) @db.Decimal(12, 2)
+  materialPrice Decimal @default(0) @db.Decimal(12, 2)
+  heatPrice     Decimal @default(0) @db.Decimal(12, 2)
+  platePrice    Decimal @default(0) @db.Decimal(12, 2)
+  otherPrice    Decimal @default(0) @db.Decimal(12, 2)
+  unitPrice     Decimal @default(0) @db.Decimal(12, 2)
+
+  rejectionRate Decimal @default(0) @db.Decimal(9, 2)
+  qtyPerTree    Decimal @default(0) @db.Decimal(9, 2)
+  qtyPerShot    Decimal @default(0) @db.Decimal(9, 2)
+  autoSplitQty  Decimal @default(0) @db.Decimal(9, 2)
+
+  drawingProductNo  String
+  drawingRevisionNo String
+  coatingPattern    String?
+
+  stamping  Boolean @default(false)
+  soluble   Boolean @default(false)
+  sizeCheck Boolean @default(false)
+
+  similarItem String?
+  remarks     String? @default("")
+  ecnNo       String?
+
+  // GraphQL loose relation FKs
+  customerId    Int?
+  itemTypeId    Int?
+  rawMaterialId Int?
+  boxTypeId     Int?
+
+  // Prisma 1:N relations
+  itemPictures  ItemPicture[]
+  itemRevisions ItemRevision[]
+  fabrications  Fabrication[]
+  itemRoutes    ItemRoute[]
+  mouldItems    MouldItem[]
+
+  // Base audit & soft delete
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([customerId])
+  @@index([itemTypeId])
+  @@index([rawMaterialId])
+  @@index([boxTypeId])
+  @@index([deletedAt])
+}

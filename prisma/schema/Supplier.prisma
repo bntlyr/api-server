@@ -1,0 +1,33 @@
+model Supplier {
+  id              Int         @id @default(autoincrement())
+  name            String
+  code            String
+  type            String      @default("Local")
+  serviceType     String
+  contactPerson   String
+  contactNumber   String
+  telephoneNumber String
+  faxNumber       String
+  emailAddress    String
+  address         String
+  country         String
+  taxId           String      @default("")
+  paymentTerms    String
+  currency        String
+  statusCodeId    Int?
+  statusCode      StatusCode? @relation(fields: [statusCodeId], references: [id])
+  remarks         String      @default("")
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  materialSuppliers MaterialSupplier[]
+
+  @@index([statusCodeId])
+  @@index([deletedAt])
+}

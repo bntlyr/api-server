@@ -1,0 +1,11 @@
+extend type ItemType {
+  mouldTypes: [MouldType!]!
+}
+
+extend type ItemType {
+  items: [Item!]!
+}
+
+extend type ItemType {
+  defaultRoute: DefaultRoute
+}

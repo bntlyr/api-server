@@ -1,0 +1,3 @@
+extend type BoxType {
+  items: [Item!]!
+}

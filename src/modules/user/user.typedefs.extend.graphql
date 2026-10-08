@@ -1,3 +1,11 @@
 extend type User {
   statusCode: StatusCode
 }
+
+extend type User {
+  section: Section
+}
+
+extend type User {
+  position: Position
+}

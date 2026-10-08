@@ -1,0 +1,7 @@
+extend type ProcessMachining {
+  process: Process
+}
+
+extend type ProcessMachining {
+  machine: Machine
+}

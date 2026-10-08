@@ -1,0 +1,12 @@
+extend type MachineTool {
+  machine: Machine
+  tool: Tool
+}
+
+extend type Machine {
+  machineTools: [MachineTool!]!
+}
+
+extend type Tool {
+  machineTools: [MachineTool!]!
+}

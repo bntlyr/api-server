@@ -1,0 +1,32 @@
+extend type Machine {
+  machineType: MachineType
+}
+
+extend type Machine {
+  section: Section
+}
+
+extend type Machine {
+  processMachinings: [ProcessMachining!]!
+}
+
+extend type Machine {
+  defaultRouteMachinings: [DefaultRouteMachining!]!
+}
+
+extend type Machine {
+  itemRouteMachinings: [ItemRouteMachining!]!
+}
+
+extend type Machine {
+  fabRouteMachinings: [FabRouteMachining!]!
+}
+
+extend input CreateMachineInput {
+  toolIds: [Int!]
+}
+
+extend input UpdateMachineInput {
+  toolIds: [Int!]
+}
+

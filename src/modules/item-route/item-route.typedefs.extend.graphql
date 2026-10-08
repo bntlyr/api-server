@@ -1,0 +1,7 @@
+extend type ItemRoute {
+  item: Item
+}
+
+extend type ItemRoute {
+  itemRouteSteps: [ItemRouteStep!]!
+}

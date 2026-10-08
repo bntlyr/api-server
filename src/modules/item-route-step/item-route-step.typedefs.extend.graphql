@@ -1,0 +1,34 @@
+extend type ItemRouteStep {
+  itemRoute: ItemRoute
+}
+
+extend type ItemRouteStep {
+  itemRouteParameters: [ItemRouteParameter!]!
+}
+
+extend type ItemRouteStep {
+  itemRouteIterations: [ItemRouteIteration!]!
+}
+
+extend type ItemRouteStep {
+  itemRouteMachinings: [ItemRouteMachining!]!
+}
+
+extend type ItemRouteStep {
+  section: Section
+}
+
+extend type ItemRouteStep {
+  process: Process
+}
+
+extend input CreateItemRouteStepInput {
+  machineIds: [Int!]
+  iterations: [String!]
+}
+
+extend input UpdateItemRouteStepInput {
+  machineIds: [Int!]
+  iterations: [String!]
+}
+

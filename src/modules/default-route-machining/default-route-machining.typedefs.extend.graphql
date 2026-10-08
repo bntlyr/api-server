@@ -1,0 +1,7 @@
+extend type DefaultRouteMachining {
+  defaultRouteStep: DefaultRouteStep
+}
+
+extend type DefaultRouteMachining {
+  machine: Machine
+}

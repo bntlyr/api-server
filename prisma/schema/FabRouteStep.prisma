@@ -1,0 +1,52 @@
+model FabRouteStep {
+  id             Int     @id @default(autoincrement())
+  sequenceNumber String
+  name           String
+  subname        String  @default("")
+  isParent       Boolean @default(true)
+
+  // Master Process & Section References
+  processId          Int?
+  sectionId          Int?
+  numberOfIterations Int  @default(0)
+
+  // Behaviour flags
+  hasMachining       Boolean @default(false)
+  hasIterating       Boolean @default(false)
+  hasChecking        Boolean @default(false)
+  hasRework          Boolean @default(false)
+  hasPacking         Boolean @default(false)
+  hasTooling         Boolean @default(false)
+  hasActualParameter Boolean @default(false)
+
+  // Duration & Lead Times
+  durationType String   @default("Batch") // Either Batch / Piece
+  leadTime     Decimal  @default(0) @db.Decimal(9, 2)
+  leadTimeUnit String   @default("Minutes") // Either Minutes/Hours/Days
+  prepTime     Decimal? @default(0) @db.Decimal(9, 2)
+  prepTimeUnit String?  @default("Minutes") // Either Minutes/Hours/Days
+  cureTime     Decimal? @default(0) @db.Decimal(9, 2)
+  cureTimeUnit String?  @default("Hours") // Either Minutes/Hours/Days
+
+  // Relation to FabRoute
+  fabRouteId Int
+  fabRoute   FabRoute @relation(fields: [fabRouteId], references: [id])
+
+  // Step Children
+  parameters FabRouteParameter[]
+  iterations FabRouteIteration[]
+  machinings FabRouteMachining[]
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([fabRouteId])
+  @@index([processId])
+  @@index([sectionId])
+  @@index([deletedAt])
+}

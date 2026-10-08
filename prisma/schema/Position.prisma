@@ -1,0 +1,20 @@
+model Position {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  sectionId Int?
+  section   Section? @relation(fields: [sectionId], references: [id])
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deletedAt DateTime?
+  deletedBy String?
+
+  users User[]
+
+  @@index([sectionId])
+  @@index([deletedAt])
+}

@@ -116,6 +116,8 @@ export class UserService {
           lastLoginTS: input.lastLoginTS ? new Date(input.lastLoginTS) : null,
           superAdmin: input.superAdmin ?? false,
           statusCodeId: input.statusCodeId ?? null,
+          sectionId: input.sectionId ?? null,
+          positionId: input.positionId ?? null,
         },
       });
 
@@ -134,6 +136,8 @@ export class UserService {
           employeeId: user.employeeId,
           superAdmin: user.superAdmin,
           statusCodeId: user.statusCodeId,
+          sectionId: user.sectionId,
+          positionId: user.positionId,
         },
         ipAddress,
         userAgent,
@@ -182,6 +186,8 @@ export class UserService {
           ...(input.lastLoginTS !== undefined ? { lastLoginTS: input.lastLoginTS ? new Date(input.lastLoginTS) : null } : {}),
           ...(input.superAdmin !== undefined ? { superAdmin: Boolean(input.superAdmin) } : {}),
           ...(input.statusCodeId !== undefined ? { statusCodeId: input.statusCodeId } : {}),
+          ...(input.sectionId !== undefined ? { sectionId: input.sectionId } : {}),
+          ...(input.positionId !== undefined ? { positionId: input.positionId } : {}),
           ...(hashedPassword ? { password: hashedPassword } : {}),
         },
       });
@@ -203,6 +209,8 @@ export class UserService {
           employeeId: user.employeeId,
           superAdmin: user.superAdmin,
           statusCodeId: user.statusCodeId,
+          sectionId: user.sectionId,
+          positionId: user.positionId,
         },
         ipAddress,
         userAgent,

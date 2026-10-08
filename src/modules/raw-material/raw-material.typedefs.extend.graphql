@@ -1,0 +1,15 @@
+extend type RawMaterial {
+  rawMaterialRotations: [RawMaterialRotation!]!
+}
+
+extend type RawMaterial {
+  meltings: [Melting!]!
+}
+
+extend type RawMaterial {
+  materials: [Material!]!
+}
+
+extend type RawMaterial {
+  items: [Item!]!
+}

@@ -1,0 +1,22 @@
+model FabRouteMachining {
+  id Int @id @default(autoincrement())
+
+  fabRouteStepId Int
+  fabRouteStep   FabRouteStep @relation(fields: [fabRouteStepId], references: [id])
+
+  machineId Int
+  machine   Machine @relation(fields: [machineId], references: [id])
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@unique([fabRouteStepId, machineId])
+  @@index([fabRouteStepId])
+  @@index([machineId])
+  @@index([deletedAt])
+}

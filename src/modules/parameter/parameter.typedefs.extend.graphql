@@ -1,0 +1,3 @@
+extend type Parameter {
+  process: Process
+}

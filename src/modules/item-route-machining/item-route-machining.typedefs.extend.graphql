@@ -1,0 +1,7 @@
+extend type ItemRouteMachining {
+  itemRouteStep: ItemRouteStep
+}
+
+extend type ItemRouteMachining {
+  machine: Machine
+}

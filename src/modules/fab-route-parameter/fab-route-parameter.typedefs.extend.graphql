@@ -1,0 +1,3 @@
+extend type FabRouteParameter {
+  fabRouteStep: FabRouteStep
+}

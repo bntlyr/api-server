@@ -7,10 +7,13 @@ model StatusCode {
   createdBy String?
   updatedAt DateTime  @updatedAt
   updatedBy String?
+  deleted   Boolean   @default(false)
   deletedAt DateTime?
   deletedBy String?
 
-  users User[]
+  users     User[]
+  customers Customer[]
+  suppliers Supplier[]
 
   @@index([deletedAt])
 }

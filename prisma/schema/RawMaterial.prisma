@@ -1,0 +1,24 @@
+model RawMaterial {
+  id         Int     @id @default(autoincrement())
+  name       String
+  code       String
+  class      String  @default("Steel")
+  stamping   String?
+  pylox      String?
+  itemTypeId Int
+
+  createdById String?
+  updatedById String?
+  createdAt   DateTime  @default(now())
+  createdBy   String?
+  updatedAt   DateTime  @updatedAt
+  updatedBy   String?
+  deleted     Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   String?
+
+  rawMaterialRotations RawMaterialRotation[]
+  meltings             Melting[]
+
+  @@index([deletedAt])
+}

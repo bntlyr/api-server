@@ -1,0 +1,23 @@
+model Fabrication {
+  id           Int     @id @default(autoincrement())
+  code         String
+  itemId       Int
+  sellingPrice Decimal @default(0) @db.Decimal(12, 2)
+  unitPrice    Decimal @default(0) @db.Decimal(9, 2)
+  item         Item    @relation(fields: [itemId], references: [id])
+  fabImage     String? @default("")
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  fabRoutes FabRoute[]
+
+  @@unique([itemId, code])
+  @@index([itemId, code])
+  @@index([deletedAt])
+}

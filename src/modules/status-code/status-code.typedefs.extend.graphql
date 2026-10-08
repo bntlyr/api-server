@@ -1,3 +1,6 @@
 extend type StatusCode {
   users: [User!]!
+  customers: [Customer!]!
+  suppliers: [Supplier!]!
 }
+

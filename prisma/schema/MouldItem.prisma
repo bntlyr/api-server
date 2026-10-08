@@ -1,0 +1,20 @@
+model MouldItem {
+  id      Int   @id @default(autoincrement())
+  mouldId Int
+  mould   Mould @relation(fields: [mouldId], references: [id])
+  itemId  Int
+  item    Item  @relation(fields: [itemId], references: [id])
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@unique([mouldId, itemId])
+  @@index([mouldId])
+  @@index([itemId])
+  @@index([deletedAt])
+}

@@ -1,0 +1,7 @@
+extend type ItemPicture {
+  item: Item
+}
+
+extend type ItemPicture {
+  process: Process
+}

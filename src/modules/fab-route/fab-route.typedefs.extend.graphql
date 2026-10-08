@@ -1,0 +1,7 @@
+extend type FabRoute {
+  fabrication: Fabrication
+}
+
+extend type FabRoute {
+  fabRouteSteps: [FabRouteStep!]!
+}

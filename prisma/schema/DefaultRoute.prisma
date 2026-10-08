@@ -1,0 +1,21 @@
+model DefaultRoute {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  itemTypeId Int      @unique
+  itemType   ItemType @relation(fields: [itemTypeId], references: [id])
+
+  steps DefaultRouteStep[]
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([itemTypeId])
+  @@index([deletedAt])
+}

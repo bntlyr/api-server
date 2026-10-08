@@ -1,0 +1,7 @@
+extend type MouldType {
+  itemType: ItemType
+}
+
+extend type MouldType {
+  moulds: [Mould!]!
+}

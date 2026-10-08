@@ -1,0 +1,25 @@
+model ItemPicture {
+  id       Int    @id @default(autoincrement())
+  title    String
+  filename String
+  filepath String
+
+  itemId Int
+  item   Item @relation(fields: [itemId], references: [id])
+
+  // GraphQL loose relation to Process
+  processId Int?
+
+  // Base audit & soft delete
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([itemId])
+  @@index([processId])
+  @@index([deletedAt])
+}

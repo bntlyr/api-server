@@ -1,0 +1,38 @@
+model Material {
+  id                Int      @id @default(autoincrement())
+  name              String
+  oldCode           String?
+  minStock          Decimal  @default(0) @db.Decimal(9, 2)
+  note              String?
+  modelNo           String?
+  shelfLife         Decimal? @db.Decimal(9, 2)
+  stockKeepingUnit  String
+  description       String?
+  category          String
+  type              String
+  unitOfMeasurement String   @default("PCS")
+  weight            Decimal  @default(0) @db.Decimal(9, 2)
+  weightUom         String   @default("G")
+  cost              Decimal  @default(0) @db.Decimal(12, 2)
+
+  materialGroupId Int?
+  materialGroup   MaterialGroup? @relation(fields: [materialGroupId], references: [id])
+
+  sectionId     Int?
+  rawMaterialId Int?
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  materialSuppliers MaterialSupplier[]
+
+  @@index([materialGroupId])
+  @@index([sectionId])
+  @@index([rawMaterialId])
+  @@index([deletedAt])
+}

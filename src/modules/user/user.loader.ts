@@ -34,11 +34,47 @@ export class UserLoader {
     },
   );
 
+    public readonly bySectionId = new DataLoader<number, PrismaUser[]>(
+    async (sectionIds: readonly (number)[]) => {
+      const rows = await this.prisma.user.findMany({
+        where: { sectionId: { in: [...sectionIds] } },
+      });
+      const groupMap = new Map<number, PrismaUser[]>();
+      for (const row of rows) {
+        if (row.sectionId != null) {
+          const list = groupMap.get(row.sectionId) ?? [];
+          list.push(row);
+          groupMap.set(row.sectionId, list);
+        }
+      }
+      return sectionIds.map((id) => groupMap.get(id) ?? []);
+    },
+  );
+
+    public readonly byPositionId = new DataLoader<number, PrismaUser[]>(
+    async (positionIds: readonly (number)[]) => {
+      const rows = await this.prisma.user.findMany({
+        where: { positionId: { in: [...positionIds] } },
+      });
+      const groupMap = new Map<number, PrismaUser[]>();
+      for (const row of rows) {
+        if (row.positionId != null) {
+          const list = groupMap.get(row.positionId) ?? [];
+          list.push(row);
+          groupMap.set(row.positionId, list);
+        }
+      }
+      return positionIds.map((id) => groupMap.get(id) ?? []);
+    },
+  );
+
   clear(id?: string) {
     if (id != null) {
       this.byId.clear(id);
     } else {
       this.byId.clearAll();
+    if (this.byPositionId) this.byPositionId.clearAll();
+    if (this.bySectionId) this.bySectionId.clearAll();
     if (this.byStatusCodeId) this.byStatusCodeId.clearAll();
     }
   }

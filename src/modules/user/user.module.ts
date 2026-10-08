@@ -1,3 +1,5 @@
+import { PositionLoader } from "../position/position.loader.js";
+import { SectionLoader } from "../section/section.loader.js";
 import { StatusCodeLoader } from "../status-code/status-code.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../prisma/index.js";
@@ -11,6 +13,8 @@ import { UserRelationResolver } from "./resolvers/user.relation.js";
 @Module({
   imports: [PrismaModule, AuthModule],
   providers: [
+    PositionLoader,
+    SectionLoader,
     StatusCodeLoader,
     UserLoader,
     UserService,

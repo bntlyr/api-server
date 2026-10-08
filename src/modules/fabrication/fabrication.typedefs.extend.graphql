@@ -1,0 +1,7 @@
+extend type Fabrication {
+  item: Item
+}
+
+extend type Fabrication {
+  fabRoutes: [FabRoute!]!
+}

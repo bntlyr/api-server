@@ -1,0 +1,40 @@
+extend type Item {
+  customer: Customer
+}
+
+extend type Item {
+  itemType: ItemType
+}
+
+extend type Item {
+  rawMaterial: RawMaterial
+}
+
+extend type Item {
+  boxType: BoxType
+}
+
+extend type Item {
+  itemPictures: [ItemPicture!]!
+}
+
+extend type Item {
+  itemRevisions: [ItemRevision!]!
+}
+
+extend type Item {
+  fabrications: [Fabrication!]!
+}
+
+extend type Item {
+  itemRoutes: [ItemRoute!]!
+}
+
+extend input CreateItemInput {
+  mouldIds: [Int!]
+}
+
+extend input UpdateItemInput {
+  mouldIds: [Int!]
+}
+

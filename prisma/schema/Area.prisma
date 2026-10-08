@@ -1,0 +1,16 @@
+model Area {
+  id       Int    @id @default(autoincrement())
+  name     String
+  category String
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deletedAt DateTime?
+  deletedBy String?
+
+  locations Location[]
+
+  @@index([deletedAt])
+}

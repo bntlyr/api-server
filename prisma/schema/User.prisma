@@ -22,6 +22,14 @@ model User {
   statusCodeId Int?
   statusCode   StatusCode? @relation(fields: [statusCodeId], references: [id])
 
+  sectionId Int?
+  section   Section? @relation(fields: [sectionId], references: [id])
+
+  positionId Int?
+  position   Position? @relation(fields: [positionId], references: [id])
+
   @@index([statusCodeId])
+  @@index([sectionId])
+  @@index([positionId])
   @@index([deletedAt])
 }

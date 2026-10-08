@@ -1,0 +1,7 @@
+extend type FabRouteMachining {
+  fabRouteStep: FabRouteStep
+}
+
+extend type FabRouteMachining {
+  machine: Machine
+}

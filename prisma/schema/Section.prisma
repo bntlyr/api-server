@@ -1,0 +1,19 @@
+model Section {
+  id          Int     @id @default(autoincrement())
+  name        String
+  code        String  @default("-")
+  description String?
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deletedAt DateTime?
+  deletedBy String?
+
+  positions Position[]
+  users     User[]
+  machines  Machine[]
+
+  @@index([deletedAt])
+}

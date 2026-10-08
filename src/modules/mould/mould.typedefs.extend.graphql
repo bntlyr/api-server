@@ -1,0 +1,12 @@
+extend type Mould {
+  mouldType: MouldType
+}
+
+extend input CreateMouldInput {
+  itemIds: [Int!]
+}
+
+extend input UpdateMouldInput {
+  itemIds: [Int!]
+}
+

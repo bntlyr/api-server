@@ -1,0 +1,12 @@
+extend type MaterialSupplier {
+  material: Material
+  supplier: Supplier
+}
+
+extend type Material {
+  materialSuppliers: [MaterialSupplier!]!
+}
+
+extend type Supplier {
+  materialSuppliers: [MaterialSupplier!]!
+}

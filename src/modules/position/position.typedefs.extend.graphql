@@ -1,0 +1,7 @@
+extend type Position {
+  section: Section
+}
+
+extend type Position {
+  users: [User!]!
+}

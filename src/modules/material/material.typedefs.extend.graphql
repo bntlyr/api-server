@@ -1,0 +1,20 @@
+extend type Material {
+  materialGroup: MaterialGroup
+}
+
+extend type Material {
+  section: Section
+}
+
+extend type Material {
+  rawMaterial: RawMaterial
+}
+
+extend input CreateMaterialInput {
+  supplierIds: [Int!]
+}
+
+extend input UpdateMaterialInput {
+  supplierIds: [Int!]
+}
+
