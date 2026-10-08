@@ -30,6 +30,9 @@ model Material {
   deletedBy String?
 
   materialSuppliers MaterialSupplier[]
+  inventoryLots     MaterialInventoryLot[]
+  inventoryTransactions MaterialInventoryTransaction[]
+  issuanceItems     MaterialIssuanceItem[]
 
   @@index([materialGroupId])
   @@index([sectionId])

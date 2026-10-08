@@ -171,15 +171,27 @@ try {
   console.error("Prisma error:", error);
 }
 
+function findModuleDir(kebab) {
+  const base = resolve(process.cwd(), "src/modules");
+  if (existsSync(resolve(base, "master", kebab))) return resolve(base, "master", kebab);
+  if (existsSync(resolve(base, "common", kebab))) return resolve(base, "common", kebab);
+  if (existsSync(resolve(base, "inventory", kebab))) return resolve(base, "inventory", kebab);
+  if (existsSync(resolve(base, kebab))) return resolve(base, kebab);
+  return resolve(base, "master", kebab);
+}
+
+const sourceModuleDir = findModuleDir(sourceKebab);
+const targetModuleDir = findModuleDir(targetKebab);
+
 // 5. Update GraphQL Schema Extensions
-const sourceExtendGqlPath = resolve(process.cwd(), `src/modules/${sourceKebab}/${sourceKebab}.typedefs.extend.graphql`);
-const targetExtendGqlPath = resolve(process.cwd(), `src/modules/${targetKebab}/${targetKebab}.typedefs.extend.graphql`);
+const sourceExtendGqlPath = resolve(sourceModuleDir, `${sourceKebab}.typedefs.extend.graphql`);
+const targetExtendGqlPath = resolve(targetModuleDir, `${targetKebab}.typedefs.extend.graphql`);
 
 const sourceRelationFieldGql = isOneToOne ? `${targetCamel}: ${targetPascal}` : `${targetPlural}: [${targetPascal}!]!`;
 const sourceExtendSnippet = `extend type ${sourcePascal} {\n  ${sourceRelationFieldGql}\n}\n`;
 const targetExtendSnippet = `extend type ${targetPascal} {\n  ${sourceCamel}: ${sourcePascal}\n}\n`;
 
-if (existsSync(resolve(process.cwd(), `src/modules/${sourceKebab}`))) {
+if (existsSync(sourceModuleDir)) {
   let sourceExtendContent = existsSync(sourceExtendGqlPath) ? readFileSync(sourceExtendGqlPath, "utf-8") : "";
   if (!sourceExtendContent.includes(`${sourceRelationFieldGql}`)) {
     sourceExtendContent = sourceExtendContent + "\n" + sourceExtendSnippet;
@@ -188,7 +200,7 @@ if (existsSync(resolve(process.cwd(), `src/modules/${sourceKebab}`))) {
   }
 }
 
-if (existsSync(resolve(process.cwd(), `src/modules/${targetKebab}`))) {
+if (existsSync(targetModuleDir)) {
   let targetExtendContent = existsSync(targetExtendGqlPath) ? readFileSync(targetExtendGqlPath, "utf-8") : "";
   if (!targetExtendContent.includes(`${sourceCamel}: ${sourcePascal}`)) {
     targetExtendContent = targetExtendContent + "\n" + targetExtendSnippet;
@@ -198,7 +210,7 @@ if (existsSync(resolve(process.cwd(), `src/modules/${targetKebab}`))) {
 }
 
 // 6. Update Target DataLoader with Batch Loader
-const targetLoaderPath = resolve(process.cwd(), `src/modules/${targetKebab}/${targetKebab}.loader.ts`);
+const targetLoaderPath = resolve(targetModuleDir, `${targetKebab}.loader.ts`);
 if (existsSync(targetLoaderPath)) {
   let loaderContent = readFileSync(targetLoaderPath, "utf-8");
   if (!loaderContent.includes(`by${sourcePascal}Id`)) {
@@ -264,10 +276,14 @@ function registerLoaderInModule(modulePath, loaderName, loaderRelativePath) {
   }
 }
 
-const sourceModulePath = resolve(process.cwd(), `src/modules/${sourceKebab}/${sourceKebab}.module.ts`);
-const targetModulePath = resolve(process.cwd(), `src/modules/${targetKebab}/${targetKebab}.module.ts`);
-registerLoaderInModule(sourceModulePath, `${targetPascal}Loader`, `../${targetKebab}/${targetKebab}.loader.js`);
-registerLoaderInModule(targetModulePath, `${sourcePascal}Loader`, `../${sourceKebab}/${sourceKebab}.loader.js`);
+const sourceModulePath = resolve(sourceModuleDir, `${sourceKebab}.module.ts`);
+const targetModulePath = resolve(targetModuleDir, `${targetKebab}.module.ts`);
+
+const relLoaderPathForSource = path.relative(sourceModuleDir, resolve(targetModuleDir, `${targetKebab}.loader.js`)).replace(/\\/g, "/");
+const relLoaderPathForTarget = path.relative(targetModuleDir, resolve(sourceModuleDir, `${sourceKebab}.loader.js`)).replace(/\\/g, "/");
+
+registerLoaderInModule(sourceModulePath, `${targetPascal}Loader`, relLoaderPathForSource.startsWith(".") ? relLoaderPathForSource : `./${relLoaderPathForSource}`);
+registerLoaderInModule(targetModulePath, `${sourcePascal}Loader`, relLoaderPathForTarget.startsWith(".") ? relLoaderPathForTarget : `./${relLoaderPathForTarget}`);
 
 // 8. Update Relation Resolvers in both modules using DataLoaders
 function updateRelationResolver(resolverPath, entityPascal, loaderPascal, resolveFieldCode) {

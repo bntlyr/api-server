@@ -1,0 +1,105 @@
+#graphql
+
+type MaterialIssuance {
+  id: ID!
+  mrsNo: String!
+  mrsDate: DateTime!
+  sectionId: Int!
+  section: Section!
+  requestorId: String
+  requestor: User
+  remarks: String
+  totalItems: Int!
+  totalQty: Float!
+
+  items: [MaterialIssuanceItem!]!
+
+  createdAt: DateTime!
+  createdBy: String
+  updatedAt: DateTime!
+  updatedBy: String
+  deleted: Boolean!
+  deletedAt: DateTime
+  deletedBy: String
+}
+
+type MaterialIssuanceItem {
+  id: ID!
+  materialIssuanceId: Int!
+  materialId: Int!
+  material: Material!
+  materialInventoryLotId: Int!
+  lot: MaterialInventoryLot!
+  lotNo: String!
+  areaId: Int!
+  area: Area!
+  locationId: Int!
+  location: Location!
+  quantity: Float!
+  remarks: String
+
+  createdAt: DateTime!
+  createdBy: String
+  updatedAt: DateTime!
+  updatedBy: String
+  deleted: Boolean!
+}
+
+input MaterialIssuanceFilterInput {
+  search: String
+  id: IntFilterInput
+  mrsNo: StringFilterInput
+  mrsDate: DateTimeFilterInput
+  sectionId: IntFilterInput
+  requestorId: StringFilterInput
+  remarks: StringFilterInput
+  AND: [MaterialIssuanceFilterInput!]
+  OR: [MaterialIssuanceFilterInput!]
+  NOT: [MaterialIssuanceFilterInput!]
+}
+
+input CreateMaterialIssuanceItemInput {
+  materialInventoryLotId: Int!
+  quantity: Float!
+  remarks: String
+}
+
+input CreateMaterialIssuanceInput {
+  mrsNo: String!
+  mrsDate: DateTime
+  sectionId: Int!
+  requestorId: String
+  remarks: String
+  items: [CreateMaterialIssuanceItemInput!]!
+}
+
+type MaterialIssuancePayload {
+  issuance: MaterialIssuance
+  userErrors: [UserError!]!
+}
+
+type MaterialIssuanceEdge {
+  cursor: String!
+  node: MaterialIssuance!
+}
+
+type MaterialIssuanceConnection {
+  edges: [MaterialIssuanceEdge!]!
+  nodes: [MaterialIssuance!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  userErrors: [UserError!]!
+}
+
+extend type Query {
+  materialIssuancesPaginated(
+    pagination: PaginationInput
+    filter: MaterialIssuanceFilterInput
+  ): MaterialIssuanceConnection!
+
+  materialIssuanceById(id: ID!): MaterialIssuance
+}
+
+extend type Mutation {
+  createMaterialIssuance(input: CreateMaterialIssuanceInput!): MaterialIssuancePayload!
+}

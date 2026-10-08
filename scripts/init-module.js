@@ -242,8 +242,17 @@ const schemaFilePath = resolve(generatedSchemaDir, `${kebabName}.generated.graph
 writeFileSync(schemaFilePath, graphqlContent, "utf-8");
 console.log(`📄 Generated base schema at src/generated/graphql/schemas/${kebabName}.generated.graphql`);
 
-// 3. Module directory structure: src/modules/<kebabName>/ (with resolvers/ and helpers/ subdirectories)
-const moduleDir = resolve(process.cwd(), `src/modules/${kebabName}`);
+// 3. Module directory structure: src/modules/master/<kebabName>/ (with resolvers/ and helpers/ subdirectories)
+function findOrCreateModuleDir(kebab) {
+  const base = resolve(process.cwd(), "src/modules");
+  if (existsSync(resolve(base, "master", kebab))) return resolve(base, "master", kebab);
+  if (existsSync(resolve(base, "common", kebab))) return resolve(base, "common", kebab);
+  if (existsSync(resolve(base, "inventory", kebab))) return resolve(base, "inventory", kebab);
+  if (existsSync(resolve(base, kebab))) return resolve(base, kebab);
+  return resolve(base, "master", kebab);
+}
+
+const moduleDir = findOrCreateModuleDir(kebabName);
 const resolversDir = resolve(moduleDir, "resolvers");
 const helpersDir = resolve(moduleDir, "helpers");
 
@@ -282,7 +291,7 @@ const validationChecks = requiredCreateFields
   })
   .join("\n");
 
-const helperContent = `import type { Create${modelName}Input, Update${modelName}Input } from "../../../generated/graphql/types.js";
+const helperContent = `import type { Create${modelName}Input, Update${modelName}Input } from "../../../../generated/graphql/types.js";
 
 /**
  * Domain helper functions for the ${modelName} module.
@@ -332,9 +341,9 @@ const updateDataFields = updateFields
   .join("\n");
 
 const serviceContent = `import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../../prisma/prisma.service.js";
-import { AuditTrailService } from "../../auth/services/audit-trail.service.js";
-import { extractContextInfo } from "../../graphql/common/context.helper.js";
+import { PrismaService } from "../../../prisma/prisma.service.js";
+import { AuditTrailService } from "../../../auth/services/audit-trail.service.js";
+import { extractContextInfo } from "../../../graphql/common/context.helper.js";
 import type {
   Create${modelName}Input,
   ${modelName}FilterInput,
@@ -342,13 +351,13 @@ import type {
   Update${modelName}Input,
   ${modelName}Connection,
   ${modelName}Payload,
-} from "../../generated/graphql/types.js";
-import { createError } from "../../graphql/common/error.helper.js";
-import { buildPrismaWhere } from "../../graphql/common/filter.helper.js";
+} from "../../../generated/graphql/types.js";
+import { createError } from "../../../graphql/common/error.helper.js";
+import { buildPrismaWhere } from "../../../graphql/common/filter.helper.js";
 import {
   getPrismaPaginationArgs,
   toConnection,
-} from "../../graphql/common/pagination.helper.js";
+} from "../../../graphql/common/pagination.helper.js";
 import { validateCreate${modelName}Input, validateUpdate${modelName}Input } from "./helpers/${kebabName}.helper.js";
 
 import { ${modelName}Loader } from "./${kebabName}.loader.js";
@@ -576,7 +585,7 @@ import type {
   ${modelName}FilterInput,
   PaginationInput,
   ${modelName}Connection,
-} from "../../../generated/graphql/types.js";
+} from "../../../../generated/graphql/types.js";
 
 @Resolver("${modelName}")
 export class ${modelName}QueryResolver {
@@ -604,7 +613,7 @@ import type {
   Create${modelName}Input,
   Update${modelName}Input,
   ${modelName}Payload,
-} from "../../../generated/graphql/types.js";
+} from "../../../../generated/graphql/types.js";
 
 @Resolver("${modelName}")
 export class ${modelName}MutationResolver {
@@ -648,8 +657,8 @@ export class ${modelName}MutationResolver {
 // Loader
 const loaderContent = `import { Injectable, Scope } from "@nestjs/common";
 import DataLoader from "dataloader";
-import { PrismaService } from "../../prisma/prisma.service.js";
-import type { ${modelName} as Prisma${modelName} } from "../../generated/prisma/client.js";
+import { PrismaService } from "../../../prisma/prisma.service.js";
+import type { ${modelName} as Prisma${modelName} } from "../../../generated/prisma/client.js";
 
 @Injectable({ scope: Scope.REQUEST })
 export class ${modelName}Loader {
@@ -689,7 +698,7 @@ export class ${modelName}RelationResolver {
 
 // Module
 const moduleContent = `import { Module } from "@nestjs/common";
-import { PrismaModule } from "../../prisma/index.js";
+import { PrismaModule } from "../../../prisma/index.js";
 import { ${modelName}Service } from "./${kebabName}.service.js";
 import { ${modelName}Loader } from "./${kebabName}.loader.js";
 import { ${modelName}QueryResolver } from "./resolvers/${kebabName}.query.js";
@@ -725,14 +734,17 @@ writeIfNotExists(resolve(resolversDir, `${kebabName}.mutation.ts`), mutationCont
 writeIfNotExists(resolve(resolversDir, `${kebabName}.relation.ts`), relationContent);
 writeIfNotExists(resolve(moduleDir, `${kebabName}.module.ts`), moduleContent);
 
-console.log(`✨ Created module structure in src/modules/${kebabName}/ with resolvers/ and helpers/`);
+console.log(`✨ Created module structure in ${moduleDir} with resolvers/ and helpers/`);
 
 // Update AppModule to import the new module
 const appModulePath = resolve(process.cwd(), "src/app.module.ts");
 if (existsSync(appModulePath)) {
   let content = readFileSync(appModulePath, "utf-8");
   const moduleName = `${modelName}Module`;
-  const moduleImport = `import { ${moduleName} } from "./modules/${kebabName}/${kebabName}.module.js";\n`;
+  const relPathToApp = moduleDir.includes("common")
+    ? `./modules/common/${kebabName}/${kebabName}.module.js`
+    : `./modules/master/${kebabName}/${kebabName}.module.js`;
+  const moduleImport = `import { ${moduleName} } from "${relPathToApp}";\n`;
 
   if (!content.includes(moduleName)) {
     content = moduleImport + content;

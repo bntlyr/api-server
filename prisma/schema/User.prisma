@@ -18,6 +18,7 @@ model User {
   sessions               Session[]
   userPages              UserPage[]
   notificationRecipients NotificationRecipient[]
+  materialIssuances      MaterialIssuance[]
 
   statusCodeId Int?
   statusCode   StatusCode? @relation(fields: [statusCodeId], references: [id])

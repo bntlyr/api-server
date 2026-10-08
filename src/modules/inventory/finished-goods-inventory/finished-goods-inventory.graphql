@@ -1,0 +1,465 @@
+#graphql
+
+enum FinishedGoodsStatus {
+  AVAILABLE
+  ALLOCATED
+  CHECKING
+  DEFECTIVE
+}
+
+enum FinishedGoodsTxType {
+  MANUAL_IN
+  BATCH_IN
+  MANUAL_OUT
+  STATUS_CHANGE
+  DISCARD
+  MOVEMENT
+  BOX_UPDATE
+  STICKER_PRINT
+}
+
+type FinishedGoodsLot {
+  id: ID!
+  itemId: Int!
+  item: Item!
+  fabricationId: Int!
+  fabrication: Fabrication!
+  
+  orderNo: String!
+  lotNo: String!
+  chargeNo: String!
+  trialLotNo: String
+  invoiceNo: String
+  
+  areaId: Int!
+  area: Area!
+  locationId: Int!
+  location: Location!
+  boxId: Int
+  boxType: BoxType
+
+  availableQty: Float!
+  allocatedQty: Float!
+  checkingQty: Float!
+  defectiveQty: Float!
+  totalQty: Float!
+
+  incomingDate: DateTime
+  manufactureDate: DateTime
+  reason: String
+  remarks: String
+  stickerPrinted: Boolean!
+  stickerPrintedAt: DateTime
+  stickerPrintedBy: String
+
+  createdAt: DateTime!
+  createdBy: String
+  updatedAt: DateTime!
+  updatedBy: String
+  deleted: Boolean!
+  deletedAt: DateTime
+  deletedBy: String
+
+  transactions: [FinishedGoodsTransaction!]!
+}
+
+type FinishedGoodsTransaction {
+  id: ID!
+  transactionNo: String!
+  transactionType: String!
+  direction: String
+  transactionDate: DateTime!
+
+  itemId: Int!
+  item: Item!
+  fabricationId: Int!
+  fabrication: Fabrication!
+
+  finishedGoodsLotId: Int
+  lot: FinishedGoodsLot
+  orderNo: String!
+  lotNo: String!
+  chargeNo: String!
+  invoiceNo: String
+
+  fromAreaId: Int
+  fromArea: Area
+  fromLocationId: Int
+  fromLocation: Location
+  toAreaId: Int
+  toArea: Area
+  toLocationId: Int
+  toLocation: Location
+
+  fromBoxId: Int
+  fromBox: BoxType
+  toBoxId: Int
+  toBox: BoxType
+
+  fromStatus: String
+  toStatus: String
+
+  quantity: Float!
+  balanceAfter: Float
+
+  reason: String
+  remarks: String
+  referenceNo: String
+
+  createdAt: DateTime!
+  createdBy: String
+  updatedAt: DateTime!
+  updatedBy: String
+  deleted: Boolean!
+  deletedAt: DateTime
+  deletedBy: String
+}
+
+type FinishedGoodsSummary {
+  id: ID!
+  itemId: Int!
+  item: Item!
+  fabricationId: Int!
+  fabrication: Fabrication!
+
+  # Computed Item Master Information
+  itemCode: String! # Formatted: e.g. 10-00000-000 or 10-00000-100
+  displayItemCode: String!
+  itemName: String
+  description: String
+  itemType: ItemType
+  rawMaterial: RawMaterial
+  noLots: Int!
+  lotCount: Int!
+  stdItemWt: Float!
+  totalWeight: Float!
+  totalQty: Float!
+  unitPrice: Float!
+  totalPrice: Float!
+
+  # Packing Area Subtotals
+  packingAvailableQty: Float!
+  packingAllocatedQty: Float!
+  packingCheckingQty: Float!
+  packingDefectiveQty: Float!
+  packingTotalQty: Float!
+
+  # Stock Area Subtotals
+  stockAvailableQty: Float!
+  stockAllocatedQty: Float!
+  stockCheckingQty: Float!
+  stockDefectiveQty: Float!
+  stockTotalQty: Float!
+
+  # Grand Totals
+  totalAvailableQty: Float!
+  totalAllocatedQty: Float!
+  totalCheckingQty: Float!
+  totalDefectiveQty: Float!
+  totalOnHandQty: Float!
+
+  lots: [FinishedGoodsLot!]!
+}
+
+extend type Item {
+  finishedGoodsSummaries: [FinishedGoodsSummary!]!
+  finishedGoodsLots: [FinishedGoodsLot!]!
+  finishedGoodsTransactions: [FinishedGoodsTransaction!]!
+}
+
+extend type Fabrication {
+  finishedGoodsSummary: FinishedGoodsSummary
+  finishedGoodsLots: [FinishedGoodsLot!]!
+  finishedGoodsTransactions: [FinishedGoodsTransaction!]!
+}
+
+input FinishedGoodsLotFilterInput {
+  search: String
+  id: IntFilterInput
+  itemId: IntFilterInput
+  fabricationId: IntFilterInput
+  orderNo: StringFilterInput
+  lotNo: StringFilterInput
+  chargeNo: StringFilterInput
+  trialLotNo: StringFilterInput
+  invoiceNo: StringFilterInput
+  areaId: IntFilterInput
+  locationId: IntFilterInput
+  boxId: IntFilterInput
+  incomingDate: DateTimeFilterInput
+  manufactureDate: DateTimeFilterInput
+  stickerPrinted: BooleanFilterInput
+
+  # Item Master Filters
+  itemCode: StringFilterInput
+  itemName: StringFilterInput
+  fabCode: StringFilterInput
+  areaCategory: StringFilterInput
+
+  AND: [FinishedGoodsLotFilterInput!]
+  OR: [FinishedGoodsLotFilterInput!]
+  NOT: [FinishedGoodsLotFilterInput!]
+}
+
+input FinishedGoodsTransactionFilterInput {
+  search: String
+  id: IntFilterInput
+  transactionNo: StringFilterInput
+  transactionType: StringFilterInput
+  direction: StringFilterInput
+  transactionDate: DateTimeFilterInput
+
+  itemId: IntFilterInput
+  fabricationId: IntFilterInput
+  finishedGoodsLotId: IntFilterInput
+  orderNo: StringFilterInput
+  lotNo: StringFilterInput
+  chargeNo: StringFilterInput
+  referenceNo: StringFilterInput
+  invoiceNo: StringFilterInput
+
+  # Item Master Filters
+  itemCode: StringFilterInput
+  itemName: StringFilterInput
+  fabCode: StringFilterInput
+
+  # Location & Box Filters
+  areaId: IntFilterInput
+  locationId: IntFilterInput
+  fromAreaId: IntFilterInput
+  fromLocationId: IntFilterInput
+  toAreaId: IntFilterInput
+  toLocationId: IntFilterInput
+  fromBoxId: IntFilterInput
+  toBoxId: IntFilterInput
+
+  fromStatus: StringFilterInput
+  toStatus: StringFilterInput
+
+  AND: [FinishedGoodsTransactionFilterInput!]
+  OR: [FinishedGoodsTransactionFilterInput!]
+  NOT: [FinishedGoodsTransactionFilterInput!]
+}
+
+input FinishedGoodsSummaryFilterInput {
+  search: String
+  itemId: IntFilterInput
+  fabricationId: IntFilterInput
+  itemCode: StringFilterInput
+  itemName: StringFilterInput
+  description: StringFilterInput
+  itemTypeId: IntFilterInput
+  rawMaterialId: IntFilterInput
+  fabCode: StringFilterInput
+  AND: [FinishedGoodsSummaryFilterInput!]
+  OR: [FinishedGoodsSummaryFilterInput!]
+  NOT: [FinishedGoodsSummaryFilterInput!]
+}
+
+input ManualInFinishedGoodsInput {
+  itemId: Int!
+  fabricationId: Int!
+  orderNo: String!
+  lotNo: String!
+  chargeNo: String!
+  trialLotNo: String
+  invoiceNo: String
+  boxId: Int
+  areaId: Int!
+  locationId: Int!
+  status: FinishedGoodsStatus!
+  quantity: Float!
+  incomingDate: DateTime
+  manufactureDate: DateTime
+  reason: String!
+  remarks: String
+}
+
+input BatchManualInFinishedGoodsItemInput {
+  lotNo: String!
+  chargeNo: String!
+  trialLotNo: String
+  invoiceNo: String
+  boxId: Int
+  areaId: Int!
+  locationId: Int!
+  status: FinishedGoodsStatus!
+  quantity: Float!
+  incomingDate: DateTime
+  manufactureDate: DateTime
+  reason: String
+  remarks: String
+}
+
+input BatchManualInFinishedGoodsInput {
+  itemId: Int!
+  fabricationId: Int!
+  orderNo: String!
+  items: [BatchManualInFinishedGoodsItemInput!]!
+  reason: String!
+  remarks: String
+}
+
+input ChangeFinishedGoodsStatusInput {
+  finishedGoodsLotId: Int!
+  fromStatus: FinishedGoodsStatus!
+  toStatus: FinishedGoodsStatus!
+  quantity: Float!
+  reason: String!
+  remarks: String
+}
+
+input ManualOutFinishedGoodsInput {
+  finishedGoodsLotId: Int!
+  quantity: Float!
+  referenceNo: String
+  invoiceNo: String
+  reason: String!
+  remarks: String
+}
+
+input DiscardFinishedGoodsInput {
+  finishedGoodsLotId: Int!
+  quantity: Float!
+  reason: String!
+  remarks: String
+}
+
+input MoveFinishedGoodsInput {
+  finishedGoodsLotId: Int!
+  toAreaId: Int!
+  toLocationId: Int!
+  quantity: Float!
+  status: FinishedGoodsStatus
+  reason: String
+  remarks: String
+}
+
+input BatchMoveFinishedGoodsItemInput {
+  finishedGoodsLotId: Int!
+  quantity: Float!
+  status: FinishedGoodsStatus
+}
+
+input BatchMoveFinishedGoodsInput {
+  items: [BatchMoveFinishedGoodsItemInput!]!
+  toAreaId: Int!
+  toLocationId: Int!
+  reason: String
+  remarks: String
+}
+
+input UpdateFinishedGoodsBoxTypeInput {
+  finishedGoodsLotId: Int!
+  boxId: Int
+  reason: String
+  remarks: String
+}
+
+input PrintFinishedGoodsStickerInput {
+  finishedGoodsLotId: Int!
+  remarks: String
+}
+
+type FinishedGoodsLotPayload {
+  lot: FinishedGoodsLot
+  destinationLot: FinishedGoodsLot
+  transaction: FinishedGoodsTransaction
+  userErrors: [UserError!]!
+}
+
+type BatchFinishedGoodsPayload {
+  lots: [FinishedGoodsLot!]!
+  transactions: [FinishedGoodsTransaction!]!
+  count: Int!
+  userErrors: [UserError!]!
+}
+
+type FinishedGoodsLotEdge {
+  cursor: String!
+  node: FinishedGoodsLot!
+}
+
+type FinishedGoodsLotConnection {
+  edges: [FinishedGoodsLotEdge!]!
+  nodes: [FinishedGoodsLot!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  userErrors: [UserError!]!
+}
+
+type FinishedGoodsTransactionEdge {
+  cursor: String!
+  node: FinishedGoodsTransaction!
+}
+
+type FinishedGoodsTransactionConnection {
+  edges: [FinishedGoodsTransactionEdge!]!
+  nodes: [FinishedGoodsTransaction!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  userErrors: [UserError!]!
+}
+
+type FinishedGoodsSummaryEdge {
+  cursor: String!
+  node: FinishedGoodsSummary!
+}
+
+type FinishedGoodsSummaryConnection {
+  edges: [FinishedGoodsSummaryEdge!]!
+  nodes: [FinishedGoodsSummary!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  userErrors: [UserError!]!
+}
+
+extend type Query {
+  finishedGoodsInventoryListPaginated(
+    pagination: PaginationInput
+    filter: FinishedGoodsSummaryFilterInput
+  ): FinishedGoodsSummaryConnection!
+
+  finishedGoodsSummariesPaginated(
+    pagination: PaginationInput
+    filter: FinishedGoodsSummaryFilterInput
+  ): FinishedGoodsSummaryConnection!
+
+  finishedGoodsSummaryByItemAndFab(
+    itemId: ID!
+    fabricationId: ID!
+  ): FinishedGoodsSummary
+
+  finishedGoodsLotsPaginated(
+    pagination: PaginationInput
+    filter: FinishedGoodsLotFilterInput
+  ): FinishedGoodsLotConnection!
+
+  finishedGoodsLotsByItemAndFabPaginated(
+    itemId: ID!
+    fabricationId: ID!
+    pagination: PaginationInput
+    filter: FinishedGoodsLotFilterInput
+  ): FinishedGoodsLotConnection!
+
+  finishedGoodsLotById(id: ID!): FinishedGoodsLot
+
+  finishedGoodsTransactionsPaginated(
+    pagination: PaginationInput
+    filter: FinishedGoodsTransactionFilterInput
+  ): FinishedGoodsTransactionConnection!
+
+  finishedGoodsTransactionById(id: ID!): FinishedGoodsTransaction
+}
+
+extend type Mutation {
+  manualInFinishedGoods(input: ManualInFinishedGoodsInput!): FinishedGoodsLotPayload!
+  batchManualInFinishedGoods(input: BatchManualInFinishedGoodsInput!): BatchFinishedGoodsPayload!
+  changeFinishedGoodsStatus(input: ChangeFinishedGoodsStatusInput!): FinishedGoodsLotPayload!
+  manualOutFinishedGoods(input: ManualOutFinishedGoodsInput!): FinishedGoodsLotPayload!
+  discardFinishedGoods(input: DiscardFinishedGoodsInput!): FinishedGoodsLotPayload!
+  moveFinishedGoods(input: MoveFinishedGoodsInput!): FinishedGoodsLotPayload!
+  batchMoveFinishedGoods(input: BatchMoveFinishedGoodsInput!): BatchFinishedGoodsPayload!
+  updateFinishedGoodsBoxType(input: UpdateFinishedGoodsBoxTypeInput!): FinishedGoodsLotPayload!
+  printFinishedGoodsSticker(input: PrintFinishedGoodsStickerInput!): FinishedGoodsLotPayload!
+}

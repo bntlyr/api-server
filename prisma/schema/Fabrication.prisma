@@ -16,6 +16,8 @@ model Fabrication {
   deletedBy String?
 
   fabRoutes FabRoute[]
+  finishedGoodsLots         FinishedGoodsLot[]
+  finishedGoodsTransactions FinishedGoodsTransaction[]
 
   @@unique([itemId, code])
   @@index([itemId, code])

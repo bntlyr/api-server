@@ -89,11 +89,18 @@ for (const schemaPath of schemaCandidates) {
   }
 }
 
-// 4. Remove module directory in src/modules/<modelKebab>/
-const moduleDir = resolve(process.cwd(), `src/modules/${modelKebab}`);
-if (existsSync(moduleDir)) {
-  rmSync(moduleDir, { recursive: true, force: true });
-  console.log(`📂 Deleted module directory src/modules/${modelKebab}/`);
+// 4. Remove module directory in src/modules/
+const moduleDirCandidates = [
+  resolve(process.cwd(), `src/modules/master/${modelKebab}`),
+  resolve(process.cwd(), `src/modules/common/${modelKebab}`),
+  resolve(process.cwd(), `src/modules/inventory/${modelKebab}`),
+  resolve(process.cwd(), `src/modules/${modelKebab}`),
+];
+for (const dir of moduleDirCandidates) {
+  if (existsSync(dir)) {
+    rmSync(dir, { recursive: true, force: true });
+    console.log(`📂 Deleted module directory ${dir}`);
+  }
 }
 
 // 5. Remove module registration from src/app.module.ts

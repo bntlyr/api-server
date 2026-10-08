@@ -11,6 +11,9 @@ model BoxType {
   updatedBy String?
   deletedAt DateTime?
   deletedBy String?
+  finishedGoodsLots             FinishedGoodsLot[]
+  fromFinishedGoodsTransactions FinishedGoodsTransaction[] @relation("FromBoxFGTransactions")
+  toFinishedGoodsTransactions   FinishedGoodsTransaction[] @relation("ToBoxFGTransactions")
 
   @@index([deletedAt])
 }

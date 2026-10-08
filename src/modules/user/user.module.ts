@@ -1,6 +1,6 @@
-import { PositionLoader } from "../position/position.loader.js";
-import { SectionLoader } from "../section/section.loader.js";
-import { StatusCodeLoader } from "../status-code/status-code.loader.js";
+import { PositionLoader } from "../master/position/position.loader.js";
+import { SectionLoader } from "../master/section/section.loader.js";
+import { StatusCodeLoader } from "../common/status-code/status-code.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../prisma/index.js";
 import { AuthModule } from "../../auth/auth.module.js";

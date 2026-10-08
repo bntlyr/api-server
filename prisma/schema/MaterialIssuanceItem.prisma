@@ -1,0 +1,34 @@
+model MaterialIssuanceItem {
+  id                     Int                  @id @default(autoincrement())
+  materialIssuanceId     Int
+  materialIssuance       MaterialIssuance     @relation(fields: [materialIssuanceId], references: [id], onDelete: Cascade)
+
+  materialId             Int
+  material               Material             @relation(fields: [materialId], references: [id])
+
+  materialInventoryLotId Int
+  lot                    MaterialInventoryLot @relation(fields: [materialInventoryLotId], references: [id])
+  lotNo                  String
+
+  areaId                 Int
+  area                   Area                 @relation(fields: [areaId], references: [id])
+  locationId             Int
+  location               Location             @relation(fields: [locationId], references: [id])
+
+  quantity               Decimal              @db.Decimal(12, 2)
+  remarks                String?
+
+  createdAt              DateTime             @default(now())
+  createdBy              String?
+  updatedAt              DateTime             @updatedAt
+  updatedBy              String?
+  deleted                Boolean              @default(false)
+  deletedAt              DateTime?
+  deletedBy              String?
+
+  @@index([materialIssuanceId])
+  @@index([materialId])
+  @@index([materialInventoryLotId])
+  @@index([areaId, locationId])
+  @@index([deletedAt])
+}

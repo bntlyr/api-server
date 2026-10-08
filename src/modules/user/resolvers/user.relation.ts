@@ -1,6 +1,6 @@
-import { PositionLoader } from "../../position/position.loader.js";
-import { SectionLoader } from "../../section/section.loader.js";
-import { StatusCodeLoader } from "../../status-code/status-code.loader.js";
+import { PositionLoader } from "../../master/position/position.loader.js";
+import { SectionLoader } from "../../master/section/section.loader.js";
+import { StatusCodeLoader } from "../../common/status-code/status-code.loader.js";
 import type { User as PrismaUser } from "../../../generated/prisma/client.js";
 import { PrismaService } from "../../../prisma/prisma.service.js";
 import { Parent, ResolveField, Resolver } from "@nestjs/graphql";

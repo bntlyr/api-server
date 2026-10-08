@@ -88,8 +88,20 @@ export function disconnectModels(sourceInput, targetInput) {
     console.warn("Prisma sync warning:", error.message);
   }
 
+  function findModuleDir(kebab) {
+    const base = resolve(process.cwd(), "src/modules");
+    if (existsSync(resolve(base, "master", kebab))) return resolve(base, "master", kebab);
+    if (existsSync(resolve(base, "common", kebab))) return resolve(base, "common", kebab);
+    if (existsSync(resolve(base, "inventory", kebab))) return resolve(base, "inventory", kebab);
+    if (existsSync(resolve(base, kebab))) return resolve(base, kebab);
+    return resolve(base, "master", kebab);
+  }
+
+  const sourceModuleDir = findModuleDir(sourceKebab);
+  const targetModuleDir = findModuleDir(targetKebab);
+
   // 3. Clean GraphQL Schema Extensions
-  const sourceExtendGqlPath = resolve(process.cwd(), `src/modules/${sourceKebab}/${sourceKebab}.typedefs.extend.graphql`);
+  const sourceExtendGqlPath = resolve(sourceModuleDir, `${sourceKebab}.typedefs.extend.graphql`);
   if (existsSync(sourceExtendGqlPath)) {
     let content = readFileSync(sourceExtendGqlPath, "utf-8");
     // Remove extend blocks targeting this relation
@@ -98,7 +110,7 @@ export function disconnectModels(sourceInput, targetInput) {
     console.log(`📄 Cleaned ${sourceKebab}.typedefs.extend.graphql`);
   }
 
-  const targetExtendGqlPath = resolve(process.cwd(), `src/modules/${targetKebab}/${targetKebab}.typedefs.extend.graphql`);
+  const targetExtendGqlPath = resolve(targetModuleDir, `${targetKebab}.typedefs.extend.graphql`);
   if (existsSync(targetExtendGqlPath)) {
     let content = readFileSync(targetExtendGqlPath, "utf-8");
     content = content.replace(new RegExp(`extend\\s+type\\s+${targetPascal}\\s*\\{[^}]*${sourceCamel}[^}]*\\}\\s*`, "g"), "");
@@ -107,7 +119,7 @@ export function disconnectModels(sourceInput, targetInput) {
   }
 
   // 4. Remove DataLoader in Target Loader
-  const targetLoaderPath = resolve(process.cwd(), `src/modules/${targetKebab}/${targetKebab}.loader.ts`);
+  const targetLoaderPath = resolve(targetModuleDir, `${targetKebab}.loader.ts`);
   if (existsSync(targetLoaderPath)) {
     let content = readFileSync(targetLoaderPath, "utf-8");
     // Remove bySourceId DataLoader definition
@@ -136,10 +148,10 @@ export function disconnectModels(sourceInput, targetInput) {
     console.log(`🧩 Cleaned relation resolvers in ${basename(resolverPath)}`);
   };
 
-  const sourceResolverPath = resolve(process.cwd(), `src/modules/${sourceKebab}/resolvers/${sourceKebab}.relation.ts`);
+  const sourceResolverPath = resolve(sourceModuleDir, `resolvers/${sourceKebab}.relation.ts`);
   cleanResolverFile(sourceResolverPath, [targetPlural, targetCamel], targetPascal, targetKebab);
 
-  const targetResolverPath = resolve(process.cwd(), `src/modules/${targetKebab}/resolvers/${targetKebab}.relation.ts`);
+  const targetResolverPath = resolve(targetModuleDir, `resolvers/${targetKebab}.relation.ts`);
   cleanResolverFile(targetResolverPath, [sourceCamel], sourcePascal, sourceKebab);
 
   // 6. Clean Modules Providers
@@ -153,8 +165,8 @@ export function disconnectModels(sourceInput, targetInput) {
     writeFileSync(modPath, content, "utf-8");
   };
 
-  cleanModuleFile(resolve(process.cwd(), `src/modules/${sourceKebab}/${sourceKebab}.module.ts`), targetPascal, targetKebab);
-  cleanModuleFile(resolve(process.cwd(), `src/modules/${targetKebab}/${targetKebab}.module.ts`), sourcePascal, sourceKebab);
+  cleanModuleFile(resolve(sourceModuleDir, `${sourceKebab}.module.ts`), targetPascal, targetKebab);
+  cleanModuleFile(resolve(targetModuleDir, `${targetKebab}.module.ts`), sourcePascal, sourceKebab);
 
   // 7. Refresh Base Schemas & Codegen
   try {

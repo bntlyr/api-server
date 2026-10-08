@@ -1,0 +1,329 @@
+#graphql
+
+enum MaterialInventoryStatus {
+  AVAILABLE
+  ALLOCATED
+  PENDING
+  DEFECTIVE
+}
+
+enum MaterialInventoryTxType {
+  MANUAL_IN
+  TRANSFER_LOCATION
+  STATUS_CHANGE
+  DISCARD
+  ALLOCATE
+  UNALLOCATE
+  CONSUMPTION
+  PURCHASE_RECEIPT
+}
+
+type MaterialInventoryLot {
+  id: ID!
+  materialId: Int!
+  material: Material!
+  lotNo: String!
+  areaId: Int!
+  area: Area!
+  locationId: Int!
+  location: Location!
+
+  availableQty: Float!
+  allocatedQty: Float!
+  pendingQty: Float!
+  defectiveQty: Float!
+  totalQty: Float!
+
+  receivingReportNo: String
+  purchaseOrderNo: String
+  invoiceNo: String
+  supplierId: Int
+  supplier: Supplier
+  incomingDate: DateTime
+  manufactureDate: DateTime
+  expirationDate: DateTime
+  qcSampling: String
+  reason: String
+
+  createdAt: DateTime!
+  createdBy: String
+  updatedAt: DateTime!
+  updatedBy: String
+  deleted: Boolean!
+  deletedAt: DateTime
+  deletedBy: String
+
+  transactions: [MaterialInventoryTransaction!]!
+}
+
+type MaterialInventoryTransaction {
+  id: ID!
+  transactionNo: String!
+  transactionType: String!
+  direction: String
+  transactionDate: DateTime!
+
+  materialId: Int!
+  material: Material!
+
+  materialInventoryLotId: Int
+  lot: MaterialInventoryLot
+  lotNo: String!
+
+  fromAreaId: Int
+  fromArea: Area
+  fromLocationId: Int
+  fromLocation: Location
+
+  toAreaId: Int
+  toArea: Area
+  toLocationId: Int
+  toLocation: Location
+
+  fromStatus: String
+  toStatus: String
+
+  quantity: Float!
+  balanceAfter: Float
+
+  reason: String
+  remarks: String
+  referenceNo: String
+
+  createdAt: DateTime!
+  createdBy: String
+  updatedAt: DateTime!
+  updatedBy: String
+  deleted: Boolean!
+  deletedAt: DateTime
+  deletedBy: String
+}
+
+type MaterialInventorySummary {
+  id: ID!
+  materialId: Int!
+  material: Material!
+  totalAvailableQty: Float!
+  totalAllocatedQty: Float!
+  totalPendingQty: Float!
+  totalDefectiveQty: Float!
+  totalOnHandQty: Float!
+  lotCount: Int!
+  lots: [MaterialInventoryLot!]!
+}
+
+extend type Material {
+  inventorySummary: MaterialInventorySummary
+  inventoryLots: [MaterialInventoryLot!]!
+  inventoryTransactions: [MaterialInventoryTransaction!]!
+}
+
+input MaterialInventoryLotFilterInput {
+  search: String
+  id: IntFilterInput
+  materialId: IntFilterInput
+  lotNo: StringFilterInput
+  areaId: IntFilterInput
+  locationId: IntFilterInput
+  supplierId: IntFilterInput
+  receivingReportNo: StringFilterInput
+  purchaseOrderNo: StringFilterInput
+  invoiceNo: StringFilterInput
+  incomingDate: DateTimeFilterInput
+  manufactureDate: DateTimeFilterInput
+  expirationDate: DateTimeFilterInput
+
+  # Material Master Filters
+  sku: StringFilterInput
+  oldCode: StringFilterInput
+  materialName: StringFilterInput
+  materialDescription: StringFilterInput
+  materialGroupId: IntFilterInput
+  rawMaterialId: IntFilterInput
+  sectionId: IntFilterInput
+
+  AND: [MaterialInventoryLotFilterInput!]
+  OR: [MaterialInventoryLotFilterInput!]
+  NOT: [MaterialInventoryLotFilterInput!]
+}
+
+input MaterialInventoryTransactionFilterInput {
+  search: String
+  id: IntFilterInput
+  transactionNo: StringFilterInput
+  transactionType: StringFilterInput
+  direction: StringFilterInput
+  transactionDate: DateTimeFilterInput
+
+  materialId: IntFilterInput
+  materialInventoryLotId: IntFilterInput
+  lotNo: StringFilterInput
+  receivingReportNo: StringFilterInput
+  purchaseOrderNo: StringFilterInput
+  referenceNo: StringFilterInput
+  supplierId: IntFilterInput
+
+  # Material Master Filters
+  sku: StringFilterInput
+  oldCode: StringFilterInput
+  materialName: StringFilterInput
+
+  # Location Filters
+  areaId: IntFilterInput
+  locationId: IntFilterInput
+  fromAreaId: IntFilterInput
+  fromLocationId: IntFilterInput
+  toAreaId: IntFilterInput
+  toLocationId: IntFilterInput
+
+  fromStatus: StringFilterInput
+  toStatus: StringFilterInput
+
+  AND: [MaterialInventoryTransactionFilterInput!]
+  OR: [MaterialInventoryTransactionFilterInput!]
+  NOT: [MaterialInventoryTransactionFilterInput!]
+}
+
+input MaterialInventorySummaryFilterInput {
+  search: String
+  materialId: IntFilterInput
+  sku: StringFilterInput
+  oldCode: StringFilterInput
+  materialName: StringFilterInput
+  description: StringFilterInput
+  category: StringFilterInput
+  type: StringFilterInput
+  materialGroupId: IntFilterInput
+  rawMaterialId: IntFilterInput
+  sectionId: IntFilterInput
+  AND: [MaterialInventorySummaryFilterInput!]
+  OR: [MaterialInventorySummaryFilterInput!]
+  NOT: [MaterialInventorySummaryFilterInput!]
+}
+
+input ManualInMaterialInput {
+  materialId: Int!
+  lotNo: String!
+  status: MaterialInventoryStatus!
+  quantity: Float!
+  areaId: Int!
+  locationId: Int!
+  reason: String!
+  receivingReportNo: String
+  purchaseOrderNo: String
+  invoiceNo: String
+  supplierId: Int
+  incomingDate: DateTime
+  manufactureDate: DateTime
+  expirationDate: DateTime
+  qcSampling: String
+  remarks: String
+}
+
+input TransferMaterialLocationInput {
+  materialInventoryLotId: Int!
+  toAreaId: Int!
+  toLocationId: Int!
+  quantity: Float!
+  status: MaterialInventoryStatus
+  reason: String
+  remarks: String
+}
+
+input ChangeMaterialLotStatusInput {
+  materialInventoryLotId: Int!
+  fromStatus: MaterialInventoryStatus!
+  toStatus: MaterialInventoryStatus!
+  quantity: Float!
+  reason: String!
+  remarks: String
+}
+
+input DiscardMaterialInventoryInput {
+  materialInventoryLotId: Int!
+  quantity: Float!
+  reason: String!
+  remarks: String
+}
+
+type MaterialInventoryOperationPayload {
+  lot: MaterialInventoryLot
+  destinationLot: MaterialInventoryLot
+  transaction: MaterialInventoryTransaction
+  userErrors: [UserError!]!
+}
+
+type MaterialInventoryLotEdge {
+  cursor: String!
+  node: MaterialInventoryLot!
+}
+
+type MaterialInventoryLotConnection {
+  edges: [MaterialInventoryLotEdge!]!
+  nodes: [MaterialInventoryLot!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  userErrors: [UserError!]!
+}
+
+type MaterialInventoryTransactionEdge {
+  cursor: String!
+  node: MaterialInventoryTransaction!
+}
+
+type MaterialInventoryTransactionConnection {
+  edges: [MaterialInventoryTransactionEdge!]!
+  nodes: [MaterialInventoryTransaction!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  userErrors: [UserError!]!
+}
+
+type MaterialInventorySummaryEdge {
+  cursor: String!
+  node: MaterialInventorySummary!
+}
+
+type MaterialInventorySummaryConnection {
+  edges: [MaterialInventorySummaryEdge!]!
+  nodes: [MaterialInventorySummary!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  userErrors: [UserError!]!
+}
+
+extend type Query {
+  materialInventoryLotsPaginated(
+    pagination: PaginationInput
+    filter: MaterialInventoryLotFilterInput
+  ): MaterialInventoryLotConnection!
+
+  materialInventoryLotsByMaterialPaginated(
+    materialId: ID!
+    pagination: PaginationInput
+    filter: MaterialInventoryLotFilterInput
+  ): MaterialInventoryLotConnection!
+
+  materialInventoryLotById(id: ID!): MaterialInventoryLot
+
+  materialInventoryTransactionsPaginated(
+    pagination: PaginationInput
+    filter: MaterialInventoryTransactionFilterInput
+  ): MaterialInventoryTransactionConnection!
+
+  materialInventoryTransactionById(id: ID!): MaterialInventoryTransaction
+
+  materialInventorySummariesPaginated(
+    pagination: PaginationInput
+    filter: MaterialInventorySummaryFilterInput
+  ): MaterialInventorySummaryConnection!
+
+  materialInventorySummaryByMaterialId(materialId: ID!): MaterialInventorySummary
+}
+
+extend type Mutation {
+  manualInMaterialInventory(input: ManualInMaterialInput!): MaterialInventoryOperationPayload!
+  transferMaterialLocation(input: TransferMaterialLocationInput!): MaterialInventoryOperationPayload!
+  changeMaterialLotStatus(input: ChangeMaterialLotStatusInput!): MaterialInventoryOperationPayload!
+  discardMaterialInventory(input: DiscardMaterialInventoryInput!): MaterialInventoryOperationPayload!
+}

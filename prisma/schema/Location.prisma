@@ -4,6 +4,13 @@ model Location {
 
   areaId Int
   area   Area @relation(fields: [areaId], references: [id])
+  materialInventoryLots      MaterialInventoryLot[]
+  fromMaterialTransactions   MaterialInventoryTransaction[] @relation("FromLocationTransactions")
+  toMaterialTransactions     MaterialInventoryTransaction[] @relation("ToLocationTransactions")
+  materialIssuanceItems      MaterialIssuanceItem[]
+  finishedGoodsLots          FinishedGoodsLot[]
+  fromFinishedGoodsTransactions FinishedGoodsTransaction[] @relation("FromLocationFGTransactions")
+  toFinishedGoodsTransactions   FinishedGoodsTransaction[] @relation("ToLocationFGTransactions")
 
   createdAt DateTime  @default(now())
   createdBy String?
