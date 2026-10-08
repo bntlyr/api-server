@@ -1,0 +1,17 @@
+model AuditTrail {
+  id          Int       @id @default(autoincrement())
+  userId      String
+  action      String?
+  method      String?
+  tableName   String?
+  recordId    String?
+  description String?
+  values      Json?     @default("{}")
+  metadata    Json?     @default("{}")
+  ipAddress   String?
+  userAgent   String
+  createdAt   DateTime  @default(now())
+  deleted     Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   String?
+}

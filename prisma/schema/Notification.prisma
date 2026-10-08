@@ -1,0 +1,11 @@
+model Notification {
+  id Int @id @default(autoincrement())
+
+  notificationRecipients NotificationRecipient[]
+
+  title    String
+  message  String
+  metadata Json?
+
+  createdAt DateTime @default(now())
+}

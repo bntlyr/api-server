@@ -1,0 +1,15 @@
+model NotificationRecipient {
+  id             Int          @id @default(autoincrement())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  notificationId Int
+  notification   Notification @relation(fields: [notificationId], references: [id])
+  readAt         DateTime?
+
+  updatedAt DateTime @updatedAt
+  deleted   Boolean  @default(false)
+
+  @@unique([userId, notificationId])
+  @@index([userId])
+  @@index([notificationId])
+}

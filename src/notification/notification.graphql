@@ -1,0 +1,73 @@
+type Notification {
+  id: ID!
+  title: String!
+  message: String!
+  metadata: JSON
+  createdAt: DateTime!
+  recipients: [NotificationRecipient!]!
+}
+
+type NotificationRecipient {
+  id: ID!
+  userId: String!
+  user: User
+  notificationId: ID!
+  notification: Notification!
+  readAt: DateTime
+  isRead: Boolean!
+  updatedAt: DateTime!
+  deleted: Boolean!
+}
+
+input SendNotificationInput {
+  userIds: [String!]!
+  title: String!
+  message: String!
+  metadata: JSON
+}
+
+type NotificationPayload {
+  notification: Notification
+  recipientCount: Int!
+  userErrors: [UserError!]!
+}
+
+type NotificationRecipientPayload {
+  recipient: NotificationRecipient
+  userErrors: [UserError!]!
+}
+
+type NotificationRecipientEdge {
+  cursor: String!
+  node: NotificationRecipient!
+}
+
+type NotificationRecipientConnection {
+  edges: [NotificationRecipientEdge!]!
+  nodes: [NotificationRecipient!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  unreadCount: Int!
+  userErrors: [UserError!]!
+}
+
+type Query {
+  myNotifications(
+    pagination: PaginationInput
+    unreadOnly: Boolean
+  ): NotificationRecipientConnection!
+
+  unreadNotificationCount: Int!
+
+  notificationById(id: ID!): Notification
+}
+
+type Mutation {
+  sendNotification(input: SendNotificationInput!): NotificationPayload!
+
+  markNotificationAsRead(notificationId: ID!): NotificationRecipientPayload!
+
+  markAllNotificationsAsRead: Boolean!
+
+  deleteNotification(notificationId: ID!): Boolean!
+}

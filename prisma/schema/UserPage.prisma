@@ -1,0 +1,18 @@
+model UserPage {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  pageId      Int
+  canModify   Boolean  @default(false)
+  createdById String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  canUnassign Boolean  @default(false)
+  canView     Boolean  @default(true)
+  page        Page     @relation(fields: [pageId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, pageId])
+  @@index([userId])
+  @@index([pageId])
+}

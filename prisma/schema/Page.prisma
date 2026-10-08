@@ -1,0 +1,9 @@
+model Page {
+  id        Int        @id @default(autoincrement())
+  name      String     @default("-")
+  url       String     @unique
+  userPages UserPage[]
+
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+}

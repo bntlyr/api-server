@@ -1,0 +1,17 @@
+model Session {
+  id               Int       @id @default(autoincrement())
+  refreshToken     String    @unique // The actual refresh token (hashed or stored as a JWT ID/JTI)
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  userAgent        String? // e.g., browser or device info
+  ipAddress        String?
+  createdAt        DateTime  @default(now())
+  expiresAt        DateTime // When the refresh token expires
+  revokedAt        DateTime? // For manual revocation (logout, security event, device limit)
+  deviceIdentifier String? // Optional: A unique ID for the device (e.g., from a client-side library)
+  deleted          Boolean   @default(false)
+  deletedAt        DateTime?
+  deletedBy        String?
+
+  @@index([userId])
+}

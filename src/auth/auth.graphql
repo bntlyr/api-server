@@ -1,0 +1,51 @@
+type AuthUser {
+  id: ID!
+  username: String!
+  email: String!
+  name: String
+  permissions: [UserPagePermissionType!]!
+}
+
+type UserPagePermissionType {
+  url: String!
+  canView: Boolean!
+  canModify: Boolean!
+  canUnassign: Boolean!
+}
+
+type AuthPayload {
+  accessToken: String
+  refreshToken: String
+  expiresIn: Int
+  user: AuthUser
+  userErrors: [UserError!]!
+}
+
+type LogoutPayload {
+  success: Boolean!
+  userErrors: [UserError!]!
+}
+
+input LoginInput {
+  usernameOrEmail: String!
+  password: String!
+  deviceIdentifier: String
+}
+
+input RegisterInput {
+  username: String!
+  email: String!
+  password: String!
+  name: String
+}
+
+extend type Query {
+  me: AuthUser
+}
+
+extend type Mutation {
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  refreshTokens(refreshToken: String!): AuthPayload!
+  logout(refreshToken: String!): LogoutPayload!
+}

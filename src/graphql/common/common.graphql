@@ -1,0 +1,95 @@
+scalar DateTime
+scalar JSON
+
+"""
+Standard error object returned on mutation failure
+"""
+type UserError {
+  message: String!
+  field: [String!]
+  code: String
+}
+
+"""
+Information about pagination in a connection (Relay style)
+"""
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+"""
+Cursor-based pagination input
+"""
+input PaginationInput {
+  first: Int
+  after: String
+  last: Int
+  before: String
+}
+
+"""
+Sorting direction
+"""
+enum SortOrder {
+  ASC
+  DESC
+}
+
+"""
+Filter operators for String fields
+"""
+input StringFilterInput {
+  equals: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  in: [String!]
+  notIn: [String!]
+}
+
+"""
+Filter operators for Int fields
+"""
+input IntFilterInput {
+  equals: Int
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  in: [Int!]
+  notIn: [Int!]
+}
+
+"""
+Filter operators for Float fields
+"""
+input FloatFilterInput {
+  equals: Float
+  lt: Float
+  lte: Float
+  gt: Float
+  gte: Float
+  in: [Float!]
+  notIn: [Float!]
+}
+
+"""
+Filter operators for Boolean fields
+"""
+input BooleanFilterInput {
+  equals: Boolean
+}
+
+"""
+Filter operators for DateTime fields
+"""
+input DateTimeFilterInput {
+  equals: DateTime
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+}
