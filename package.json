@@ -55,6 +55,7 @@
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "dataloader": "^2.2.3",
+    "exceljs": "^4.4.0",
     "graphql": "^16.14.2",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",

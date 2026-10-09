@@ -1,0 +1,42 @@
+input PrintProductionSlipInput {
+  slipId: Int
+  orderNo: String
+  lotNo: String
+  type: String # "ORIGINAL", "REWORK", "REMAKE", "TRIAL"
+  watermarkText: String
+}
+
+input PrintProductionSlipBatchInput {
+  orderNo: String
+  slipIds: [Int!]
+  watermarkText: String
+}
+
+input PrintTrialCardInput {
+  slipId: Int!
+  itemId: Int
+  watermarkText: String
+}
+
+input PrintTrialCardBatchInput {
+  orderNo: String
+  slipIds: [Int!]
+  watermarkText: String
+}
+
+type PrintReportPayload {
+  success: Boolean!
+  filename: String
+  downloadUrl: String
+  relativePath: String
+  fileSize: Int
+  durationMs: Int
+  userErrors: [UserError!]!
+}
+
+extend type Mutation {
+  printProductionSlip(input: PrintProductionSlipInput!): PrintReportPayload!
+  printProductionSlipBatch(input: PrintProductionSlipBatchInput!): PrintReportPayload!
+  printTrialCard(input: PrintTrialCardInput!): PrintReportPayload!
+  printTrialCardBatch(input: PrintTrialCardBatchInput!): PrintReportPayload!
+}

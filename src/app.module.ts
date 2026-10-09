@@ -80,6 +80,8 @@ import { UserModule } from './modules/user/user.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { HealthModule } from './health/health.module.js';
 import { JavaServiceModule } from './java-service/java-service.module.js';
+import { ExcelModule } from './excel/excel.module.js';
+import { PrintModule } from './print/print.module.js';
 
 @Module({
   imports: [
@@ -91,6 +93,8 @@ import { JavaServiceModule } from './java-service/java-service.module.js';
     EventsModule,
     UserModule,
     StorageModule,
+    ExcelModule,
+    PrintModule,
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
       imports: [AuthModule],

@@ -132,3 +132,80 @@ export interface ScheduleResponse {
   resultingLoads: DailyLoadDto[];
   capacityWarnings: CapacityWarningDto[];
 }
+
+export interface ProductionSlipTableInfoDto {
+  id?: number;
+  processName: string;
+  startDate?: string;
+  actualStartDate?: string;
+  endDate?: string;
+  actualEndDate?: string;
+  personInCharge?: string;
+  rejectedQty?: number;
+  passedQty?: number;
+  remarks?: string;
+}
+
+export interface PrintProductionSlipRequestDto {
+  slipId?: number;
+  type?: string;
+  requestedETD?: string;
+  itemCode?: string;
+  orderNo?: string;
+  orderQty?: number;
+  rawMaterial?: string;
+  chargeNo?: string;
+  trialLotNo?: string;
+  boxLayer?: string;
+  plasticSize?: string;
+  plasticQty?: number;
+  topLayerQty?: number;
+  btmLayerQty?: number;
+  maxQty?: number;
+  maxWt?: number;
+  packingRemarks?: string;
+  imageUrl?: string;
+  productionQty?: string;
+  scheduledTrees?: string;
+  coatingPattern?: string;
+  treeMark?: string;
+  similarProducts?: string;
+  castingTemp?: number;
+  moldTemp?: number;
+  castingWt?: number;
+  pcsPerTree?: number;
+  slipSize?: string;
+  trialRemarks?: string;
+  salesRemarks?: string;
+  qrCode?: string;
+  reworkLotNo?: string;
+  createdBy?: string;
+  watermarkText?: string;
+  processTableDetails?: ProductionSlipTableInfoDto[];
+}
+
+export interface PrintTrialCardRequestDto {
+  itemId?: number;
+  slipId?: number;
+  type?: string;
+  createdAt?: string;
+  trialLotNo?: string;
+  itemCode?: string;
+  rawMaterial?: string;
+  trialPurpose?: string;
+  trialProcess?: string;
+  orderNo?: string;
+  lotNo?: string;
+  watermarkText?: string;
+}
+
+export interface PrintReportResponseDto {
+  success: boolean;
+  filename?: string;
+  downloadUrl?: string;
+  relativePath?: string;
+  fileSize?: number;
+  durationMs?: number;
+  errorMessage?: string;
+}
+

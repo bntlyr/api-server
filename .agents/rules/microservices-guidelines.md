@@ -12,3 +12,11 @@
 - `java-server` exposes Spring Actuator at `/actuator/health`.
 - `api-server` integrates `java-server` health into `HealthService` (`/health`, `/health/ready`, and `/health/java`).
 - Readiness checks verify both PostgreSQL and `java-server` availability.
+
+## PDF & Report Printing Delegation
+- **Delegation Architecture**: `api-server` prepares business entities, user context, and Prisma relations, and delegates document rendering, QR code generation, and PDF stamping to `java-server`.
+- **Inter-Service Communication**: Dispatch requests to `java-server` over `/api/v1/print/*` and `/api/v1/export/*` using `JavaService` with `X-Internal-Secret` authentication.
+- **Dual Interface for Frontend**:
+  - **GraphQL Mutations**: `printProductionSlip`, `printProductionSlipBatch`, `printTrialCard`, `printTrialCardBatch`.
+  - **REST Endpoints**: `/api/print/production-slip`, `/api/print/production-slip/batch`, `/api/print/trial-card`, `/api/print/trial-card/batch`.
+

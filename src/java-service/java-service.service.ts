@@ -117,4 +117,80 @@ export class JavaService {
 
     return (await response.json()) as import("./interfaces/java-service.interface.js").ScheduleResponse;
   }
+
+  async printProductionSlip(payload: import("./interfaces/java-service.interface.js").PrintProductionSlipRequestDto): Promise<import("./interfaces/java-service.interface.js").PrintReportResponseDto> {
+    const url = `${this.baseUrl}/api/v1/print/production-slip`;
+    this.logger.log(`Calling Java Print Service (Single Slip): ${url} for Slip [${payload.slipId || payload.orderNo}]`);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Internal-Secret": this.secret,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      this.logger.error(`Java Print Service failed HTTP ${response.status}: ${errorText}`);
+      return {
+        success: false,
+        errorMessage: `Microservice error (${response.status}): ${errorText}`,
+      };
+    }
+
+    return (await response.json()) as import("./interfaces/java-service.interface.js").PrintReportResponseDto;
+  }
+
+  async printProductionSlipBatch(payloadList: import("./interfaces/java-service.interface.js").PrintProductionSlipRequestDto[]): Promise<import("./interfaces/java-service.interface.js").PrintReportResponseDto> {
+    const url = `${this.baseUrl}/api/v1/print/production-slip/batch`;
+    this.logger.log(`Calling Java Print Service (Batch Slips): ${url} for ${payloadList.length} slips`);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Internal-Secret": this.secret,
+      },
+      body: JSON.stringify(payloadList),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      this.logger.error(`Java Batch Print Service failed HTTP ${response.status}: ${errorText}`);
+      return {
+        success: false,
+        errorMessage: `Microservice error (${response.status}): ${errorText}`,
+      };
+    }
+
+    return (await response.json()) as import("./interfaces/java-service.interface.js").PrintReportResponseDto;
+  }
+
+  async printTrialCard(payload: import("./interfaces/java-service.interface.js").PrintTrialCardRequestDto): Promise<import("./interfaces/java-service.interface.js").PrintReportResponseDto> {
+    const url = `${this.baseUrl}/api/v1/print/trial-card`;
+    this.logger.log(`Calling Java Print Service (Trial Card): ${url} for Slip [${payload.slipId}], Item [${payload.itemId}]`);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Internal-Secret": this.secret,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      this.logger.error(`Java Trial Card Print Service failed HTTP ${response.status}: ${errorText}`);
+      return {
+        success: false,
+        errorMessage: `Microservice error (${response.status}): ${errorText}`,
+      };
+    }
+
+    return (await response.json()) as import("./interfaces/java-service.interface.js").PrintReportResponseDto;
+  }
 }
+

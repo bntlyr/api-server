@@ -24,6 +24,8 @@ const MIME_MAP: Record<string, string> = {
   ".csv": "text/csv",
   ".json": "application/json",
   ".zip": "application/zip",
+  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ".xls": "application/vnd.ms-excel",
   ".mp4": "video/mp4",
   ".mp3": "audio/mpeg",
 };

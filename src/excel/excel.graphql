@@ -1,0 +1,41 @@
+input ExcelColumnAlignmentInput {
+  horizontal: String
+  vertical: String
+}
+
+input ExcelColumnInput {
+  header: String!
+  key: String!
+  width: Float
+  type: String # "string", "number", "currency", "date", "boolean"
+  numFmt: String
+  alignment: ExcelColumnAlignmentInput
+}
+
+input ExportToExcelInput {
+  title: String!
+  filename: String
+  sheetName: String
+  entityName: String
+  filterJson: String
+  orderByJson: String
+  columns: [ExcelColumnInput!]!
+  dataJson: String
+  isPublic: Boolean
+  subPath: String
+  bucket: String
+}
+
+type ExportToExcelPayload {
+  success: Boolean!
+  filename: String
+  filePath: String
+  downloadUrl: String
+  totalRows: Int!
+  fileSizeBytes: Int!
+  userErrors: [UserError!]!
+}
+
+extend type Mutation {
+  exportToExcel(input: ExportToExcelInput!): ExportToExcelPayload!
+}
