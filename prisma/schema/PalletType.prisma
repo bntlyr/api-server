@@ -12,5 +12,8 @@ model PalletType {
   deletedAt DateTime?
   deletedBy String?
 
+  shipments        Shipment[]
+  palletContainers PalletContainer[]
+
   @@index([deletedAt])
 }

@@ -1,3 +1,4 @@
+import { ShippingModule } from "./modules/shipping/shipping.module.js";
 import { MimDefectModule } from "./modules/master/mim-defect/mim-defect.module.js";
 import { FabDefectModule } from "./modules/master/fab-defect/fab-defect.module.js";
 import { PrefinDefectModule } from "./modules/master/prefin-defect/prefin-defect.module.js";
@@ -183,6 +184,7 @@ import { PrintModule } from './print/print.module.js';
       PrefinDefectModule,
       FabDefectModule,
       MimDefectModule,
+      ShippingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

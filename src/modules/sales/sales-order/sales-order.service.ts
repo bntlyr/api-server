@@ -107,6 +107,19 @@ export class SalesOrderService {
           finalOrderNo = await generateNextOrderNo("SO", tx);
         }
 
+        // Look up item and customer by itemCode
+        const matchedItem = await tx.item.findFirst({
+          where: { itemCode: input.itemCode },
+        });
+
+        let matchedFabId: number | null = null;
+        if (matchedItem) {
+          const defaultFab = await tx.fabrication.findFirst({
+            where: { itemId: matchedItem.id },
+          });
+          matchedFabId = defaultFab?.id ?? null;
+        }
+
         const created = await tx.salesOrder.create({
           data: {
             orderNo: finalOrderNo,
@@ -132,6 +145,9 @@ export class SalesOrderService {
             productionPlanningStatus: input.productionPlanningStatus ?? "Locked",
             productionStatus: input.productionStatus ?? "Pending",
             shippingStatus: input.shippingStatus ?? "For-Shipment",
+            itemId: matchedItem ? matchedItem.id : null,
+            fabricationId: matchedFabId,
+            customerId: matchedItem?.customerId ?? null,
             createdBy: userId,
             updatedBy: userId,
           },

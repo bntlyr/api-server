@@ -1,0 +1,266 @@
+enum ShipmentStatus {
+  PREPARING
+  FINALIZED
+  SHIPPED
+}
+
+enum PalletSealStatus {
+  UNSEALED
+  SEALED
+}
+
+type Shipment {
+  id: ID!
+  shipmentNo: String!
+  invoiceNo: String!
+  shipmentDate: DateTime!
+  freightType: String!
+  courier: String!
+
+  # Logistics & Destination Info
+  containerNo: String
+  sealNo: String
+  portOfDestination: String
+
+  customerId: Int
+  customer: Customer
+  contactPerson: String
+  contactNumber: String
+  shippingAddress: String
+
+  # Configuration
+  defaultPalletTypeId: Int
+  defaultPalletType: PalletType
+  maxPalletLimit: Int!
+
+  # Status & Tracking
+  status: String!
+  finalizedAt: DateTime
+  finalizedById: String
+  shippedAt: DateTime
+  shippedById: String
+  remarks: String
+
+  # Computed Aggregations
+  totalPallets: Int!
+  totalBoxes: Int!
+  totalQuantity: Float!
+  totalNetWeight: Float!
+  totalGrossWeight: Float!
+
+  # Relations
+  pallets: [PalletContainer!]!
+  salesOrders: [SalesOrder!]!
+
+  createdAt: DateTime!
+  createdBy: String
+  createdById: String
+  updatedAt: DateTime!
+  updatedBy: String
+  updatedById: String
+  deleted: Boolean!
+  deletedAt: DateTime
+  deletedBy: String
+}
+
+type PalletContainer {
+  id: ID!
+  shipmentId: Int!
+  shipment: Shipment!
+  palletNo: String!
+  sequenceNo: Int!
+  palletTypeId: Int
+  palletType: PalletType
+  sealStatus: String!
+  sealedAt: DateTime
+  sealedById: String
+  maxCapacity: Int!
+  tareWeight: Float!
+  netWeight: Float!
+  grossWeight: Float!
+
+  # Computed Aggregation
+  boxCount: Int!
+  totalQuantity: Float!
+
+  # Relations
+  boxContainers: [BoxContainer!]!
+
+  createdAt: DateTime!
+  createdBy: String
+  createdById: String
+  updatedAt: DateTime!
+  updatedBy: String
+  updatedById: String
+  deleted: Boolean!
+  deletedAt: DateTime
+  deletedBy: String
+}
+
+type ShipmentEdge {
+  cursor: String!
+  node: Shipment!
+}
+
+type ShipmentConnection {
+  edges: [ShipmentEdge!]!
+  nodes: [Shipment!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  userErrors: [UserError!]!
+}
+
+type ShipmentPayload {
+  shipment: Shipment
+  userErrors: [UserError!]!
+}
+
+type PalletContainerPayload {
+  palletContainer: PalletContainer
+  userErrors: [UserError!]!
+}
+
+input ShipmentFilterInput {
+  search: String
+  shipmentNo: StringFilterInput
+  invoiceNo: StringFilterInput
+  status: StringFilterInput
+  customerId: IntFilterInput
+  freightType: StringFilterInput
+  courier: StringFilterInput
+  shipmentDate: DateTimeFilterInput
+  AND: [ShipmentFilterInput!]
+  OR: [ShipmentFilterInput!]
+  NOT: [ShipmentFilterInput!]
+}
+
+input CreateShipmentInput {
+  shipmentDate: DateTime!
+  freightType: String!
+  courier: String!
+  containerNo: String
+  sealNo: String
+  portOfDestination: String
+  customerId: Int
+  contactPerson: String
+  contactNumber: String
+  shippingAddress: String
+  defaultPalletTypeId: Int
+  maxPalletLimit: Int
+  remarks: String
+  salesOrderIds: [Int!]
+  boxContainerIds: [Int!]
+  force: Boolean
+}
+
+input UpdateShipmentInput {
+  shipmentDate: DateTime
+  freightType: String
+  courier: String
+  containerNo: String
+  sealNo: String
+  portOfDestination: String
+  customerId: Int
+  contactPerson: String
+  contactNumber: String
+  shippingAddress: String
+  defaultPalletTypeId: Int
+  maxPalletLimit: Int
+  remarks: String
+}
+
+input AddBoxesToShipmentInput {
+  shipmentId: ID!
+  boxContainerIds: [Int!]
+  salesOrderIds: [Int!]
+  palletTypeId: Int
+  targetPalletContainerId: ID
+  force: Boolean
+}
+
+input CreatePalletContainerInput {
+  shipmentId: ID!
+  palletTypeId: Int
+  maxCapacity: Int
+  force: Boolean
+}
+
+input UpdatePalletContainerInput {
+  palletTypeId: Int
+  maxCapacity: Int
+}
+
+input MoveBoxContainerInput {
+  boxContainerId: ID!
+  targetPalletContainerId: ID!
+  force: Boolean
+}
+
+input RemoveBoxFromPalletInput {
+  boxContainerId: ID!
+  targetAreaId: Int
+  targetLocationId: Int
+}
+
+extend type BoxContainer {
+  palletContainerId: Int
+  palletContainer: PalletContainer
+  sequenceInPallet: Int
+  shippingBoxNo: String
+}
+
+extend type SalesOrder {
+  shipmentId: Int
+  shipment: Shipment
+}
+
+extend type PalletType {
+  shipments: [Shipment!]!
+  palletContainers: [PalletContainer!]!
+}
+
+extend type Customer {
+  shipments: [Shipment!]!
+}
+
+extend type Query {
+  shipmentById(id: ID!): Shipment
+  shipmentsPaginated(
+    pagination: PaginationInput
+    filter: ShipmentFilterInput
+  ): ShipmentConnection!
+
+  palletContainerById(id: ID!): PalletContainer
+
+  eligibleBoxContainersForShipping(
+    customerId: Int
+    salesOrderIds: [Int!]
+    search: String
+  ): [BoxContainer!]!
+
+  eligibleSalesOrdersForShipping(
+    customerId: Int
+    search: String
+  ): [SalesOrder!]!
+}
+
+extend type Mutation {
+  createShipment(input: CreateShipmentInput!): ShipmentPayload!
+  updateShipment(id: ID!, input: UpdateShipmentInput!): ShipmentPayload!
+  deleteShipment(id: ID!): ShipmentPayload!
+
+  addBoxesToShipment(input: AddBoxesToShipmentInput!): ShipmentPayload!
+  reallocateShipmentBoxes(shipmentId: ID!, palletTypeId: Int, force: Boolean): ShipmentPayload!
+
+  finalizeShipment(id: ID!): ShipmentPayload!
+  undoFinalizeShipment(id: ID!): ShipmentPayload!
+  shipOut(id: ID!): ShipmentPayload!
+
+  createPalletContainer(input: CreatePalletContainerInput!): PalletContainerPayload!
+  updatePalletContainer(id: ID!, input: UpdatePalletContainerInput!): PalletContainerPayload!
+  deletePalletContainer(id: ID!, targetAreaId: Int, targetLocationId: Int): PalletContainerPayload!
+
+  togglePalletSeal(palletContainerId: ID!, seal: Boolean!): PalletContainerPayload!
+  moveBoxContainer(input: MoveBoxContainerInput!): PalletContainerPayload!
+  removeBoxFromPallet(input: RemoveBoxFromPalletInput!): PalletContainerPayload!
+}

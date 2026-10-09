@@ -12,7 +12,12 @@ model UserPage {
   page        Page     @relation(fields: [pageId], references: [id])
   user        User     @relation(fields: [userId], references: [id])
 
+  deleted     Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   String?
+
   @@unique([userId, pageId])
   @@index([userId])
   @@index([pageId])
+  @@index([deletedAt])
 }

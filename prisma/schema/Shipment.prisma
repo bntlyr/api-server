@@ -1,0 +1,49 @@
+model Shipment {
+  id                Int       @id @default(autoincrement())
+  shipmentNo        String    @unique
+  invoiceNo         String    @unique
+  shipmentDate      DateTime
+  freightType       String
+  courier           String
+
+  // Step 1: Logistics & Delivery Info
+  containerNo       String?
+  sealNo            String?
+  portOfDestination String?
+
+  customerId        Int?
+  customer          Customer? @relation(fields: [customerId], references: [id])
+  contactPerson     String?
+  contactNumber     String?
+  shippingAddress   String?   @db.Text
+
+  // Step 2: Configuration
+  defaultPalletTypeId Int?
+  defaultPalletType   PalletType? @relation(fields: [defaultPalletTypeId], references: [id])
+  maxPalletLimit      Int         @default(30)
+
+  // Status & Audit
+  status            String    @default("PREPARING") // PREPARING, FINALIZED, SHIPPED
+  finalizedAt       DateTime?
+  finalizedById     String?
+  shippedAt         DateTime?
+  shippedById       String?
+  remarks           String?   @db.Text
+
+  createdAt         DateTime  @default(now())
+  createdBy         String?
+  createdById       String?
+  updatedAt         DateTime  @updatedAt
+  updatedBy         String?
+  updatedById       String?
+  deleted           Boolean   @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?
+
+  pallets           PalletContainer[]
+  salesOrders       SalesOrder[]
+
+  @@index([shipmentNo, invoiceNo, status])
+  @@index([customerId, shipmentDate])
+  @@index([deletedAt])
+}

@@ -565,11 +565,32 @@ export class ProductionExecutionService {
               const qty = Number(cItem.quantity);
               packedIncrement += qty;
 
+              let cFabId = cItem.fabricationId;
+              if (!cFabId) {
+                const fab = await tx.fabrication.findFirst({
+                  where: { itemId: cItem.itemId },
+                });
+                if (fab) {
+                  cFabId = fab.id;
+                } else {
+                  const newFab = await tx.fabrication.create({
+                    data: {
+                      itemId: cItem.itemId,
+                      code: "000",
+                      sellingPrice: 0,
+                      unitPrice: 0,
+                      createdBy: effectiveUserId,
+                    },
+                  });
+                  cFabId = newFab.id;
+                }
+              }
+
               const fgLot = await tx.finishedGoodsLot.upsert({
                 where: {
                   itemId_fabricationId_orderNo_lotNo_chargeNo_areaId_locationId_boxId: {
                     itemId: cItem.itemId,
-                    fabricationId: cItem.fabricationId ?? 0,
+                    fabricationId: cFabId,
                     orderNo: cItem.orderNo,
                     lotNo: cItem.lotNo,
                     chargeNo: cItem.chargeNo ?? "",
@@ -580,7 +601,7 @@ export class ProductionExecutionService {
                 },
                 create: {
                   itemId: cItem.itemId,
-                  fabricationId: cItem.fabricationId ?? 0,
+                  fabricationId: cFabId,
                   orderNo: cItem.orderNo,
                   lotNo: cItem.lotNo,
                   chargeNo: cItem.chargeNo ?? "",
@@ -605,7 +626,7 @@ export class ProductionExecutionService {
                   transactionType: "PRODUCTION",
                   direction: "INBOUND",
                   itemId: cItem.itemId,
-                  fabricationId: cItem.fabricationId ?? 0,
+                  fabricationId: cFabId,
                   finishedGoodsLotId: fgLot.id,
                   orderNo: cItem.orderNo,
                   lotNo: cItem.lotNo,
@@ -727,12 +748,33 @@ export class ProductionExecutionService {
           const order = process.productionSlip.salesOrder;
           const passedQty = process.passedQty;
 
+          let fabId = order.fabricationId;
+          if (!fabId && order.itemId) {
+            const fab = await tx.fabrication.findFirst({
+              where: { itemId: order.itemId },
+            });
+            if (fab) {
+              fabId = fab.id;
+            } else {
+              const newFab = await tx.fabrication.create({
+                data: {
+                  itemId: order.itemId,
+                  code: "000",
+                  sellingPrice: 0,
+                  unitPrice: 0,
+                  createdBy: effectiveUserId,
+                },
+              });
+              fabId = newFab.id;
+            }
+          }
+
           // Upsert FinishedGoodsLot physical stock
           const fgLot = await tx.finishedGoodsLot.upsert({
             where: {
               itemId_fabricationId_orderNo_lotNo_chargeNo_areaId_locationId_boxId: {
                 itemId: order.itemId ?? 0,
-                fabricationId: order.fabricationId ?? 0,
+                fabricationId: fabId ?? 0,
                 orderNo: process.productionSlip.orderNo,
                 lotNo: process.productionSlip.lotNo,
                 chargeNo: process.productionSlip.chargeNo ?? "",
@@ -743,7 +785,7 @@ export class ProductionExecutionService {
             },
             create: {
               itemId: order.itemId ?? 0,
-              fabricationId: order.fabricationId ?? 0,
+              fabricationId: fabId ?? 0,
               orderNo: process.productionSlip.orderNo,
               lotNo: process.productionSlip.lotNo,
               chargeNo: process.productionSlip.chargeNo ?? "",
@@ -769,7 +811,7 @@ export class ProductionExecutionService {
               transactionType: "PRODUCTION",
               direction: "INBOUND",
               itemId: order.itemId ?? 0,
-              fabricationId: order.fabricationId ?? 0,
+              fabricationId: fabId ?? 0,
               finishedGoodsLotId: fgLot.id,
               orderNo: process.productionSlip.orderNo,
               lotNo: process.productionSlip.lotNo,
@@ -794,6 +836,67 @@ export class ProductionExecutionService {
               updatedBy: effectiveUserId,
             },
           });
+
+          // Create/update BoxContainer for shipping readiness
+          const boxNo = `BOX-${process.productionSlip.lotNo}`;
+          const boxContainer = await tx.boxContainer.upsert({
+            where: { boxNo },
+            update: {
+              status: input.boxStatus,
+              areaId: input.areaId!,
+              locationId: input.locationId!,
+              totalQty: passedQty,
+              closedAt: input.boxStatus === "CLOSED" ? new Date() : null,
+              closedById: input.boxStatus === "CLOSED" ? effectiveUserId : null,
+              updatedBy: effectiveUserId,
+            },
+            create: {
+              boxNo,
+              salesOrderId: order.id,
+              orderNo: process.productionSlip.orderNo,
+              boxTypeId: input.boxId ?? 1,
+              status: input.boxStatus,
+              areaId: input.areaId!,
+              locationId: input.locationId!,
+              totalQty: passedQty,
+              closedAt: input.boxStatus === "CLOSED" ? new Date() : null,
+              closedById: input.boxStatus === "CLOSED" ? effectiveUserId : null,
+              createdBy: effectiveUserId,
+            },
+          });
+
+          const existingBoxItem = await tx.boxContainerItem.findFirst({
+            where: {
+              boxContainerId: boxContainer.id,
+              productionSlipId: process.productionSlipId,
+            },
+          });
+
+          if (existingBoxItem) {
+            await tx.boxContainerItem.update({
+              where: { id: existingBoxItem.id },
+              data: {
+                quantity: passedQty,
+                updatedBy: effectiveUserId,
+              },
+            });
+          } else {
+            await tx.boxContainerItem.create({
+              data: {
+                boxContainerId: boxContainer.id,
+                productionSlipId: process.productionSlipId,
+                productionProcessId: process.id,
+                salesOrderId: order.id,
+                orderNo: process.productionSlip.orderNo,
+                lotNo: process.productionSlip.lotNo,
+                chargeNo: process.productionSlip.chargeNo ?? "",
+                itemId: order.itemId ?? 0,
+                fabricationId: fabId ?? null,
+                quantity: passedQty,
+                createdBy: effectiveUserId,
+              },
+            });
+          }
 
           // Update process and slip
           const updatedProc = await tx.productionProcess.update({

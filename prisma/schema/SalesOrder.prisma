@@ -45,6 +45,9 @@ model SalesOrder {
   customerId    Int?
   customer      Customer?    @relation(fields: [customerId], references: [id])
 
+  shipmentId    Int?
+  shipment      Shipment?    @relation(fields: [shipmentId], references: [id])
+
   allocationRequests FinishedGoodsAllocationRequest[]
   productionSlips    ProductionSlip[]
   bookings           Booking[]
@@ -73,6 +76,7 @@ model SalesOrder {
   @@index([itemId])
   @@index([fabricationId])
   @@index([customerId])
+  @@index([shipmentId])
   @@index([status])
   @@index([productionPlanningStatus])
   @@index([productionStatus])

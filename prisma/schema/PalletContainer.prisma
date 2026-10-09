@@ -1,0 +1,36 @@
+model PalletContainer {
+  id           Int         @id @default(autoincrement())
+  shipmentId   Int
+  shipment     Shipment    @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  palletNo     String
+  sequenceNo   Int
+
+  palletTypeId Int?
+  palletType   PalletType? @relation(fields: [palletTypeId], references: [id])
+
+  sealStatus   String      @default("UNSEALED") // UNSEALED, SEALED
+  sealedAt     DateTime?
+  sealedById   String?
+
+  maxCapacity  Int         @default(40)
+  tareWeight   Decimal     @default(0) @db.Decimal(9, 2)
+  netWeight    Decimal     @default(0) @db.Decimal(9, 2)
+  grossWeight  Decimal     @default(0) @db.Decimal(9, 2)
+
+  createdAt    DateTime    @default(now())
+  createdBy    String?
+  createdById  String?
+  updatedAt    DateTime    @updatedAt
+  updatedBy    String?
+  updatedById  String?
+  deleted      Boolean     @default(false)
+  deletedAt    DateTime?
+  deletedBy    String?
+
+  boxContainers BoxContainer[]
+
+  @@unique([shipmentId, sequenceNo])
+  @@index([shipmentId, palletNo])
+  @@index([deletedAt])
+}

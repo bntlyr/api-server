@@ -1,5 +1,13 @@
 import { Prisma } from "../generated/prisma/client.js";
 
+const nonSoftDeleteModels = new Set([
+  "Notification",
+  "NotificationRecipient",
+  "OrderSequence",
+  "UserPage",
+  "Page",
+]);
+
 /**
  * Prisma extension to enable soft delete by default.
  * - Automatically filters out records where `deletedAt` is not null on read queries.
@@ -11,45 +19,72 @@ export const softDeleteExtension = Prisma.defineExtension((client) => {
     name: "softDelete",
     query: {
       $allModels: {
-        async findFirst({ args, query }) {
+        async findFirst({ model, args, query }) {
+          if (model && nonSoftDeleteModels.has(model)) {
+            return query(args);
+          }
           args.where = { deletedAt: null, ...args.where };
           return query(args);
         },
-        async findFirstOrThrow({ args, query }) {
+        async findFirstOrThrow({ model, args, query }) {
+          if (model && nonSoftDeleteModels.has(model)) {
+            return query(args);
+          }
           args.where = { deletedAt: null, ...args.where };
           return query(args);
         },
-        async findMany({ args, query }) {
+        async findMany({ model, args, query }) {
+          if (model && nonSoftDeleteModels.has(model)) {
+            return query(args);
+          }
           args.where = { deletedAt: null, ...args.where };
           return query(args);
         },
-        async findUnique({ model, args }) {
+        async findUnique({ model, args, query }) {
+          if (model && nonSoftDeleteModels.has(model)) {
+            return query(args);
+          }
           const { where, ...rest } = args as { where: Record<string, unknown> };
           return (client as Record<string, any>)[model].findFirst({
             where: { ...where, deletedAt: null },
             ...rest,
           });
         },
-        async findUniqueOrThrow({ model, args }) {
+        async findUniqueOrThrow({ model, args, query }) {
+          if (model && nonSoftDeleteModels.has(model)) {
+            return query(args);
+          }
           const { where, ...rest } = args as { where: Record<string, unknown> };
           return (client as Record<string, any>)[model].findFirstOrThrow({
             where: { ...where, deletedAt: null },
             ...rest,
           });
         },
-        async count({ args, query }) {
+        async count({ model, args, query }) {
+          if (model && nonSoftDeleteModels.has(model)) {
+            return query(args);
+          }
           args.where = { deletedAt: null, ...args.where };
           return query(args);
         },
-        async aggregate({ args, query }) {
+        async aggregate({ model, args, query }) {
+          if (model && nonSoftDeleteModels.has(model)) {
+            return query(args);
+          }
           args.where = { deletedAt: null, ...args.where };
           return query(args);
         },
-        async groupBy({ args, query }) {
+        async groupBy({ model, args, query }) {
+          if (model && nonSoftDeleteModels.has(model)) {
+            return query(args);
+          }
           args.where = { deletedAt: null, ...args.where };
           return query(args);
         },
-        async delete({ model, args }) {
+        async delete({ model, args, query }) {
+          if (model && nonSoftDeleteModels.has(model)) {
+            return query(args);
+          }
           const deleteArgs = args as {
             where: Record<string, unknown>;
             select?: Record<string, unknown>;
@@ -62,7 +97,10 @@ export const softDeleteExtension = Prisma.defineExtension((client) => {
             include: deleteArgs.include,
           });
         },
-        async deleteMany({ model, args }) {
+        async deleteMany({ model, args, query }) {
+          if (model && nonSoftDeleteModels.has(model)) {
+            return query(args);
+          }
           const deleteManyArgs = args as { where?: Record<string, unknown> };
           return (client as Record<string, any>)[model].updateMany({
             where: { deletedAt: null, ...deleteManyArgs.where },

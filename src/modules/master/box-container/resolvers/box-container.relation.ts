@@ -41,4 +41,12 @@ export class BoxContainerRelationResolver {
       where: { boxContainerId: Number(boxContainer.id), deleted: false },
     });
   }
+
+  @ResolveField("palletContainer")
+  async palletContainer(@Parent() boxContainer: BoxContainer) {
+    if (!boxContainer.palletContainerId) return null;
+    return this.prisma.palletContainer.findUnique({
+      where: { id: boxContainer.palletContainerId },
+    });
+  }
 }

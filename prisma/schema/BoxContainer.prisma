@@ -24,6 +24,11 @@ model BoxContainer {
   closedAt   DateTime?
   closedById String?
 
+  palletContainerId Int?
+  palletContainer   PalletContainer? @relation(fields: [palletContainerId], references: [id])
+  sequenceInPallet  Int?
+  shippingBoxNo     String?
+
   items BoxContainerItem[]
 
   createdAt DateTime  @default(now())
@@ -37,6 +42,7 @@ model BoxContainer {
   @@index([boxNo])
   @@index([salesOrderId])
   @@index([boxTypeId])
+  @@index([palletContainerId])
   @@index([areaId, locationId])
   @@index([status])
   @@index([deletedAt])
