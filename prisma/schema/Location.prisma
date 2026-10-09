@@ -2,15 +2,16 @@ model Location {
   id   Int    @id @default(autoincrement())
   name String
 
-  areaId Int
-  area   Area @relation(fields: [areaId], references: [id])
-  materialInventoryLots      MaterialInventoryLot[]
-  fromMaterialTransactions   MaterialInventoryTransaction[] @relation("FromLocationTransactions")
-  toMaterialTransactions     MaterialInventoryTransaction[] @relation("ToLocationTransactions")
-  materialIssuanceItems      MaterialIssuanceItem[]
-  finishedGoodsLots          FinishedGoodsLot[]
-  fromFinishedGoodsTransactions FinishedGoodsTransaction[] @relation("FromLocationFGTransactions")
-  toFinishedGoodsTransactions   FinishedGoodsTransaction[] @relation("ToLocationFGTransactions")
+  areaId                          Int
+  area                            Area                             @relation(fields: [areaId], references: [id])
+  materialInventoryLots           MaterialInventoryLot[]
+  fromMaterialTransactions        MaterialInventoryTransaction[]   @relation("FromLocationTransactions")
+  toMaterialTransactions          MaterialInventoryTransaction[]   @relation("ToLocationTransactions")
+  materialIssuanceItems           MaterialIssuanceItem[]
+  finishedGoodsLots               FinishedGoodsLot[]
+  fromFinishedGoodsTransactions   FinishedGoodsTransaction[]       @relation("FromLocationFGTransactions")
+  toFinishedGoodsTransactions     FinishedGoodsTransaction[]       @relation("ToLocationFGTransactions")
+  finishedGoodsAllocationRequests FinishedGoodsAllocationRequest[]
 
   createdAt DateTime  @default(now())
   createdBy String?

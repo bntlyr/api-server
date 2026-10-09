@@ -1,17 +1,17 @@
 model MaterialInventoryLot {
-  id                Int       @id @default(autoincrement())
-  materialId        Int
-  material          Material  @relation(fields: [materialId], references: [id])
-  lotNo             String
-  areaId            Int
-  area              Area      @relation(fields: [areaId], references: [id])
-  locationId        Int
-  location          Location  @relation(fields: [locationId], references: [id])
+  id         Int      @id @default(autoincrement())
+  materialId Int
+  material   Material @relation(fields: [materialId], references: [id])
+  lotNo      String
+  areaId     Int
+  area       Area     @relation(fields: [areaId], references: [id])
+  locationId Int
+  location   Location @relation(fields: [locationId], references: [id])
 
-  availableQty      Decimal   @default(0) @db.Decimal(12, 2)
-  allocatedQty      Decimal   @default(0) @db.Decimal(12, 2)
-  pendingQty        Decimal   @default(0) @db.Decimal(12, 2)
-  defectiveQty      Decimal   @default(0) @db.Decimal(12, 2)
+  availableQty Decimal @default(0) @db.Decimal(12, 2)
+  allocatedQty Decimal @default(0) @db.Decimal(12, 2)
+  pendingQty   Decimal @default(0) @db.Decimal(12, 2)
+  defectiveQty Decimal @default(0) @db.Decimal(12, 2)
 
   receivingReportNo String    @default("")
   purchaseOrderNo   String?
@@ -24,16 +24,16 @@ model MaterialInventoryLot {
   qcSampling        String?
   reason            String    @default("-")
 
-  createdAt         DateTime  @default(now())
-  createdBy         String?
-  updatedAt         DateTime  @updatedAt
-  updatedBy         String?
-  deleted           Boolean   @default(false)
-  deletedAt         DateTime?
-  deletedBy         String?
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
 
-  transactions      MaterialInventoryTransaction[]
-  issuanceItems     MaterialIssuanceItem[]
+  transactions  MaterialInventoryTransaction[]
+  issuanceItems MaterialIssuanceItem[]
 
   @@unique([materialId, lotNo, receivingReportNo, areaId, locationId])
   @@index([materialId, lotNo])

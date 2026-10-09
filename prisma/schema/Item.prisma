@@ -47,13 +47,14 @@ model Item {
   boxTypeId     Int?
 
   // Prisma 1:N relations
-  itemPictures  ItemPicture[]
-  itemRevisions ItemRevision[]
-  fabrications  Fabrication[]
-  itemRoutes    ItemRoute[]
-  mouldItems    MouldItem[]
+  itemPictures              ItemPicture[]
+  itemRevisions             ItemRevision[]
+  fabrications              Fabrication[]
+  itemRoutes                ItemRoute[]
+  mouldItems                MouldItem[]
   finishedGoodsLots         FinishedGoodsLot[]
   finishedGoodsTransactions FinishedGoodsTransaction[]
+  salesOrders               SalesOrder[]
 
   // Base audit & soft delete
   createdAt DateTime  @default(now())

@@ -1,0 +1,36 @@
+model FinishedGoodsAllocationRequest {
+  id Int @id @default(autoincrement())
+
+  allocationQty Decimal @default(0) @db.Decimal(12, 2)
+  status        String  @default("Pending") // Pending, Accepted, Rejected, Canceled
+
+  salesOrderId             Int?
+  finishedGoodsLotId       Int?
+  finishedGoodsInventoryId Int?
+  finishedGoodsDetailId    Int?
+
+  destinationAreaId     Int?
+  destinationLocationId Int?
+  rejectionReason       String?
+  remarks               String?
+
+  salesOrder       SalesOrder?       @relation(fields: [salesOrderId], references: [id])
+  finishedGoodsLot FinishedGoodsLot? @relation(fields: [finishedGoodsLotId], references: [id])
+  destinationArea  Area?             @relation(fields: [destinationAreaId], references: [id])
+  destinationLoc   Location?         @relation(fields: [destinationLocationId], references: [id])
+
+  approvedAt  DateTime?
+  approvedBy  String?
+  createdById String?
+  updatedById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deleted     Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   String?
+
+  @@index([salesOrderId])
+  @@index([finishedGoodsLotId])
+  @@index([status])
+  @@index([deletedAt])
+}

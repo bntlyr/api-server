@@ -11,9 +11,9 @@ model Section {
   deletedAt DateTime?
   deletedBy String?
 
-  positions Position[]
-  users     User[]
-  machines  Machine[]
+  positions         Position[]
+  users             User[]
+  machines          Machine[]
   materialIssuances MaterialIssuance[]
 
   @@index([deletedAt])

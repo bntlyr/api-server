@@ -1,0 +1,64 @@
+model SalesOrder {
+  id                       Int       @id @default(autoincrement())
+  orderNo                  String    @unique
+  salesOrderNo             String
+  salesOrderDate           DateTime
+  itemCode                 String
+  orderCode                String
+  orderQty                 Decimal   @default(0) @db.Decimal(12, 2)
+  originalQty              Decimal   @default(0) @db.Decimal(12, 2)
+  revisedQty               Decimal   @default(0) @db.Decimal(12, 2)
+  freightType              String
+  requestedETD             DateTime
+  rad                      DateTime
+  committedETD             DateTime?
+  remarks                  String?   @default("")
+  shippingLotNo            String?   @default("")
+  prodNo                   String
+  shippingTo               String?   @default("")
+  classOrder               String?   @default("")
+  endUser                  String?   @default("")
+  asgdShipment             String?   @default("")
+  status                   String    @default("Pending") // Pending, Planning, Production, Shipping, Shipped, Completed, Cancelled
+  productionPlanningStatus String    @default("Locked") // Locked, Planned, Cancelled
+  productionStatus         String    @default("Pending") // Pending, Delay, On-Time, Completed, Incomplete, Short, Advanced, Cancelled
+  shippingStatus           String    @default("For-Shipment") // For-Shipment, Preparing, Finalized, Shipped, Completed, Cancelled
+
+  // Downstream tracking counters
+  allocatedQty Decimal @default(0) @db.Decimal(12, 2)
+  plannedQty   Decimal @default(0) @db.Decimal(12, 2)
+  producedQty  Decimal @default(0) @db.Decimal(12, 2)
+  packedQty    Decimal @default(0) @db.Decimal(12, 2)
+  shippedQty   Decimal @default(0) @db.Decimal(12, 2)
+
+  // Relations
+  itemId        Int?
+  item          Item?        @relation(fields: [itemId], references: [id])
+  fabricationId Int?
+  fabrication   Fabrication? @relation(fields: [fabricationId], references: [id])
+  customerId    Int?
+  customer      Customer?    @relation(fields: [customerId], references: [id])
+
+  allocationRequests FinishedGoodsAllocationRequest[]
+
+  // Base audit & soft delete
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([orderNo])
+  @@index([salesOrderNo])
+  @@index([itemCode])
+  @@index([itemId])
+  @@index([fabricationId])
+  @@index([customerId])
+  @@index([status])
+  @@index([productionPlanningStatus])
+  @@index([productionStatus])
+  @@index([shippingStatus])
+  @@index([deletedAt])
+}

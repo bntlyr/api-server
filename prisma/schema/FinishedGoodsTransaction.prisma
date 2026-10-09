@@ -1,53 +1,53 @@
 model FinishedGoodsTransaction {
-  id                   Int               @id @default(autoincrement())
-  transactionNo        String            @unique
-  transactionType      String            // MANUAL_IN, BATCH_IN, MANUAL_OUT, STATUS_CHANGE, DISCARD, MOVEMENT, BOX_UPDATE, STICKER_PRINT
-  direction            String?           @default("INTERNAL") // INBOUND, OUTBOUND, INTERNAL
-  transactionDate      DateTime          @default(now())
+  id              Int      @id @default(autoincrement())
+  transactionNo   String   @unique
+  transactionType String // MANUAL_IN, BATCH_IN, MANUAL_OUT, STATUS_CHANGE, DISCARD, MOVEMENT, BOX_UPDATE, STICKER_PRINT
+  direction       String?  @default("INTERNAL") // INBOUND, OUTBOUND, INTERNAL
+  transactionDate DateTime @default(now())
 
-  itemId               Int
-  item                 Item              @relation(fields: [itemId], references: [id])
-  fabricationId        Int
-  fabrication          Fabrication       @relation(fields: [fabricationId], references: [id])
+  itemId        Int
+  item          Item        @relation(fields: [itemId], references: [id])
+  fabricationId Int
+  fabrication   Fabrication @relation(fields: [fabricationId], references: [id])
 
-  finishedGoodsLotId   Int?
-  lot                  FinishedGoodsLot? @relation(fields: [finishedGoodsLotId], references: [id])
-  orderNo              String
-  lotNo                String
-  chargeNo             String
+  finishedGoodsLotId Int?
+  lot                FinishedGoodsLot? @relation(fields: [finishedGoodsLotId], references: [id])
+  orderNo            String
+  lotNo              String
+  chargeNo           String
 
-  fromAreaId           Int?
-  fromArea             Area?             @relation("FromAreaFGTransactions", fields: [fromAreaId], references: [id])
-  fromLocationId       Int?
-  fromLocation         Location?         @relation("FromLocationFGTransactions", fields: [fromLocationId], references: [id])
-  toAreaId             Int?
-  toArea               Area?             @relation("ToAreaFGTransactions", fields: [toAreaId], references: [id])
-  toLocationId         Int?
-  toLocation           Location?         @relation("ToLocationFGTransactions", fields: [toLocationId], references: [id])
+  fromAreaId     Int?
+  fromArea       Area?     @relation("FromAreaFGTransactions", fields: [fromAreaId], references: [id])
+  fromLocationId Int?
+  fromLocation   Location? @relation("FromLocationFGTransactions", fields: [fromLocationId], references: [id])
+  toAreaId       Int?
+  toArea         Area?     @relation("ToAreaFGTransactions", fields: [toAreaId], references: [id])
+  toLocationId   Int?
+  toLocation     Location? @relation("ToLocationFGTransactions", fields: [toLocationId], references: [id])
 
-  fromBoxId            Int?
-  fromBox              BoxType?          @relation("FromBoxFGTransactions", fields: [fromBoxId], references: [id])
-  toBoxId              Int?
-  toBox                BoxType?          @relation("ToBoxFGTransactions", fields: [toBoxId], references: [id])
+  fromBoxId Int?
+  fromBox   BoxType? @relation("FromBoxFGTransactions", fields: [fromBoxId], references: [id])
+  toBoxId   Int?
+  toBox     BoxType? @relation("ToBoxFGTransactions", fields: [toBoxId], references: [id])
 
-  fromStatus           String?           // AVAILABLE, ALLOCATED, CHECKING, DEFECTIVE
-  toStatus             String?
+  fromStatus String? // AVAILABLE, ALLOCATED, CHECKING, DEFECTIVE
+  toStatus   String?
 
-  quantity             Decimal           @db.Decimal(12, 2)
-  balanceAfter         Decimal?          @db.Decimal(12, 2)
+  quantity     Decimal  @db.Decimal(12, 2)
+  balanceAfter Decimal? @db.Decimal(12, 2)
 
-  reason               String?
-  remarks              String?
-  referenceNo          String?
-  invoiceNo            String?
+  reason      String?
+  remarks     String?
+  referenceNo String?
+  invoiceNo   String?
 
-  createdAt            DateTime          @default(now())
-  createdBy            String?
-  updatedAt            DateTime          @updatedAt
-  updatedBy            String?
-  deleted              Boolean           @default(false)
-  deletedAt            DateTime?
-  deletedBy            String?
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
 
   @@index([itemId, fabricationId, transactionDate])
   @@index([finishedGoodsLotId])

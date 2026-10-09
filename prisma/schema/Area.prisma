@@ -10,14 +10,15 @@ model Area {
   deletedAt DateTime?
   deletedBy String?
 
-  locations Location[]
-  materialInventoryLots      MaterialInventoryLot[]
-  fromMaterialTransactions   MaterialInventoryTransaction[] @relation("FromAreaTransactions")
-  toMaterialTransactions     MaterialInventoryTransaction[] @relation("ToAreaTransactions")
-  materialIssuanceItems      MaterialIssuanceItem[]
-  finishedGoodsLots          FinishedGoodsLot[]
-  fromFinishedGoodsTransactions FinishedGoodsTransaction[] @relation("FromAreaFGTransactions")
-  toFinishedGoodsTransactions   FinishedGoodsTransaction[] @relation("ToAreaFGTransactions")
+  locations                       Location[]
+  materialInventoryLots           MaterialInventoryLot[]
+  fromMaterialTransactions        MaterialInventoryTransaction[]   @relation("FromAreaTransactions")
+  toMaterialTransactions          MaterialInventoryTransaction[]   @relation("ToAreaTransactions")
+  materialIssuanceItems           MaterialIssuanceItem[]
+  finishedGoodsLots               FinishedGoodsLot[]
+  fromFinishedGoodsTransactions   FinishedGoodsTransaction[]       @relation("FromAreaFGTransactions")
+  toFinishedGoodsTransactions     FinishedGoodsTransaction[]       @relation("ToAreaFGTransactions")
+  finishedGoodsAllocationRequests FinishedGoodsAllocationRequest[]
 
   @@index([deletedAt])
 }

@@ -1,46 +1,47 @@
 model FinishedGoodsLot {
-  id              Int       @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  itemId          Int
-  item            Item      @relation(fields: [itemId], references: [id])
-  fabricationId   Int
-  fabrication     Fabrication @relation(fields: [fabricationId], references: [id])
+  itemId        Int
+  item          Item        @relation(fields: [itemId], references: [id])
+  fabricationId Int
+  fabrication   Fabrication @relation(fields: [fabricationId], references: [id])
 
-  orderNo         String
-  lotNo           String
-  chargeNo        String
-  trialLotNo      String?   @default("")
-  invoiceNo       String?
+  orderNo    String
+  lotNo      String
+  chargeNo   String
+  trialLotNo String? @default("")
+  invoiceNo  String?
 
-  areaId          Int
-  area            Area      @relation(fields: [areaId], references: [id])
-  locationId      Int
-  location        Location  @relation(fields: [locationId], references: [id])
-  boxId           Int?
-  boxType         BoxType?  @relation(fields: [boxId], references: [id])
+  areaId     Int
+  area       Area     @relation(fields: [areaId], references: [id])
+  locationId Int
+  location   Location @relation(fields: [locationId], references: [id])
+  boxId      Int?
+  boxType    BoxType? @relation(fields: [boxId], references: [id])
 
-  availableQty    Decimal   @default(0) @db.Decimal(12, 2)
-  allocatedQty    Decimal   @default(0) @db.Decimal(12, 2)
-  checkingQty     Decimal   @default(0) @db.Decimal(12, 2)
-  defectiveQty    Decimal   @default(0) @db.Decimal(12, 2)
+  availableQty Decimal @default(0) @db.Decimal(12, 2)
+  allocatedQty Decimal @default(0) @db.Decimal(12, 2)
+  checkingQty  Decimal @default(0) @db.Decimal(12, 2)
+  defectiveQty Decimal @default(0) @db.Decimal(12, 2)
 
-  incomingDate    DateTime?
-  manufactureDate DateTime?
-  reason          String    @default("-")
-  remarks         String?
-  stickerPrinted  Boolean   @default(false)
+  incomingDate     DateTime?
+  manufactureDate  DateTime?
+  reason           String    @default("-")
+  remarks          String?
+  stickerPrinted   Boolean   @default(false)
   stickerPrintedAt DateTime?
   stickerPrintedBy String?
 
-  createdAt       DateTime  @default(now())
-  createdBy       String?
-  updatedAt       DateTime  @updatedAt
-  updatedBy       String?
-  deleted         Boolean   @default(false)
-  deletedAt       DateTime?
-  deletedBy       String?
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
 
-  transactions    FinishedGoodsTransaction[]
+  transactions       FinishedGoodsTransaction[]
+  allocationRequests FinishedGoodsAllocationRequest[]
 
   @@unique([itemId, fabricationId, orderNo, lotNo, chargeNo, areaId, locationId, boxId])
   @@index([itemId, fabricationId])

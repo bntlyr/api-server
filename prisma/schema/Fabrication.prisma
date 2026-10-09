@@ -15,9 +15,10 @@ model Fabrication {
   deletedAt DateTime?
   deletedBy String?
 
-  fabRoutes FabRoute[]
+  fabRoutes                 FabRoute[]
   finishedGoodsLots         FinishedGoodsLot[]
   finishedGoodsTransactions FinishedGoodsTransaction[]
+  salesOrders               SalesOrder[]
 
   @@unique([itemId, code])
   @@index([itemId, code])

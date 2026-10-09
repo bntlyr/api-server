@@ -1,0 +1,102 @@
+#graphql
+
+type AvailableFgStockForOrder {
+  lotId: ID!
+  orderNo: String!
+  lotNo: String!
+  postfix: String
+  manufactureDate: DateTime
+  availableQty: Float!
+  allocatedQty: Float!
+  areaId: Int!
+  area: Area
+  locationId: Int!
+  location: Location
+
+  # Existing allocation request state for this Sales Order
+  requestId: ID
+  allocationQty: Float
+  status: String # Pending, Accepted, Rejected, Canceled
+  rejectionReason: String
+  remarks: String
+}
+
+type FinishedGoodsAllocationRequest {
+  id: ID!
+  allocationQty: Float!
+  status: String! # Pending, Accepted, Rejected, Canceled
+
+  salesOrderId: Int
+  salesOrder: SalesOrder
+  finishedGoodsLotId: Int
+  finishedGoodsLot: FinishedGoodsLot
+
+  destinationAreaId: Int
+  destinationArea: Area
+  destinationLocationId: Int
+  destinationLocation: Location
+
+  rejectionReason: String
+  remarks: String
+
+  approvedAt: DateTime
+  approvedBy: String
+  createdById: String
+  updatedById: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deleted: Boolean!
+  deletedAt: DateTime
+  deletedBy: String
+}
+
+input SubmitFgAllocationItemInput {
+  lotId: ID!
+  allocationQty: Float!
+  remarks: String
+}
+
+input SubmitFgAllocationsInput {
+  salesOrderId: ID!
+  allocations: [SubmitFgAllocationItemInput!]!
+}
+
+type SubmitFgAllocationsPayload {
+  success: Boolean!
+  requests: [FinishedGoodsAllocationRequest!]!
+  userErrors: [UserError!]!
+}
+
+type FinishedGoodsAllocationRequestPayload {
+  request: FinishedGoodsAllocationRequest
+  userErrors: [UserError!]!
+}
+
+extend type Query {
+  availableFgStockForOrder(salesOrderId: ID!): [AvailableFgStockForOrder!]!
+  fgAllocationRequests(
+    salesOrderId: ID
+    status: String
+  ): [FinishedGoodsAllocationRequest!]!
+  fgAllocationRequestById(id: ID!): FinishedGoodsAllocationRequest
+}
+
+extend type Mutation {
+  submitFgAllocations(input: SubmitFgAllocationsInput!): SubmitFgAllocationsPayload!
+
+  approveFinishedGoodsAllocationRequest(
+    id: ID!
+    destinationAreaId: Int!
+    destinationLocationId: Int!
+    remarks: String
+  ): FinishedGoodsAllocationRequestPayload!
+
+  rejectFinishedGoodsAllocationRequest(
+    id: ID!
+    reason: String!
+  ): FinishedGoodsAllocationRequestPayload!
+
+  cancelFinishedGoodsAllocationRequest(
+    id: ID!
+  ): FinishedGoodsAllocationRequestPayload!
+}

@@ -5,12 +5,12 @@ model BoxType {
   description String?
   weight      Decimal @default(0) @db.Decimal(9, 2)
 
-  createdAt DateTime  @default(now())
-  createdBy String?
-  updatedAt DateTime  @updatedAt
-  updatedBy String?
-  deletedAt DateTime?
-  deletedBy String?
+  createdAt                     DateTime                   @default(now())
+  createdBy                     String?
+  updatedAt                     DateTime                   @updatedAt
+  updatedBy                     String?
+  deletedAt                     DateTime?
+  deletedBy                     String?
   finishedGoodsLots             FinishedGoodsLot[]
   fromFinishedGoodsTransactions FinishedGoodsTransaction[] @relation("FromBoxFGTransactions")
   toFinishedGoodsTransactions   FinishedGoodsTransaction[] @relation("ToBoxFGTransactions")

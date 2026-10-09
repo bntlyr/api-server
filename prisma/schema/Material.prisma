@@ -29,10 +29,10 @@ model Material {
   deletedAt DateTime?
   deletedBy String?
 
-  materialSuppliers MaterialSupplier[]
-  inventoryLots     MaterialInventoryLot[]
+  materialSuppliers     MaterialSupplier[]
+  inventoryLots         MaterialInventoryLot[]
   inventoryTransactions MaterialInventoryTransaction[]
-  issuanceItems     MaterialIssuanceItem[]
+  issuanceItems         MaterialIssuanceItem[]
 
   @@index([materialGroupId])
   @@index([sectionId])

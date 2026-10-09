@@ -1,3 +1,5 @@
+import { FinishedGoodsAllocationModule } from './modules/planning/fg-allocation/fg-allocation.module.js';
+import { SalesOrderModule } from './modules/sales/sales-order/sales-order.module.js';
 import { FinishedGoodsInventoryModule } from './modules/inventory/finished-goods-inventory/finished-goods-inventory.module.js';
 import { MaterialIssuanceModule } from './modules/inventory/material-issuance/material-issuance.module.js';
 import { MaterialInventoryModule } from './modules/inventory/material-inventory/material-inventory.module.js';
@@ -147,6 +149,8 @@ import { JavaServiceModule } from './java-service/java-service.module.js';
     MaterialInventoryModule,
     MaterialIssuanceModule,
     FinishedGoodsInventoryModule,
+    SalesOrderModule,
+    FinishedGoodsAllocationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

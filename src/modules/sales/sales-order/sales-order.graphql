@@ -1,0 +1,216 @@
+#graphql
+
+type SalesOrder {
+  id: ID!
+  orderNo: String!
+  salesOrderNo: String!
+  salesOrderDate: DateTime!
+  itemCode: String!
+  orderCode: String!
+  orderQty: Float!
+  originalQty: Float!
+  revisedQty: Float!
+  freightType: String!
+  requestedETD: DateTime!
+  rad: DateTime!
+  committedETD: DateTime
+  remarks: String
+  shippingLotNo: String
+  prodNo: String!
+  shippingTo: String
+  classOrder: String
+  endUser: String
+  asgdShipment: String
+  status: String!
+  productionPlanningStatus: String!
+  productionStatus: String!
+  shippingStatus: String!
+
+  allocatedQty: Float!
+  plannedQty: Float!
+  producedQty: Float!
+  packedQty: Float!
+  shippedQty: Float!
+  remainingQty: Float!
+
+  itemId: Int
+  item: Item
+  fabricationId: Int
+  fabrication: Fabrication
+  customerId: Int
+  customer: Customer
+
+  createdAt: DateTime!
+  createdBy: String
+  updatedAt: DateTime!
+  updatedBy: String
+  deleted: Boolean!
+  deletedAt: DateTime
+  deletedBy: String
+}
+
+input SalesOrderFilterInput {
+  search: String
+  id: IntFilterInput
+  orderNo: StringFilterInput
+  salesOrderNo: StringFilterInput
+  itemCode: StringFilterInput
+  orderCode: StringFilterInput
+  freightType: StringFilterInput
+  prodNo: StringFilterInput
+  classOrder: StringFilterInput
+  status: StringFilterInput
+  productionPlanningStatus: StringFilterInput
+  productionStatus: StringFilterInput
+  shippingStatus: StringFilterInput
+  endUser: StringFilterInput
+  itemId: IntFilterInput
+  fabricationId: IntFilterInput
+  customerId: IntFilterInput
+  salesOrderDate: DateTimeFilterInput
+  requestedETD: DateTimeFilterInput
+  rad: DateTimeFilterInput
+  committedETD: DateTimeFilterInput
+  AND: [SalesOrderFilterInput!]
+  OR: [SalesOrderFilterInput!]
+  NOT: [SalesOrderFilterInput!]
+}
+
+input CreateSalesOrderInput {
+  orderNo: String
+  salesOrderNo: String!
+  salesOrderDate: DateTime!
+  itemCode: String!
+  orderCode: String!
+  orderQty: Float!
+  freightType: String!
+  requestedETD: DateTime!
+  rad: DateTime!
+  committedETD: DateTime
+  remarks: String
+  shippingLotNo: String
+  prodNo: String!
+  shippingTo: String
+  classOrder: String
+  endUser: String
+  asgdShipment: String
+  status: String
+  productionPlanningStatus: String
+  productionStatus: String
+  shippingStatus: String
+}
+
+input UpdateSalesOrderInput {
+  orderNo: String
+  salesOrderNo: String
+  salesOrderDate: DateTime
+  itemCode: String
+  orderCode: String
+  orderQty: Float
+  freightType: String
+  requestedETD: DateTime
+  rad: DateTime
+  committedETD: DateTime
+  remarks: String
+  shippingLotNo: String
+  prodNo: String
+  shippingTo: String
+  classOrder: String
+  endUser: String
+  asgdShipment: String
+  status: String
+  productionPlanningStatus: String
+  productionStatus: String
+  shippingStatus: String
+}
+
+input UploadSalesOrderRowInput {
+  rowNumber: Int
+  orderNo: String
+  salesOrderNo: String
+  salesOrderDate: DateTime
+  itemCode: String
+  orderCode: String
+  orderQty: Float
+  freightType: String
+  requestedETD: DateTime
+  rad: DateTime
+  remarks: String
+  committedETD: DateTime
+  shippingLotNo: String
+  prodNo: String
+  shippingTo: String
+  classOrder: String
+  nowStage: String
+  asgdShipment: String
+  customerId: Int
+  fgInventoryId: Int
+  endUser: String
+  materialPrice: Float
+  heatPrice: Float
+  platePrice: Float
+  otherPrice: Float
+  fabPrice: Float
+}
+
+input UploadSalesOrdersInput {
+  newOrders: [UploadSalesOrderRowInput!]
+  reviseOrders: [UploadSalesOrderRowInput!]
+}
+
+type SalesOrderUploadError {
+  rowNumber: Int
+  sheetName: String!
+  orderNo: String
+  salesOrderNo: String
+  itemCode: String
+  field: String
+  reason: String!
+  actionRequired: String
+}
+
+type SalesOrderUploadResult {
+  totalProcessed: Int!
+  successCount: Int!
+  failedCount: Int!
+  createdOrders: [SalesOrder!]!
+  updatedOrders: [SalesOrder!]!
+  failedRows: [SalesOrderUploadError!]!
+}
+
+type SalesOrderPayload {
+  order: SalesOrder
+  userErrors: [UserError!]!
+}
+
+type SalesOrderEdge {
+  cursor: String!
+  node: SalesOrder!
+}
+
+type SalesOrderConnection {
+  edges: [SalesOrderEdge!]!
+  nodes: [SalesOrder!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  userErrors: [UserError!]!
+}
+
+extend type Query {
+  salesOrdersPaginated(
+    pagination: PaginationInput
+    filter: SalesOrderFilterInput
+  ): SalesOrderConnection!
+
+  salesOrderById(id: ID!): SalesOrder
+  salesOrderByOrderNo(orderNo: String!): SalesOrder
+}
+
+extend type Mutation {
+  createSalesOrder(input: CreateSalesOrderInput!): SalesOrderPayload!
+  updateSalesOrder(id: ID!, input: UpdateSalesOrderInput!): SalesOrderPayload!
+  deleteSalesOrder(id: ID!): SalesOrderPayload!
+  restoreSalesOrder(id: ID!): SalesOrderPayload!
+  cancelSalesOrder(id: ID!, reason: String): SalesOrderPayload!
+  uploadSalesOrders(input: UploadSalesOrdersInput!): SalesOrderUploadResult!
+}

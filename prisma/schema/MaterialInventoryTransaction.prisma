@@ -1,44 +1,44 @@
 model MaterialInventoryTransaction {
-  id                     Int                   @id @default(autoincrement())
-  transactionNo          String                @unique
-  transactionType        String
-  direction              String?               @default("INTERNAL") // INBOUND, OUTBOUND, INTERNAL
-  transactionDate        DateTime              @default(now())
+  id              Int      @id @default(autoincrement())
+  transactionNo   String   @unique
+  transactionType String
+  direction       String?  @default("INTERNAL") // INBOUND, OUTBOUND, INTERNAL
+  transactionDate DateTime @default(now())
 
-  materialId             Int
-  material               Material              @relation(fields: [materialId], references: [id])
+  materialId Int
+  material   Material @relation(fields: [materialId], references: [id])
 
   materialInventoryLotId Int?
   lot                    MaterialInventoryLot? @relation(fields: [materialInventoryLotId], references: [id])
   lotNo                  String
 
-  fromAreaId             Int?
-  fromArea               Area?                 @relation("FromAreaTransactions", fields: [fromAreaId], references: [id])
-  fromLocationId         Int?
-  fromLocation           Location?             @relation("FromLocationTransactions", fields: [fromLocationId], references: [id])
+  fromAreaId     Int?
+  fromArea       Area?     @relation("FromAreaTransactions", fields: [fromAreaId], references: [id])
+  fromLocationId Int?
+  fromLocation   Location? @relation("FromLocationTransactions", fields: [fromLocationId], references: [id])
 
-  toAreaId               Int?
-  toArea                 Area?                 @relation("ToAreaTransactions", fields: [toAreaId], references: [id])
-  toLocationId           Int?
-  toLocation             Location?             @relation("ToLocationTransactions", fields: [toLocationId], references: [id])
+  toAreaId     Int?
+  toArea       Area?     @relation("ToAreaTransactions", fields: [toAreaId], references: [id])
+  toLocationId Int?
+  toLocation   Location? @relation("ToLocationTransactions", fields: [toLocationId], references: [id])
 
-  fromStatus             String?
-  toStatus               String?
+  fromStatus String?
+  toStatus   String?
 
-  quantity               Decimal               @db.Decimal(12, 2)
-  balanceAfter           Decimal?              @db.Decimal(12, 2)
+  quantity     Decimal  @db.Decimal(12, 2)
+  balanceAfter Decimal? @db.Decimal(12, 2)
 
-  reason                 String?
-  remarks                String?
-  referenceNo            String?
+  reason      String?
+  remarks     String?
+  referenceNo String?
 
-  createdAt              DateTime              @default(now())
-  createdBy              String?
-  updatedAt              DateTime              @updatedAt
-  updatedBy              String?
-  deleted                Boolean               @default(false)
-  deletedAt              DateTime?
-  deletedBy              String?
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
 
   @@index([materialId, transactionDate])
   @@index([materialInventoryLotId])
