@@ -1,0 +1,58 @@
+model ProductionProcess {
+  id               Int       @id @default(autoincrement())
+  productionSlipId Int
+  stepNo           Int
+  processId        Int?
+  processName      String
+  itemCode         String?
+  isFabrication    Boolean   @default(false)
+  isCompleted      Boolean   @default(false)
+  isRework         Boolean   @default(false)
+  isReceived       Boolean   @default(false)
+  receivedById     String?
+  receivedAt       DateTime?
+  status           String    @default("Pending") // Pending, Received, In Progress, Completed, Transferred, Cancelled
+
+  scheduledStartDate DateTime?
+  scheduledEndDate   DateTime?
+  actualStartDate    DateTime?
+  actualEndDate      DateTime?
+
+  leadTime       Decimal @default(0) @db.Decimal(9, 2)
+  productionTime Decimal @default(0) @db.Decimal(9, 2)
+
+  neededQty   Decimal @default(0) @db.Decimal(12, 2)
+  passedQty   Decimal @default(0) @db.Decimal(12, 2)
+  rejectedQty Decimal @default(0) @db.Decimal(12, 2)
+  reworkQty1  Decimal @default(0) @db.Decimal(12, 2)
+  reworkQty2  Decimal @default(0) @db.Decimal(12, 2)
+  reworkQty3  Decimal @default(0) @db.Decimal(12, 2)
+
+  machineId   Int?
+  machineName String?
+  remarks     String?
+
+  previousProcessId Int?
+  previousProcess   ProductionProcess?  @relation("ProductionProcessChain", fields: [previousProcessId], references: [id])
+  nextProcesses     ProductionProcess[] @relation("ProductionProcessChain")
+
+  // Relations
+  productionSlip ProductionSlip @relation(fields: [productionSlipId], references: [id])
+  process        Process?       @relation(fields: [processId], references: [id])
+
+  // Base audit & soft delete
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([productionSlipId])
+  @@index([processId])
+  @@index([stepNo])
+  @@index([status])
+  @@index([scheduledStartDate, scheduledEndDate])
+  @@index([deletedAt])
+}

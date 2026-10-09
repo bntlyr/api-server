@@ -31,6 +31,12 @@ model SalesOrder {
   packedQty    Decimal @default(0) @db.Decimal(12, 2)
   shippedQty   Decimal @default(0) @db.Decimal(12, 2)
 
+  // Production Scheduling
+  productionId       String?
+  scheduledStartDate DateTime?
+  scheduledEndDate   DateTime?
+  scheduledTotalDays Decimal?  @db.Decimal(9, 2)
+
   // Relations
   itemId        Int?
   item          Item?        @relation(fields: [itemId], references: [id])
@@ -40,6 +46,7 @@ model SalesOrder {
   customer      Customer?    @relation(fields: [customerId], references: [id])
 
   allocationRequests FinishedGoodsAllocationRequest[]
+  productionSlips    ProductionSlip[]
 
   // Base audit & soft delete
   createdAt DateTime  @default(now())
@@ -52,6 +59,7 @@ model SalesOrder {
 
   @@index([orderNo])
   @@index([salesOrderNo])
+  @@index([productionId])
   @@index([itemCode])
   @@index([itemId])
   @@index([fabricationId])
@@ -60,5 +68,6 @@ model SalesOrder {
   @@index([productionPlanningStatus])
   @@index([productionStatus])
   @@index([shippingStatus])
+  @@index([scheduledStartDate, scheduledEndDate])
   @@index([deletedAt])
 }

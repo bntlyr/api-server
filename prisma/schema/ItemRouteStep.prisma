@@ -28,6 +28,11 @@ model ItemRouteStep {
   cureTime     Decimal? @default(0) @db.Decimal(9, 2)
   cureTimeUnit String?  @default("Hours") // Either Minutes/Hours/Days
 
+  maxPcsPerDay    Decimal? @default(0) @db.Decimal(12, 2)
+  maxWeightPerDay Decimal? @default(0) @db.Decimal(12, 2)
+  qtyPerTree      Decimal? @default(0) @db.Decimal(9, 2)
+  qtyPerShot      Decimal? @default(0) @db.Decimal(9, 2)
+
   // Relation to ItemRoute
   itemRouteId Int
   itemRoute   ItemRoute @relation(fields: [itemRouteId], references: [id])

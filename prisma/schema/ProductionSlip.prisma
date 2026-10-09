@@ -1,0 +1,43 @@
+model ProductionSlip {
+  id           Int     @id @default(autoincrement())
+  salesOrderId Int
+  orderNo      String
+  lotNo        String
+  chargeNo     String?
+  type         String  @default("ORIGINAL") // ORIGINAL, REWORK, REMAKE, REVISED, TRIAL
+  trialLotNo   String?
+  trialCardUrl String?
+  status       String  @default("Pending") // Pending, In Progress, Completed, Cancelled
+
+  totalQty  Decimal   @default(0) @db.Decimal(12, 2)
+  startDate DateTime?
+  endDate   DateTime?
+  totalDays Decimal?  @db.Decimal(9, 2)
+  remarks   String?
+
+  fabStartDate DateTime?
+  fabEndDate   DateTime?
+  fabTotalDays Decimal?  @db.Decimal(9, 2)
+
+  // Relations
+  salesOrder SalesOrder          @relation(fields: [salesOrderId], references: [id])
+  processes  ProductionProcess[]
+
+  // Base audit & soft delete
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@unique([lotNo, salesOrderId, type])
+  @@index([salesOrderId])
+  @@index([orderNo])
+  @@index([lotNo])
+  @@index([chargeNo])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@index([deletedAt])
+}

@@ -21,3 +21,114 @@ export interface JavaServerHealth {
   details?: Record<string, any>;
   error?: string;
 }
+
+export interface RouteStepDto {
+  stepNo?: number;
+  processId?: number;
+  processName?: string;
+  leadTime?: number;
+  leadTimeUnit?: string;
+  prepTime?: number;
+  prepTimeUnit?: string;
+  cureTime?: number;
+  cureTimeUnit?: string;
+  durationType?: string;
+  hasPacking?: boolean;
+  maxPcsPerDay?: number;
+  maxWeightPerDay?: number;
+  qtyPerTree?: number;
+  qtyPerShot?: number;
+}
+
+export interface DailyLoadDto {
+  date: string;
+  processId: number;
+  processName: string;
+  scheduledPcs: number;
+  scheduledWeight: number;
+}
+
+export interface CapacityWarningDto {
+  requestedDate: string;
+  adjustedDate: string;
+  processId: number;
+  processName: string;
+  lotNo: string;
+  message: string;
+  requestedPcs: number;
+  maxPcsPerDay: number;
+  requestedWeight: number;
+  maxWeightPerDay: number;
+}
+
+export interface ScheduledProcessDto {
+  stepNo: number;
+  processId: number;
+  processName: string;
+  itemCode?: string;
+  isFabrication: boolean;
+  scheduledStartDate: string;
+  scheduledEndDate: string;
+  leadTime: number;
+  productionTime: number;
+  neededQty: number;
+  previousStepNo?: number;
+  nextStepNos: number[];
+}
+
+export interface ScheduledSlipDto {
+  lotNo: string;
+  orderNo: string;
+  type: string;
+  totalQty: number;
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+  fabStartDate?: string;
+  fabEndDate?: string;
+  fabTotalDays?: number;
+  processes: ScheduledProcessDto[];
+}
+
+export interface ScheduleRequest {
+  orderNo: string;
+  salesOrderId: number;
+  itemCode: string;
+  orderQty: number;
+  allocatedQty: number;
+  rejectionRate: number;
+  autoSplitQty: number;
+  stdItemWt: number;
+  castingWt: number;
+  requestedEtd?: string;
+  startDateOverride?: string;
+  maxConcurrentLots?: number;
+  includeSaturday?: boolean;
+  maxWorkingHoursPerDay?: number;
+  holidays?: string[];
+  existingLoads?: DailyLoadDto[];
+  itemRoutes?: RouteStepDto[];
+  hasFabrication?: boolean;
+  fabCode?: string;
+  fabRoutes?: RouteStepDto[];
+}
+
+export interface ScheduleResponse {
+  orderNo: string;
+  salesOrderId: number;
+  productionId: string;
+  netRequiredQty: number;
+  totalProductionQty: number;
+  lotCount: number;
+  requestedEtd?: string;
+  targetEndDate?: string;
+  scheduledStartDate: string;
+  scheduledEndDate: string;
+  totalWorkingDays: number;
+  isDelayed: boolean;
+  delayWorkingDays: number;
+  schedulingMode: string;
+  slips: ScheduledSlipDto[];
+  resultingLoads: DailyLoadDto[];
+  capacityWarnings: CapacityWarningDto[];
+}

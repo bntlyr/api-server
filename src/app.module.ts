@@ -1,3 +1,6 @@
+import { ProductionSchedulerModule } from "./modules/planning/production-scheduler/production-scheduler.module.js";
+import { ProductionProcessModule } from "./modules/master/production-process/production-process.module.js";
+import { ProductionSlipModule } from "./modules/master/production-slip/production-slip.module.js";
 import { FinishedGoodsAllocationModule } from './modules/planning/fg-allocation/fg-allocation.module.js';
 import { SalesOrderModule } from './modules/sales/sales-order/sales-order.module.js';
 import { FinishedGoodsInventoryModule } from './modules/inventory/finished-goods-inventory/finished-goods-inventory.module.js';
@@ -151,6 +154,9 @@ import { JavaServiceModule } from './java-service/java-service.module.js';
     FinishedGoodsInventoryModule,
     SalesOrderModule,
     FinishedGoodsAllocationModule,
+    ProductionSlipModule,
+    ProductionProcessModule,
+    ProductionSchedulerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

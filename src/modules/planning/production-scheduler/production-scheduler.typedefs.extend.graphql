@@ -1,0 +1,106 @@
+type ProductionSchedulePreview {
+  orderNo: String!
+  salesOrderId: Int!
+  productionId: String!
+  netRequiredQty: Float!
+  totalProductionQty: Float!
+  lotCount: Int!
+  requestedETD: DateTime
+  targetEndDate: DateTime
+  scheduledStartDate: DateTime!
+  scheduledEndDate: DateTime!
+  totalWorkingDays: Float!
+  isDelayed: Boolean!
+  delayWorkingDays: Int!
+  schedulingMode: String!
+  slips: [ScheduledSlipPreview!]!
+  resultingLoads: [DailyLoadInfo!]!
+  capacityWarnings: [CapacityWarningInfo!]!
+}
+
+type ScheduledSlipPreview {
+  lotNo: String!
+  orderNo: String!
+  type: String!
+  totalQty: Float!
+  startDate: DateTime!
+  endDate: DateTime!
+  totalDays: Float!
+  fabStartDate: DateTime
+  fabEndDate: DateTime
+  fabTotalDays: Float
+  processes: [ScheduledProcessPreview!]!
+}
+
+type ScheduledProcessPreview {
+  stepNo: Int!
+  processId: Int!
+  processName: String!
+  itemCode: String
+  isFabrication: Boolean!
+  scheduledStartDate: DateTime!
+  scheduledEndDate: DateTime!
+  leadTime: Float!
+  productionTime: Float!
+  neededQty: Float!
+  previousStepNo: Int
+  nextStepNos: [Int!]!
+}
+
+type DailyLoadInfo {
+  date: String!
+  processId: Int!
+  processName: String!
+  scheduledPcs: Float!
+  scheduledWeight: Float!
+}
+
+type CapacityWarningInfo {
+  requestedDate: String!
+  adjustedDate: String!
+  processId: Int!
+  processName: String!
+  lotNo: String!
+  message: String!
+  requestedPcs: Float!
+  maxPcsPerDay: Float!
+  requestedWeight: Float!
+  maxWeightPerDay: Float!
+}
+
+input ValidateProductionScheduleInput {
+  salesOrderId: Int!
+  startDateOverride: DateTime
+  maxConcurrentLots: Int
+  includeSaturday: Boolean
+  maxWorkingHoursPerDay: Float
+}
+
+input CreateProductionScheduleInput {
+  salesOrderId: Int!
+  startDateOverride: DateTime
+  maxConcurrentLots: Int
+  includeSaturday: Boolean
+  maxWorkingHoursPerDay: Float
+}
+
+type CreateProductionSchedulePayload {
+  salesOrder: SalesOrder
+  slips: [ProductionSlip!]!
+  productionId: String
+  scheduledStartDate: DateTime
+  scheduledEndDate: DateTime
+  scheduledTotalDays: Float
+  isDelayed: Boolean
+  delayWorkingDays: Int
+  capacityWarnings: [CapacityWarningInfo!]!
+  userErrors: [UserError!]!
+}
+
+extend type Query {
+  previewProductionSchedule(input: ValidateProductionScheduleInput!): ProductionSchedulePreview!
+}
+
+extend type Mutation {
+  createProductionSchedule(input: CreateProductionScheduleInput!): CreateProductionSchedulePayload!
+}

@@ -95,4 +95,26 @@ export class JavaService {
       };
     }
   }
+
+  async scheduleProduction(request: import("./interfaces/java-service.interface.js").ScheduleRequest): Promise<import("./interfaces/java-service.interface.js").ScheduleResponse> {
+    const url = `${this.baseUrl}/api/v1/scheduler/schedule`;
+    this.logger.log(`Calling Java Scheduler endpoint: ${url} for Order [${request.orderNo}]`);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Internal-Secret": this.secret,
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      this.logger.error(`Java Scheduler failed HTTP ${response.status}: ${errorText}`);
+      throw new Error(`Java Scheduler microservice error (${response.status}): ${errorText}`);
+    }
+
+    return (await response.json()) as import("./interfaces/java-service.interface.js").ScheduleResponse;
+  }
 }

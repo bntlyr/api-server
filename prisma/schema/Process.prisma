@@ -29,9 +29,10 @@ model Process {
   sectionId          Int?
   numberOfIterations Int  @default(0)
 
-  parameters        Parameter[]
-  processIterations ProcessIteration[]
-  processMachinings ProcessMachining[]
+  parameters          Parameter[]
+  processIterations   ProcessIteration[]
+  processMachinings   ProcessMachining[]
+  productionProcesses ProductionProcess[]
 
   createdAt DateTime  @default(now())
   createdBy String?
