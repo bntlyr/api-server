@@ -1,0 +1,36 @@
+model ProductionDtr {
+  id                  Int       @id @default(autoincrement())
+  userId              String
+  productionProcessId Int
+  productionSlipId    Int?
+  currentProcessName  String
+
+  status              String    @default("Started") // Started, Stopped
+  startTime           DateTime
+  endTime             DateTime?
+  durationMinutes     Decimal?  @db.Decimal(9, 2)
+
+  passedQty           Decimal   @default(0) @db.Decimal(12, 2)
+  rejectedQty         Decimal   @default(0) @db.Decimal(12, 2)
+  reworkQty           Decimal   @default(0) @db.Decimal(12, 2)
+  remarks             String?
+
+  // Relations
+  productionProcess   ProductionProcess @relation(fields: [productionProcessId], references: [id])
+
+  // Base audit & soft delete
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([userId])
+  @@index([productionProcessId])
+  @@index([productionSlipId])
+  @@index([status])
+  @@index([startTime, endTime])
+  @@index([deletedAt])
+}

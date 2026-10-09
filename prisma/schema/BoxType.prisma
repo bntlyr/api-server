@@ -14,6 +14,7 @@ model BoxType {
   finishedGoodsLots             FinishedGoodsLot[]
   fromFinishedGoodsTransactions FinishedGoodsTransaction[] @relation("FromBoxFGTransactions")
   toFinishedGoodsTransactions   FinishedGoodsTransaction[] @relation("ToBoxFGTransactions")
+  boxContainers                 BoxContainer[]
 
   @@index([deletedAt])
 }

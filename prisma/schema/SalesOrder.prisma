@@ -47,6 +47,15 @@ model SalesOrder {
 
   allocationRequests FinishedGoodsAllocationRequest[]
   productionSlips    ProductionSlip[]
+  bookings           Booking[]
+  waxDefects         WaxDefect[]
+  coatingDefects     CoatingDefect[]
+  castingDefects     CastingDefect[]
+  prefinDefects      PrefinDefect[]
+  fabDefects         FabDefect[]
+  mimDefects         MimDefect[]
+  boxContainers      BoxContainer[]
+  boxContainerItems  BoxContainerItem[]
 
   // Base audit & soft delete
   createdAt DateTime  @default(now())

@@ -1,0 +1,42 @@
+model BoxContainerItem {
+  id Int @id @default(autoincrement())
+
+  boxContainerId Int
+  boxContainer   BoxContainer @relation(fields: [boxContainerId], references: [id])
+
+  productionSlipId    Int?
+  productionSlip      ProductionSlip?    @relation(fields: [productionSlipId], references: [id])
+  productionProcessId Int?
+  productionProcess   ProductionProcess? @relation(fields: [productionProcessId], references: [id])
+
+  salesOrderId Int
+  salesOrder   SalesOrder @relation(fields: [salesOrderId], references: [id])
+
+  itemId Int
+  item   Item @relation(fields: [itemId], references: [id])
+
+  fabricationId Int?
+  fabrication   Fabrication? @relation(fields: [fabricationId], references: [id])
+
+  orderNo  String
+  lotNo    String
+  chargeNo String?
+
+  quantity Decimal @db.Decimal(12, 2)
+  remarks  String?
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deleted   Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([boxContainerId])
+  @@index([productionSlipId])
+  @@index([salesOrderId])
+  @@index([itemId])
+  @@index([orderNo, lotNo])
+  @@index([deletedAt])
+}

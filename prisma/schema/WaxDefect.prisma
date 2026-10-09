@@ -1,0 +1,47 @@
+model WaxDefect {
+  id               Int            @id @default(autoincrement())
+  bookingId        Int            @unique
+  booking          Booking        @relation(fields: [bookingId], references: [id])
+  productionSlipId Int
+  productionSlip   ProductionSlip @relation(fields: [productionSlipId], references: [id])
+  salesOrderId     Int
+  salesOrder       SalesOrder     @relation(fields: [salesOrderId], references: [id])
+  itemId           Int
+  item             Item           @relation(fields: [itemId], references: [id])
+  itemCode         String
+
+  aSoluble           Decimal @default(0) @db.Decimal(12, 2)
+  eSoluble           Decimal @default(0) @db.Decimal(12, 2)
+  aWrinkles          Decimal @default(0) @db.Decimal(12, 2)
+  eWrinkles          Decimal @default(0) @db.Decimal(12, 2)
+  aBurryExcess       Decimal @default(0) @db.Decimal(12, 2)
+  eBurryExcess       Decimal @default(0) @db.Decimal(12, 2)
+  aPartingLineOffset Decimal @default(0) @db.Decimal(12, 2)
+  ePartingLineOffset Decimal @default(0) @db.Decimal(12, 2)
+  aSurfaceShrinkage  Decimal @default(0) @db.Decimal(12, 2)
+  eSurfaceShrinkage  Decimal @default(0) @db.Decimal(12, 2)
+  aDieMouldDefect    Decimal @default(0) @db.Decimal(12, 2)
+  eDieMouldDefect    Decimal @default(0) @db.Decimal(12, 2)
+  aDroplets          Decimal @default(0) @db.Decimal(12, 2)
+  eDroplets          Decimal @default(0) @db.Decimal(12, 2)
+  aDeformation       Decimal @default(0) @db.Decimal(12, 2)
+  eDeformation       Decimal @default(0) @db.Decimal(12, 2)
+  aInjectionDamage   Decimal @default(0) @db.Decimal(12, 2)
+  eInjectionDamage   Decimal @default(0) @db.Decimal(12, 2)
+
+  totalDefects Decimal   @default(0) @db.Decimal(12, 2)
+  remarks      String?
+  createdAt    DateTime  @default(now())
+  createdBy    String?
+  updatedAt    DateTime  @updatedAt
+  updatedBy    String?
+  deleted      Boolean   @default(false)
+  deletedAt    DateTime?
+  deletedBy    String?
+
+  @@index([bookingId])
+  @@index([productionSlipId])
+  @@index([salesOrderId])
+  @@index([itemId])
+  @@index([deletedAt])
+}

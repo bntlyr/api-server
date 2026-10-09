@@ -19,6 +19,8 @@ model Fabrication {
   finishedGoodsLots         FinishedGoodsLot[]
   finishedGoodsTransactions FinishedGoodsTransaction[]
   salesOrders               SalesOrder[]
+  bookings                  Booking[]
+  boxContainerItems         BoxContainerItem[]
 
   @@unique([itemId, code])
   @@index([itemId, code])

@@ -32,13 +32,19 @@ model ProductionProcess {
   machineName String?
   remarks     String?
 
+  boxId     Int?
+  boxStatus String? // OPEN, CLOSED
+
   previousProcessId Int?
   previousProcess   ProductionProcess?  @relation("ProductionProcessChain", fields: [previousProcessId], references: [id])
   nextProcesses     ProductionProcess[] @relation("ProductionProcessChain")
 
   // Relations
-  productionSlip ProductionSlip @relation(fields: [productionSlipId], references: [id])
-  process        Process?       @relation(fields: [processId], references: [id])
+  productionSlip    ProductionSlip     @relation(fields: [productionSlipId], references: [id])
+  process           Process?           @relation(fields: [processId], references: [id])
+  dtrs              ProductionDtr[]
+  bookings          Booking[]
+  boxContainerItems BoxContainerItem[]
 
   // Base audit & soft delete
   createdAt DateTime  @default(now())

@@ -1,0 +1,72 @@
+model FabDefect {
+  id               Int            @id @default(autoincrement())
+  bookingId        Int            @unique
+  booking          Booking        @relation(fields: [bookingId], references: [id])
+  productionSlipId Int
+  productionSlip   ProductionSlip @relation(fields: [productionSlipId], references: [id])
+  salesOrderId     Int
+  salesOrder       SalesOrder     @relation(fields: [salesOrderId], references: [id])
+  itemId           Int
+  item             Item           @relation(fields: [itemId], references: [id])
+  itemCode         String
+
+  oxide                 Decimal @default(0) @db.Decimal(12, 2)
+  surfaceShrinkage      Decimal @default(0) @db.Decimal(12, 2)
+  sandInclusion         Decimal @default(0) @db.Decimal(12, 2)
+  swelling              Decimal @default(0) @db.Decimal(12, 2)
+  misrun                Decimal @default(0) @db.Decimal(12, 2)
+  shrinkage             Decimal @default(0) @db.Decimal(12, 2)
+  pinhole               Decimal @default(0) @db.Decimal(12, 2)
+  slagInclusion         Decimal @default(0) @db.Decimal(12, 2)
+  bruise                Decimal @default(0) @db.Decimal(12, 2)
+  overGrind             Decimal @default(0) @db.Decimal(12, 2)
+  overRepair            Decimal @default(0) @db.Decimal(12, 2)
+  materialDeform        Decimal @default(0) @db.Decimal(12, 2)
+  gashole               Decimal @default(0) @db.Decimal(12, 2)
+  step                  Decimal @default(0) @db.Decimal(12, 2)
+  offSet                Decimal @default(0) @db.Decimal(12, 2)
+  toolMark              Decimal @default(0) @db.Decimal(12, 2)
+  brokenTool            Decimal @default(0) @db.Decimal(12, 2)
+  roughSurface          Decimal @default(0) @db.Decimal(12, 2)
+  scratch               Decimal @default(0) @db.Decimal(12, 2)
+  misAlign              Decimal @default(0) @db.Decimal(12, 2)
+  swelling1             Decimal @default(0) @db.Decimal(12, 2)
+  dent                  Decimal @default(0) @db.Decimal(12, 2)
+  deburring             Decimal @default(0) @db.Decimal(12, 2)
+  wrongProcess          Decimal @default(0) @db.Decimal(12, 2)
+  holeDiameterUndersize Decimal @default(0) @db.Decimal(12, 2)
+  holeDiameterOversize  Decimal @default(0) @db.Decimal(12, 2)
+  thicknessOversize     Decimal @default(0) @db.Decimal(12, 2)
+  thicknessUndersize    Decimal @default(0) @db.Decimal(12, 2)
+  pitchOversize         Decimal @default(0) @db.Decimal(12, 2)
+  pitchUndersize        Decimal @default(0) @db.Decimal(12, 2)
+  threadOversize        Decimal @default(0) @db.Decimal(12, 2)
+  threadUndersize       Decimal @default(0) @db.Decimal(12, 2)
+  depthOversize         Decimal @default(0) @db.Decimal(12, 2)
+  depthUndersize        Decimal @default(0) @db.Decimal(12, 2)
+  champerOversize       Decimal @default(0) @db.Decimal(12, 2)
+  champerUndersize      Decimal @default(0) @db.Decimal(12, 2)
+  gTOSPosition          Decimal @default(0) @db.Decimal(12, 2)
+  gTOSParallel          Decimal @default(0) @db.Decimal(12, 2)
+  gTOSPerpendicular     Decimal @default(0) @db.Decimal(12, 2)
+  gTOSConcentricity     Decimal @default(0) @db.Decimal(12, 2)
+  gTOSFlatness          Decimal @default(0) @db.Decimal(12, 2)
+  gTOSSymmetry          Decimal @default(0) @db.Decimal(12, 2)
+  gTOSRunOut            Decimal @default(0) @db.Decimal(12, 2)
+
+  totalDefects Decimal   @default(0) @db.Decimal(12, 2)
+  remarks      String?
+  createdAt    DateTime  @default(now())
+  createdBy    String?
+  updatedAt    DateTime  @updatedAt
+  updatedBy    String?
+  deleted      Boolean   @default(false)
+  deletedAt    DateTime?
+  deletedBy    String?
+
+  @@index([bookingId])
+  @@index([productionSlipId])
+  @@index([salesOrderId])
+  @@index([itemId])
+  @@index([deletedAt])
+}

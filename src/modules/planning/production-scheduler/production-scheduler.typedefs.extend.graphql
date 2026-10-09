@@ -84,6 +84,15 @@ input CreateProductionScheduleInput {
   maxWorkingHoursPerDay: Float
 }
 
+input CreateRemakeScheduleInput {
+  salesOrderId: Int!
+  remakeQty: Float
+  startDateOverride: DateTime
+  maxConcurrentLots: Int
+  includeSaturday: Boolean
+  maxWorkingHoursPerDay: Float
+}
+
 type CreateProductionSchedulePayload {
   salesOrder: SalesOrder
   slips: [ProductionSlip!]!
@@ -99,8 +108,10 @@ type CreateProductionSchedulePayload {
 
 extend type Query {
   previewProductionSchedule(input: ValidateProductionScheduleInput!): ProductionSchedulePreview!
+  previewRemakeSchedule(input: CreateRemakeScheduleInput!): ProductionSchedulePreview!
 }
 
 extend type Mutation {
   createProductionSchedule(input: CreateProductionScheduleInput!): CreateProductionSchedulePayload!
+  createRemakeSchedule(input: CreateRemakeScheduleInput!): CreateProductionSchedulePayload!
 }

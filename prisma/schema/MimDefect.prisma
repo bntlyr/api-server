@@ -1,0 +1,51 @@
+model MimDefect {
+  id               Int            @id @default(autoincrement())
+  bookingId        Int            @unique
+  booking          Booking        @relation(fields: [bookingId], references: [id])
+  productionSlipId Int
+  productionSlip   ProductionSlip @relation(fields: [productionSlipId], references: [id])
+  salesOrderId     Int
+  salesOrder       SalesOrder     @relation(fields: [salesOrderId], references: [id])
+  itemId           Int
+  item             Item           @relation(fields: [itemId], references: [id])
+  itemCode         String
+
+  crack               Decimal @default(0) @db.Decimal(12, 2)
+  cavity              Decimal @default(0) @db.Decimal(12, 2)
+  roughSurface        Decimal @default(0) @db.Decimal(12, 2)
+  spatter             Decimal @default(0) @db.Decimal(12, 2)
+  sticking            Decimal @default(0) @db.Decimal(12, 2)
+  bruiseChipping      Decimal @default(0) @db.Decimal(12, 2)
+  deformation         Decimal @default(0) @db.Decimal(12, 2)
+  size                Decimal @default(0) @db.Decimal(12, 2)
+  evaporation         Decimal @default(0) @db.Decimal(12, 2)
+  surfaceShrinkage    Decimal @default(0) @db.Decimal(12, 2)
+  gate                Decimal @default(0) @db.Decimal(12, 2)
+  injectionIncomplete Decimal @default(0) @db.Decimal(12, 2)
+  airInclusion        Decimal @default(0) @db.Decimal(12, 2)
+  damage              Decimal @default(0) @db.Decimal(12, 2)
+  drop                Decimal @default(0) @db.Decimal(12, 2)
+  weldline            Decimal @default(0) @db.Decimal(12, 2)
+  strainMark          Decimal @default(0) @db.Decimal(12, 2)
+  jetting             Decimal @default(0) @db.Decimal(12, 2)
+  missing             Decimal @default(0) @db.Decimal(12, 2)
+  sintering           Decimal @default(0) @db.Decimal(12, 2)
+  fabricationRej      Decimal @default(0) @db.Decimal(12, 2)
+  others              Decimal @default(0) @db.Decimal(12, 2)
+
+  totalDefects Decimal   @default(0) @db.Decimal(12, 2)
+  remarks      String?
+  createdAt    DateTime  @default(now())
+  createdBy    String?
+  updatedAt    DateTime  @updatedAt
+  updatedBy    String?
+  deleted      Boolean   @default(false)
+  deletedAt    DateTime?
+  deletedBy    String?
+
+  @@index([bookingId])
+  @@index([productionSlipId])
+  @@index([salesOrderId])
+  @@index([itemId])
+  @@index([deletedAt])
+}

@@ -19,3 +19,22 @@ description: Notification system architecture, PG LISTEN/NOTIFY database trigger
   - Authenticate clients during handshake using JWT `TokenService`.
   - Automatically route clients into `cache:global`, `entity:<TableName>`, and `user:<userId>` rooms.
   - Broadcast `cache:invalidate` events containing `{ table, action, id, userId, timestamp }` for instant frontend query cache invalidation (TanStack Query / Apollo Client).
+
+## System Notification Triggers
+
+### 1. Finished Goods (FG) Allocation Subsystem
+- **Request Submitted (`submitFgAllocations`)**: Notifies warehouse approvers and superAdmins when planning requests FG stock allocation (`"New FG Allocation Request: ${orderNo}"`).
+- **Request Approved (`approveFinishedGoodsAllocationRequest`)**: Notifies the original requestor and Sales Order PIC upon warehouse review and stock dedication (`"FG Allocation Approved: ${orderNo}"`).
+- **Request Rejected (`rejectFinishedGoodsAllocationRequest`)**: Notifies the requestor with the recorded rejection reason (`"FG Allocation Rejected: ${orderNo}"`).
+
+### 2. Remake Alerts for Production Sections
+- **Remake Scheduled (`createRemakeSchedule`)**:
+  - Dynamically extracts the route steps of the remake slip to identify all distinct `sectionId`s involved (e.g., Wax Injection, Casting, Machining, QA).
+  - Broadcasts targeted alerts (`"Remake Alert: Order ${orderNo} (${remakeLots.join(', ')})"`) to all active workers and supervisors in those sections (plus Super Admins).
+
+### 3. Left-Running DTR Monitoring
+- **Floor Monitoring Mutation (`notifyLeftRunningDtrs(maxHoursRunning?: Float)`)**:
+  - Detects active DTR sessions running past threshold duration (default: $\ge 4.0$ hours).
+  - Dispatches personalized alert (`"Active DTR Left Running: ${processName}"`) to the worker reminding them to stop their session.
+  - Escalates to section supervisors and managers for stale sessions running $> 8$ hours.
+

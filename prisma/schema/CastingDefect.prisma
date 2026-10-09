@@ -1,0 +1,43 @@
+model CastingDefect {
+  id               Int            @id @default(autoincrement())
+  bookingId        Int            @unique
+  booking          Booking        @relation(fields: [bookingId], references: [id])
+  productionSlipId Int
+  productionSlip   ProductionSlip @relation(fields: [productionSlipId], references: [id])
+  salesOrderId     Int
+  salesOrder       SalesOrder     @relation(fields: [salesOrderId], references: [id])
+  itemId           Int
+  item             Item           @relation(fields: [itemId], references: [id])
+  itemCode         String
+
+  runout         Decimal @default(0) @db.Decimal(12, 2)
+  aMRun          Decimal @default(0) @db.Decimal(12, 2)
+  eMRun          Decimal @default(0) @db.Decimal(12, 2)
+  aShrink        Decimal @default(0) @db.Decimal(12, 2)
+  eShrink        Decimal @default(0) @db.Decimal(12, 2)
+  aPinhole       Decimal @default(0) @db.Decimal(12, 2)
+  ePinhole       Decimal @default(0) @db.Decimal(12, 2)
+  aSlagInclusion Decimal @default(0) @db.Decimal(12, 2)
+  eSlagInclusion Decimal @default(0) @db.Decimal(12, 2)
+  aOxide         Decimal @default(0) @db.Decimal(12, 2)
+  eOxide         Decimal @default(0) @db.Decimal(12, 2)
+  aCrkBrk        Decimal @default(0) @db.Decimal(12, 2)
+  eCrkBrk        Decimal @default(0) @db.Decimal(12, 2)
+  brokenCast     Decimal @default(0) @db.Decimal(12, 2)
+
+  totalDefects Decimal   @default(0) @db.Decimal(12, 2)
+  remarks      String?
+  createdAt    DateTime  @default(now())
+  createdBy    String?
+  updatedAt    DateTime  @updatedAt
+  updatedBy    String?
+  deleted      Boolean   @default(false)
+  deletedAt    DateTime?
+  deletedBy    String?
+
+  @@index([bookingId])
+  @@index([productionSlipId])
+  @@index([salesOrderId])
+  @@index([itemId])
+  @@index([deletedAt])
+}

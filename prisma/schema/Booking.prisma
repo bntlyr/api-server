@@ -1,0 +1,56 @@
+model Booking {
+  id        Int      @id @default(autoincrement())
+  bookingNo String   @unique
+  bookingDate DateTime @default(now())
+
+  itemCode String
+  itemId   Int
+  item     Item   @relation(fields: [itemId], references: [id])
+
+  fabricationId Int?
+  fabrication   Fabrication? @relation(fields: [fabricationId], references: [id])
+
+  orderNo String
+  lotNo   String
+
+  passedQty   Decimal @default(0) @db.Decimal(12, 2)
+  rejectedQty Decimal @default(0) @db.Decimal(12, 2)
+  reworkQty1  Decimal @default(0) @db.Decimal(12, 2)
+  reworkQty2  Decimal @default(0) @db.Decimal(12, 2)
+  reworkQty3  Decimal @default(0) @db.Decimal(12, 2)
+
+  totalInspectedQty Decimal @default(0) @db.Decimal(12, 2)
+
+  actualParameters Json?
+  remarks          String?
+
+  productionSlipId    Int
+  productionSlip      ProductionSlip    @relation(fields: [productionSlipId], references: [id])
+  productionProcessId Int
+  productionProcess   ProductionProcess @relation(fields: [productionProcessId], references: [id])
+  salesOrderId        Int
+  salesOrder          SalesOrder        @relation(fields: [salesOrderId], references: [id])
+
+  waxDefect     WaxDefect?
+  coatingDefect CoatingDefect?
+  castingDefect CastingDefect?
+  prefinDefect  PrefinDefect?
+  fabDefect     FabDefect?
+  mimDefect     MimDefect?
+
+  createdById String?
+  updatedById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deleted     Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   String?
+
+  @@index([productionSlipId, productionProcessId])
+  @@index([productionProcessId, deleted])
+  @@index([productionSlipId, deleted])
+  @@index([salesOrderId, deleted])
+  @@index([orderNo, lotNo, deleted])
+  @@index([bookingDate])
+  @@index([deletedAt])
+}

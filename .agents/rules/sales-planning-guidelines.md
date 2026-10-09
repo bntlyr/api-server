@@ -72,3 +72,85 @@ When a Sales Order is cancelled (`cancelSalesOrder`):
 - **Java Microservice Architecture**:
   - Heavy algorithmic computation is delegated to `java-server` (`POST /api/v1/scheduler/schedule`).
   - `api-server` orchestrates DB retrieval, prepares DTOs, calls Java service, and executes atomic transaction to persist `ProductionSlip` and `ProductionProcess` rows.
+
+---
+
+## 5. Production Execution & Shop Floor Operations
+
+### Process Lifecycle State Machine
+Every chained `ProductionProcess` work order follows a strictly enforced linear transition model:
+$$\text{Pending} \xrightarrow{\text{IN (Receive)}} \text{Received} \xrightarrow{\text{DTR Start}} \text{In-Progress} \xrightarrow{\text{BOOK / ASSIGN BOX}} \text{Completed} \xrightarrow{\text{OUT (Transfer)}} \mathbf{Transferred}$$
+
+- **`Pending`**: Default state awaiting upstream dispatch.
+- **`Received` (`IN`)**: Step received physically at the workstation. **Invariant**: Cannot be received unless the previous process in the chain is in `Transferred` status (Step 1 is exempt).
+- **`In-Progress` (`DTR Start`)**: Worker commences job session. Automatically transitions process from `Received` $\rightarrow$ `In-Progress`.
+- **`Completed` (`BOOK` / `ASSIGN BOX`)**: Final output and scrap tallies recorded (`passedQty`, `rejectedQty`, `reworkQty1..3`).
+- **`Transferred` (`OUT`)**: **The terminal status for every process**. Parts dispatched to the next station or finished goods packaging.
+
+### Worker DTR (Daily Time Record) History
+- **Append-Only Tracking (`ProductionDtr`)**:
+  - Each `startDtr` creates a new record with `status: "Started"`, `startTime: now()`, `currentProcessName: process.processName`, and `userId`.
+  - Each `stopDtr` sets `status: "Stopped"`, `endTime: now()`, and calculates `durationMinutes`.
+  - Active worker monitoring (`activeWorkerDtrs` query) retrieves non-stopped DTR sessions across sections.
+- **Cumulative Quantity Cap Invariant**:
+  $$\sum_{\text{all stopped DTRs}} (\text{passedQty} + \text{rejectedQty} + \text{reworkQty}) \le \text{ProductionProcess.neededQty}$$
+  No worker session can record quantities exceeding the remaining unproduced balance for that process step.
+
+### Reject Shrinkage & Upstream Handover (`OUT`)
+- On `transfer` (`OUT`), the next downstream process step automatically inherits the passed quantity:
+  $$\text{NextProcess.neededQty} = \text{CurrentProcess.passedQty}$$
+- If the current step is the final process of the lot, `ProductionSlip.status` transitions to `Completed`.
+- When all slips for a `SalesOrder` complete, `SalesOrder.productionStatus` transitions to `Completed`, `status` to `Shipping`, and `shippingStatus` to `For-Shipment`.
+
+### Booking Transaction Ledger & Section Defect Analysis
+- **`Booking` Model**: Immutable ledger recording inspection tallies (`passedQty`, `rejectedQty`, `reworkQty1..3`), `totalInspectedQty`, and `actualParameters: Json?` (for runtime temperatures, pressures, cycle times, CMM GD&T dimensions).
+- **Process-Specific Defect Tracking**:
+  - `WaxDefect`: Soluble core, wrinkles, burrs, parting line offset, shrinkage, mould defects, droplets, deformation, injection damage.
+  - `CoatingDefect`: Sand inclusion, swelling, fin run, pimple, projection, rough surface, broken shell, coating defect.
+  - `CastingDefect`: Runout, misrun, shrinkage, pinhole, slag inclusion, oxide, crack/break, broken casting.
+  - `PrefinDefect`: Over-cut, over-shot, sandblast, ceramics, gate burr, over-grind, TIG weld, machine damage, strain marks, wax residue.
+  - `FabDefect`: GD&T (position, parallelism, perpendicularity, concentricity, flatness, symmetry, runout), dimensional tolerances (hole diameter, thickness, pitch, thread, depth, chamfer), tool marks, deburring.
+  - `MimDefect`: Crack, cavity, rough surface, spatter, sticking, chipping, deformation, size, evaporation, gate, weldline, jetting, sintering.
+- **Defect Sum Invariant**:
+  $$\sum \text{Defect Counts} \le \text{rejectedQty} + \sum \text{reworkQty}$$
+
+### BoxContainer Packaging & Deferred Inventory Handover
+- **2-Tier Box Model (`BoxContainer` & `BoxContainerItem`)**:
+  - `BoxContainer` acts as the physical packaging unit allocated to a `salesOrderId` / `orderNo`.
+  - `BoxContainerItem` preserves full lot traceability (`orderNo`, `lotNo`, `chargeNo`, `itemId`, `fabricationId`, `productionSlipId`).
+  - Container tracks physical storage via `areaId` (Area FK) and `locationId` (Location FK).
+- **Staging vs. Transfer Inventory Invariant**:
+  - **Pre-Transfer (Staging)**: While the packing step is active/booked, workers can create containers (`status: "OPEN"` in Packing Area), add/remove pieces, edit weights, or mark `status: "CLOSED"`. **No `FinishedGoodsLot` or `FinishedGoodsTransaction` is created at this stage.**
+  - **Official Handover on `OUT` (`transferProductionProcess`)**: When the final packing process is **`Transferred`**:
+    1. Locks all associated `BoxContainer` records.
+    2. Atomically upserts `FinishedGoodsLot` physical stock in the container's designated `areaId` and `locationId`.
+    3. Writes immutable inbound `FinishedGoodsTransaction` (`transactionType: "PRODUCTION"`, `direction: "INBOUND"`, `referenceNo: boxContainer.boxNo`).
+    4. Increments `SalesOrder.packedQty` and `SalesOrder.producedQty`.
+    5. Completes `ProductionSlip.status = "Completed"`. If all slips complete, transitions `SalesOrder` to `"Shipping"`.
+
+### In-Process Rework Lot Generation & Rework Limits
+- **Automatic Rework Trigger**: When booking a process with $Q_{\text{rework}} = \text{reworkQty1} + \text{reworkQty2} + \text{reworkQty3} > 0$:
+  1. Spawns an independent `ProductionSlip` (`type: "REWORK"`, `lotNo: ${parentLotNo}-R${index}`).
+  2. Natively schedules Step 1 (the rework corrective step with `isRework: true`, `scheduledStartDate: today`, `scheduledEndDate: today`).
+  3. Clones all downstream processes from the parent slip ($P_{k+1} \dots P_n$) with `neededQty = Q_rework`, `scheduledStartDate: today`, and chains them via `previousProcessId`.
+- **Rework Limits & Fabrication Bonus**:
+  - **Base Limit**: Max **3 reworks** per parent lot (`-R1`, `-R2`, `-R3`).
+  - **Fabrication Bonus (+1)**: Reworks occurring during a **Fabrication process** (`process.isFabrication = true`) gain **+1 additional rework bonus**, allowing up to **4 total reworks** (`-R4`).
+  - **Cap Enforcement**: If `existingReworkCount >= maxLimit` (4 for fab, 3 otherwise), booking with `reworkQty > 0` is rejected with `UserError` requiring remaining defective parts to be logged as scrap (`rejectedQty`).
+
+### Production Remake Eligibility & Remake Scheduling
+- **Remake Eligibility Evaluation (`checkRemakeEligibility`)**:
+  - Scrap buffer is calculated against the net demand:
+    $$\text{Net Demand} = \max(0, \text{orderQty} - \text{allocatedQty})$$
+    $$\text{Total Original Scheduled Qty} = \sum \text{ProductionSlip(ORIGINAL).totalQty}$$
+    $$\text{Scrap Buffer} = \max(0, \text{Total Original Scheduled Qty} - \text{Net Demand})$$
+  - Remake is triggered when cumulative rejects across all slip processes exceed the planned scrap buffer:
+    $$\text{isRemakeEligible} = (\sum \text{rejectedQty} > \text{Scrap Buffer})$$
+    $$\text{Shortfall Qty} = \sum \text{rejectedQty} - \text{Scrap Buffer}$$
+    $$\text{Suggested Remake Qty} = \left\lceil \text{Shortfall Qty} \times \left(1 + \frac{\text{item.rejectionRate}}{100}\right) \right\rceil$$
+- **Remake Scheduling Invariants (`previewRemakeSchedule` & `createRemakeSchedule`)**:
+  - Reuses the Java scheduling engine (`POST /api/v1/scheduler/schedule`) with all committed shop-floor load included.
+  - **Preservation of Existing Slips**: Remake scheduling **never deletes** existing slips or processes; it appends new slips with `type: "REMAKE"` and lot numbering `RM-1`, `RM-2`, etc.
+  - All `ProductionProcess` work orders on the remake slip start with `status: "Pending"`, `isCompleted: false`, `isReceived: false`.
+
+

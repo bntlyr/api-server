@@ -1,0 +1,216 @@
+input WaxDefectBookingInput {
+  aSoluble: Float
+  eSoluble: Float
+  aWrinkles: Float
+  eWrinkles: Float
+  aBurryExcess: Float
+  eBurryExcess: Float
+  aPartingLineOffset: Float
+  ePartingLineOffset: Float
+  aSurfaceShrinkage: Float
+  eSurfaceShrinkage: Float
+  aDieMouldDefect: Float
+  eDieMouldDefect: Float
+  aDroplets: Float
+  eDroplets: Float
+  aDeformation: Float
+  eDeformation: Float
+  aInjectionDamage: Float
+  eInjectionDamage: Float
+  remarks: String
+}
+
+input CoatingDefectBookingInput {
+  aSand: Float
+  eSand: Float
+  aSwell: Float
+  eSwell: Float
+  aFinRun: Float
+  eFinRun: Float
+  aPimple: Float
+  ePimple: Float
+  aProjection: Float
+  eProjection: Float
+  aRSurf: Float
+  eRSurf: Float
+  broken: Float
+  eCoating: Float
+  aCoating: Float
+  remarks: String
+}
+
+input CastingDefectBookingInput {
+  runout: Float
+  aMRun: Float
+  eMRun: Float
+  aShrink: Float
+  eShrink: Float
+  aPinhole: Float
+  ePinhole: Float
+  aSlagInclusion: Float
+  eSlagInclusion: Float
+  aOxide: Float
+  eOxide: Float
+  aCrkBrk: Float
+  eCrkBrk: Float
+  brokenCast: Float
+  remarks: String
+}
+
+input PrefinDefectBookingInput {
+  aOCut: Float
+  eOCut: Float
+  aOverShot: Float
+  eOverShot: Float
+  aOverSandBlast: Float
+  eOverSandBlast: Float
+  remainingCeramics: Float
+  gateBurry: Float
+  aOGrnd: Float
+  eOGrnd: Float
+  overRepair: Float
+  aNGSpotTigWeld: Float
+  eNGSpotTigWeld: Float
+  aMachineDamage: Float
+  eMachineDamage: Float
+  aStrainMarks: Float
+  eStrainMarks: Float
+  eDeformationSA: Float
+  eOverGrindStrain: Float
+  aBruise: Float
+  eBruise: Float
+  aWaxResidue: Float
+  eWaxResidue: Float
+  aOther: Float
+  eOther: Float
+  miss: Float
+  isTrial: Boolean
+  remarks: String
+}
+
+input FabDefectBookingInput {
+  oxide: Float
+  surfaceShrinkage: Float
+  sandInclusion: Float
+  swelling: Float
+  misrun: Float
+  shrinkage: Float
+  pinhole: Float
+  slagInclusion: Float
+  bruise: Float
+  overGrind: Float
+  overRepair: Float
+  materialDeform: Float
+  gashole: Float
+  step: Float
+  offSet: Float
+  toolMark: Float
+  brokenTool: Float
+  roughSurface: Float
+  scratch: Float
+  misAlign: Float
+  swelling1: Float
+  dent: Float
+  deburring: Float
+  wrongProcess: Float
+  holeDiameterUndersize: Float
+  holeDiameterOversize: Float
+  thicknessOversize: Float
+  thicknessUndersize: Float
+  pitchOversize: Float
+  pitchUndersize: Float
+  threadOversize: Float
+  threadUndersize: Float
+  depthOversize: Float
+  depthUndersize: Float
+  champerOversize: Float
+  champerUndersize: Float
+  gTOSPosition: Float
+  gTOSParallel: Float
+  gTOSPerpendicular: Float
+  gTOSConcentricity: Float
+  gTOSFlatness: Float
+  gTOSSymmetry: Float
+  gTOSRunOut: Float
+  remarks: String
+}
+
+input MimDefectBookingInput {
+  crack: Float
+  cavity: Float
+  roughSurface: Float
+  spatter: Float
+  sticking: Float
+  bruiseChipping: Float
+  deformation: Float
+  size: Float
+  evaporation: Float
+  surfaceShrinkage: Float
+  gate: Float
+  injectionIncomplete: Float
+  airInclusion: Float
+  damage: Float
+  drop: Float
+  weldline: Float
+  strainMark: Float
+  jetting: Float
+  missing: Float
+  sintering: Float
+  fabricationRej: Float
+  others: Float
+  remarks: String
+}
+
+input BookingExecutionInput {
+  productionProcessId: Int!
+  passedQty: Float!
+  rejectedQty: Float!
+  reworkQty1: Float
+  reworkQty2: Float
+  reworkQty3: Float
+  actualParameters: String
+  remarks: String
+
+  waxDefect: WaxDefectBookingInput
+  coatingDefect: CoatingDefectBookingInput
+  castingDefect: CastingDefectBookingInput
+  prefinDefect: PrefinDefectBookingInput
+  fabDefect: FabDefectBookingInput
+  mimDefect: MimDefectBookingInput
+}
+
+extend type Booking {
+  productionSlip: ProductionSlip
+  productionProcess: ProductionProcess
+  salesOrder: SalesOrder
+  item: Item
+  fabrication: Fabrication
+  waxDefect: WaxDefect
+  coatingDefect: CoatingDefect
+  castingDefect: CastingDefect
+  prefinDefect: PrefinDefect
+  fabDefect: FabDefect
+  mimDefect: MimDefect
+}
+
+type RemakeEligibilityResult {
+  salesOrderId: Int!
+  orderNo: String!
+  orderQty: Float!
+  allocatedQty: Float!
+  netDemand: Float!
+  totalOriginalScheduledQty: Float!
+  scrapBufferQty: Float!
+  totalCumulativeRejects: Float!
+  isRemakeEligible: Boolean!
+  shortfallQty: Float!
+  suggestedRemakeQty: Float!
+}
+
+extend type Query {
+  checkRemakeEligibility(salesOrderId: Int!): RemakeEligibilityResult!
+}
+
+extend type Mutation {
+  bookProcessWithDefects(input: BookingExecutionInput!): BookingPayload!
+}

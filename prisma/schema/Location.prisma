@@ -12,6 +12,7 @@ model Location {
   fromFinishedGoodsTransactions   FinishedGoodsTransaction[]       @relation("FromLocationFGTransactions")
   toFinishedGoodsTransactions     FinishedGoodsTransaction[]       @relation("ToLocationFGTransactions")
   finishedGoodsAllocationRequests FinishedGoodsAllocationRequest[]
+  boxContainers                   BoxContainer[]
 
   createdAt DateTime  @default(now())
   createdBy String?

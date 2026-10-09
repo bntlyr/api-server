@@ -1,0 +1,56 @@
+input BoxContainerItemInput {
+  productionSlipId: Int
+  productionProcessId: Int
+  salesOrderId: Int!
+  itemId: Int!
+  fabricationId: Int
+  orderNo: String!
+  lotNo: String!
+  chargeNo: String
+  quantity: Float!
+  remarks: String
+}
+
+input AddItemsToBoxContainerInput {
+  boxContainerId: Int!
+  items: [BoxContainerItemInput!]!
+}
+
+input RemoveItemFromBoxContainerInput {
+  boxContainerItemId: Int!
+}
+
+input CloseBoxContainerInput {
+  boxContainerId: Int!
+  destinationAreaId: Int!
+  destinationLocationId: Int!
+  remarks: String
+}
+
+extend type BoxContainer {
+  salesOrder: SalesOrder
+  boxType: BoxType!
+  area: Area!
+  location: Location!
+  items: [BoxContainerItem!]!
+}
+
+extend type BoxContainerItem {
+  boxContainer: BoxContainer!
+  productionSlip: ProductionSlip
+  productionProcess: ProductionProcess
+  salesOrder: SalesOrder!
+  item: Item!
+  fabrication: Fabrication
+}
+
+extend type Query {
+  openBoxContainers(areaId: Int): [BoxContainer!]!
+  boxContainersBySalesOrder(salesOrderId: Int!): [BoxContainer!]!
+}
+
+extend type Mutation {
+  addItemsToBoxContainer(input: AddItemsToBoxContainerInput!): BoxContainerPayload!
+  removeItemFromBoxContainer(input: RemoveItemFromBoxContainerInput!): BoxContainerPayload!
+  closeBoxContainer(input: CloseBoxContainerInput!): BoxContainerPayload!
+}

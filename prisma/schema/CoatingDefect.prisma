@@ -1,0 +1,44 @@
+model CoatingDefect {
+  id               Int            @id @default(autoincrement())
+  bookingId        Int            @unique
+  booking          Booking        @relation(fields: [bookingId], references: [id])
+  productionSlipId Int
+  productionSlip   ProductionSlip @relation(fields: [productionSlipId], references: [id])
+  salesOrderId     Int
+  salesOrder       SalesOrder     @relation(fields: [salesOrderId], references: [id])
+  itemId           Int
+  item             Item           @relation(fields: [itemId], references: [id])
+  itemCode         String
+
+  aSand       Decimal @default(0) @db.Decimal(12, 2)
+  eSand       Decimal @default(0) @db.Decimal(12, 2)
+  aSwell      Decimal @default(0) @db.Decimal(12, 2)
+  eSwell      Decimal @default(0) @db.Decimal(12, 2)
+  aFinRun     Decimal @default(0) @db.Decimal(12, 2)
+  eFinRun     Decimal @default(0) @db.Decimal(12, 2)
+  aPimple     Decimal @default(0) @db.Decimal(12, 2)
+  ePimple     Decimal @default(0) @db.Decimal(12, 2)
+  aProjection Decimal @default(0) @db.Decimal(12, 2)
+  eProjection Decimal @default(0) @db.Decimal(12, 2)
+  aRSurf      Decimal @default(0) @db.Decimal(12, 2)
+  eRSurf      Decimal @default(0) @db.Decimal(12, 2)
+  broken      Decimal @default(0) @db.Decimal(12, 2)
+  eCoating    Decimal @default(0) @db.Decimal(12, 2)
+  aCoating    Decimal @default(0) @db.Decimal(12, 2)
+
+  totalDefects Decimal   @default(0) @db.Decimal(12, 2)
+  remarks      String?
+  createdAt    DateTime  @default(now())
+  createdBy    String?
+  updatedAt    DateTime  @updatedAt
+  updatedBy    String?
+  deleted      Boolean   @default(false)
+  deletedAt    DateTime?
+  deletedBy    String?
+
+  @@index([bookingId])
+  @@index([productionSlipId])
+  @@index([salesOrderId])
+  @@index([itemId])
+  @@index([deletedAt])
+}

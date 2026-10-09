@@ -7,6 +7,7 @@ import { FinishedGoodsAllocationRequestLoader } from "./fg-allocation.loader.js"
 import { FinishedGoodsInventoryLoader } from "../../inventory/finished-goods-inventory/finished-goods-inventory.loader.js";
 import { SalesOrderLoader } from "../../sales/sales-order/sales-order.loader.js";
 import { generateFGTransactionNo } from "../../inventory/finished-goods-inventory/helpers/finished-goods-inventory.helper.js";
+import { NotificationService } from "../../../notification/notification.service.js";
 import type {
   AvailableFgStockForOrder,
   SubmitFgAllocationsInput,
@@ -23,6 +24,7 @@ export class FinishedGoodsAllocationService {
     private readonly fgLotLoader: FinishedGoodsInventoryLoader,
     private readonly salesOrderLoader: SalesOrderLoader,
     private readonly auditService: AuditTrailService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async findById(id: number | string) {
@@ -256,6 +258,43 @@ export class FinishedGoodsAllocationService {
         userAgent: userAgent || "Unknown",
       });
 
+      // Notify Warehouse / Inventory Approvers
+      if (savedRequests.length > 0) {
+        const approverUsers = await this.prisma.user.findMany({
+          where: {
+            deletedAt: null,
+            OR: [
+              { superAdmin: true },
+              { section: { name: { in: ["Warehouse", "Inventory", "Finished Goods", "Shipping"] } } },
+            ],
+          },
+          select: { id: true },
+        });
+
+        if (approverUsers.length > 0) {
+          const salesOrder = await this.prisma.salesOrder.findUnique({
+            where: { id: salesOrderId },
+            select: { orderNo: true },
+          });
+          const orderNo = salesOrder?.orderNo ?? `SO-${salesOrderId}`;
+
+          await this.notificationService.send(
+            {
+              userIds: approverUsers.map((u) => u.id),
+              title: `New FG Allocation Request: ${orderNo}`,
+              message: `${userId ?? "Planner"} submitted FG allocation requests for Sales Order ${orderNo} (${savedRequests.length} lot(s)).`,
+              metadata: {
+                type: "FG_ALLOCATION_REQUEST",
+                salesOrderId,
+                orderNo,
+                count: savedRequests.length,
+              },
+            },
+            context,
+          );
+        }
+      }
+
       return {
         success: true,
         requests: savedRequests as any,
@@ -411,6 +450,36 @@ export class FinishedGoodsAllocationService {
         userAgent: userAgent || "Unknown",
       });
 
+      // Notify Requestor & Sales Order PIC
+      if (result.createdById) {
+        const salesOrder = result.salesOrderId
+          ? await this.prisma.salesOrder.findUnique({
+              where: { id: result.salesOrderId },
+              select: { orderNo: true, createdBy: true },
+            })
+          : null;
+        const orderNo = salesOrder?.orderNo ?? `SO-${result.salesOrderId}`;
+        const recipients = [...new Set([result.createdById, salesOrder?.createdBy].filter(Boolean) as string[])];
+
+        if (recipients.length > 0) {
+          await this.notificationService.send(
+            {
+              userIds: recipients,
+              title: `FG Allocation Approved: ${orderNo}`,
+              message: `Allocation request of ${result.allocationQty} pcs for Order ${orderNo} has been approved.`,
+              metadata: {
+                type: "FG_ALLOCATION_APPROVED",
+                requestId: result.id,
+                salesOrderId: result.salesOrderId,
+                orderNo,
+                allocationQty: Number(result.allocationQty),
+              },
+            },
+            context,
+          );
+        }
+      }
+
       return {
         request: result as any,
         userErrors: [],
@@ -473,6 +542,33 @@ export class FinishedGoodsAllocationService {
         ipAddress: ipAddress ?? undefined,
         userAgent: userAgent || "Unknown",
       });
+
+      // Notify Requestor
+      if (existing.createdById) {
+        const salesOrder = existing.salesOrderId
+          ? await this.prisma.salesOrder.findUnique({
+              where: { id: existing.salesOrderId },
+              select: { orderNo: true },
+            })
+          : null;
+        const orderNo = salesOrder?.orderNo ?? `SO-${existing.salesOrderId}`;
+
+        await this.notificationService.send(
+          {
+            userIds: existing.createdById,
+            title: `FG Allocation Rejected: ${orderNo}`,
+            message: `Allocation request for Order ${orderNo} was rejected. Reason: ${reason || "No reason provided."}`,
+            metadata: {
+              type: "FG_ALLOCATION_REJECTED",
+              requestId: existing.id,
+              salesOrderId: existing.salesOrderId,
+              orderNo,
+              reason,
+            },
+          },
+          context,
+        );
+      }
 
       return {
         request: updated as any,

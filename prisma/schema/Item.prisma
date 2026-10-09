@@ -55,6 +55,14 @@ model Item {
   finishedGoodsLots         FinishedGoodsLot[]
   finishedGoodsTransactions FinishedGoodsTransaction[]
   salesOrders               SalesOrder[]
+  bookings                  Booking[]
+  waxDefects                WaxDefect[]
+  coatingDefects            CoatingDefect[]
+  castingDefects            CastingDefect[]
+  prefinDefects             PrefinDefect[]
+  fabDefects                FabDefect[]
+  mimDefects                MimDefect[]
+  boxContainerItems         BoxContainerItem[]
 
   // Base audit & soft delete
   createdAt DateTime  @default(now())

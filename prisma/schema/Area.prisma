@@ -19,6 +19,7 @@ model Area {
   fromFinishedGoodsTransactions   FinishedGoodsTransaction[]       @relation("FromAreaFGTransactions")
   toFinishedGoodsTransactions     FinishedGoodsTransaction[]       @relation("ToAreaFGTransactions")
   finishedGoodsAllocationRequests FinishedGoodsAllocationRequest[]
+  boxContainers                   BoxContainer[]
 
   @@index([deletedAt])
 }

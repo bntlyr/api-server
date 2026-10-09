@@ -3,6 +3,7 @@ import { ProductionSchedulerService } from "../production-scheduler.service.js";
 import type {
   CreateProductionScheduleInput,
   CreateProductionSchedulePayload,
+  CreateRemakeScheduleInput,
   ProductionSchedulePreview,
   ValidateProductionScheduleInput,
 } from "../../../../generated/graphql/types.js";
@@ -18,11 +19,26 @@ export class ProductionSchedulerResolver {
     return this.schedulerService.preview(input);
   }
 
+  @Query("previewRemakeSchedule")
+  async previewRemakeSchedule(
+    @Args("input") input: CreateRemakeScheduleInput,
+  ): Promise<ProductionSchedulePreview> {
+    return this.schedulerService.previewRemakeSchedule(input);
+  }
+
   @Mutation("createProductionSchedule")
   async createProductionSchedule(
     @Args("input") input: CreateProductionScheduleInput,
     @Context() context: any,
   ): Promise<CreateProductionSchedulePayload> {
     return this.schedulerService.createSchedule(input, context);
+  }
+
+  @Mutation("createRemakeSchedule")
+  async createRemakeSchedule(
+    @Args("input") input: CreateRemakeScheduleInput,
+    @Context() context: any,
+  ): Promise<CreateProductionSchedulePayload> {
+    return this.schedulerService.createRemakeSchedule(input, context);
   }
 }

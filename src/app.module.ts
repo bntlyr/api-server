@@ -1,3 +1,14 @@
+import { MimDefectModule } from "./modules/master/mim-defect/mim-defect.module.js";
+import { FabDefectModule } from "./modules/master/fab-defect/fab-defect.module.js";
+import { PrefinDefectModule } from "./modules/master/prefin-defect/prefin-defect.module.js";
+import { CastingDefectModule } from "./modules/master/casting-defect/casting-defect.module.js";
+import { CoatingDefectModule } from "./modules/master/coating-defect/coating-defect.module.js";
+import { WaxDefectModule } from "./modules/master/wax-defect/wax-defect.module.js";
+import { BoxContainerItemModule } from "./modules/master/box-container-item/box-container-item.module.js";
+import { BoxContainerModule } from "./modules/master/box-container/box-container.module.js";
+import { BookingModule } from "./modules/master/booking/booking.module.js";
+import { ProductionExecutionModule } from "./modules/production/production-execution/production-execution.module.js";
+import { ProductionDtrModule } from "./modules/master/production-dtr/production-dtr.module.js";
 import { ProductionSchedulerModule } from "./modules/planning/production-scheduler/production-scheduler.module.js";
 import { ProductionProcessModule } from "./modules/master/production-process/production-process.module.js";
 import { ProductionSlipModule } from "./modules/master/production-slip/production-slip.module.js";
@@ -157,6 +168,17 @@ import { JavaServiceModule } from './java-service/java-service.module.js';
     ProductionSlipModule,
     ProductionProcessModule,
     ProductionSchedulerModule,
+    ProductionDtrModule,
+    ProductionExecutionModule,
+      BookingModule,
+      BoxContainerModule,
+      BoxContainerItemModule,
+      WaxDefectModule,
+      CoatingDefectModule,
+      CastingDefectModule,
+      PrefinDefectModule,
+      FabDefectModule,
+      MimDefectModule,
   ],
   controllers: [AppController],
   providers: [AppService],

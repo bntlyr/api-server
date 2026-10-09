@@ -1,0 +1,79 @@
+input ReceiveProductionProcessInput {
+  processId: Int!
+}
+
+input StartProductionDtrInput {
+  processId: Int!
+  remarks: String
+}
+
+input StopProductionDtrInput {
+  dtrId: Int!
+  passedQty: Float!
+  rejectedQty: Float!
+  reworkQty: Float
+  remarks: String
+}
+
+input BookProductionProcessInput {
+  processId: Int!
+  passedQty: Float!
+  rejectedQty: Float!
+  reworkQty1: Float
+  reworkQty2: Float
+  reworkQty3: Float
+  remarks: String
+}
+
+input TransferProductionProcessInput {
+  processId: Int!
+}
+
+input AssignProductionBoxInput {
+  processId: Int!
+  boxId: Int!
+  boxStatus: String! # OPEN, CLOSED
+  areaId: Int
+  locationId: Int
+}
+
+type AssignProductionBoxPayload {
+  productionProcess: ProductionProcess
+  productionSlip: ProductionSlip
+  finishedGoodsLot: FinishedGoodsLot
+  userErrors: [UserError!]!
+}
+
+type ActiveWorkerDtrInfo {
+  dtrId: Int!
+  userId: String!
+  userName: String
+  sectionName: String
+  productionProcessId: Int!
+  productionSlipId: Int
+  orderNo: String
+  lotNo: String
+  processName: String!
+  status: String!
+  startTime: DateTime!
+}
+
+type NotifyLeftRunningDtrsPayload {
+  notifiedCount: Int!
+  dtrIds: [Int!]!
+  userErrors: [UserError!]!
+}
+
+extend type Query {
+  activeWorkerDtrs(sectionId: Int): [ActiveWorkerDtrInfo!]!
+}
+
+extend type Mutation {
+  receiveProductionProcess(input: ReceiveProductionProcessInput!): ProductionProcessPayload!
+  startProductionDtr(input: StartProductionDtrInput!): ProductionDtrPayload!
+  stopProductionDtr(input: StopProductionDtrInput!): ProductionDtrPayload!
+  bookProductionProcess(input: BookProductionProcessInput!): ProductionProcessPayload!
+  transferProductionProcess(input: TransferProductionProcessInput!): ProductionProcessPayload!
+  assignProductionBox(input: AssignProductionBoxInput!): AssignProductionBoxPayload!
+  notifyLeftRunningDtrs(maxHoursRunning: Float): NotifyLeftRunningDtrsPayload!
+}

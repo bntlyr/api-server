@@ -1,0 +1,56 @@
+model PrefinDefect {
+  id               Int            @id @default(autoincrement())
+  bookingId        Int            @unique
+  booking          Booking        @relation(fields: [bookingId], references: [id])
+  productionSlipId Int
+  productionSlip   ProductionSlip @relation(fields: [productionSlipId], references: [id])
+  salesOrderId     Int
+  salesOrder       SalesOrder     @relation(fields: [salesOrderId], references: [id])
+  itemId           Int
+  item             Item           @relation(fields: [itemId], references: [id])
+  itemCode         String
+
+  aOCut             Decimal @default(0) @db.Decimal(12, 2)
+  eOCut             Decimal @default(0) @db.Decimal(12, 2)
+  aOverShot         Decimal @default(0) @db.Decimal(12, 2)
+  eOverShot         Decimal @default(0) @db.Decimal(12, 2)
+  aOverSandBlast    Decimal @default(0) @db.Decimal(12, 2)
+  eOverSandBlast    Decimal @default(0) @db.Decimal(12, 2)
+  remainingCeramics Decimal @default(0) @db.Decimal(12, 2)
+  gateBurry         Decimal @default(0) @db.Decimal(12, 2)
+  aOGrnd            Decimal @default(0) @db.Decimal(12, 2)
+  eOGrnd            Decimal @default(0) @db.Decimal(12, 2)
+  overRepair        Decimal @default(0) @db.Decimal(12, 2)
+  aNGSpotTigWeld    Decimal @default(0) @db.Decimal(12, 2)
+  eNGSpotTigWeld    Decimal @default(0) @db.Decimal(12, 2)
+  aMachineDamage    Decimal @default(0) @db.Decimal(12, 2)
+  eMachineDamage    Decimal @default(0) @db.Decimal(12, 2)
+  aStrainMarks      Decimal @default(0) @db.Decimal(12, 2)
+  eStrainMarks      Decimal @default(0) @db.Decimal(12, 2)
+  eDeformationSA    Decimal @default(0) @db.Decimal(12, 2)
+  eOverGrindStrain  Decimal @default(0) @db.Decimal(12, 2)
+  aBruise           Decimal @default(0) @db.Decimal(12, 2)
+  eBruise           Decimal @default(0) @db.Decimal(12, 2)
+  aWaxResidue       Decimal @default(0) @db.Decimal(12, 2)
+  eWaxResidue       Decimal @default(0) @db.Decimal(12, 2)
+  aOther            Decimal @default(0) @db.Decimal(12, 2)
+  eOther            Decimal @default(0) @db.Decimal(12, 2)
+  miss              Decimal @default(0) @db.Decimal(12, 2)
+
+  totalDefects Decimal   @default(0) @db.Decimal(12, 2)
+  isTrial      Boolean   @default(false)
+  remarks      String?
+  createdAt    DateTime  @default(now())
+  createdBy    String?
+  updatedAt    DateTime  @updatedAt
+  updatedBy    String?
+  deleted      Boolean   @default(false)
+  deletedAt    DateTime?
+  deletedBy    String?
+
+  @@index([bookingId])
+  @@index([productionSlipId])
+  @@index([salesOrderId])
+  @@index([itemId])
+  @@index([deletedAt])
+}
