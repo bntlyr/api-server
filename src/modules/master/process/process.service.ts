@@ -31,6 +31,25 @@ function parseJsonInput(val: string | null | undefined): any {
   }
 }
 
+function normalizeProcessRecord<T extends Record<string, any> | null | undefined>(row: T): T {
+  if (!row) return row;
+  return {
+    ...row,
+    itemTypeInclusion:
+      row.itemTypeInclusion == null
+        ? null
+        : typeof row.itemTypeInclusion === "string"
+          ? row.itemTypeInclusion
+          : JSON.stringify(row.itemTypeInclusion),
+    itemTypeExclusion:
+      row.itemTypeExclusion == null
+        ? null
+        : typeof row.itemTypeExclusion === "string"
+          ? row.itemTypeExclusion
+          : JSON.stringify(row.itemTypeExclusion),
+  };
+}
+
 @Injectable()
 export class ProcessService {
   constructor(
@@ -39,23 +58,27 @@ export class ProcessService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
-    return this.processLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
+    const row = await this.processLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
+    return normalizeProcessRecord(row);
   }
 
   async findMany(
     pagination?: PaginationInput | null,
     filter?: ProcessFilterInput | null,
+    context?: any,
   ): Promise<ProcessConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
 
       const where = buildPrismaWhere(filter, ["name", "durationType", "leadTimeUnit", "prepTimeUnit", "cureTimeUnit"]);
 
-      const [items, totalCount] = await Promise.all([
+      const [rawItems, totalCount] = await Promise.all([
         this.prisma.process.findMany({
           where,
           take,
@@ -65,6 +88,8 @@ export class ProcessService {
         }),
         this.prisma.process.count({ where }),
       ]);
+
+      const items = rawItems.map((item) => normalizeProcessRecord(item));
 
       const connection = toConnection(items, limit, totalCount, Boolean(pagination?.after));
 
@@ -109,23 +134,21 @@ export class ProcessService {
             numberOfIterations: input.numberOfIterations ?? (input.iterations?.length ? Math.min(input.iterations.length, 10) : 0),
             hasMachining: input.hasMachining ?? (Boolean(input.machineIds && input.machineIds.length > 0)),
             hasIterating: input.hasIterating ?? (Boolean(input.iterations && input.iterations.length > 0)),
-            ...(input.hasChecking ? { hasChecking: input.hasChecking } : {}),
-            ...(input.hasRework ? { hasRework: input.hasRework } : {}),
-            ...(input.hasPacking ? { hasPacking: input.hasPacking } : {}),
-            ...(input.hasTooling ? { hasTooling: input.hasTooling } : {}),
-            ...(input.hasActualParameter ? { hasActualParameter: input.hasActualParameter } : {}),
+            ...(input.hasChecking != null ? { hasChecking: input.hasChecking } : {}),
+            ...(input.hasRework != null ? { hasRework: input.hasRework } : {}),
+            ...(input.hasPacking != null ? { hasPacking: input.hasPacking } : {}),
+            ...(input.hasTooling != null ? { hasTooling: input.hasTooling } : {}),
+            ...(input.hasActualParameter != null ? { hasActualParameter: input.hasActualParameter } : {}),
             ...(input.durationType ? { durationType: input.durationType } : {}),
-            ...(input.leadTime ? { leadTime: input.leadTime } : {}),
+            ...(input.leadTime != null ? { leadTime: input.leadTime } : {}),
             ...(input.leadTimeUnit ? { leadTimeUnit: input.leadTimeUnit } : {}),
             prepTime: input.prepTime ?? null,
             prepTimeUnit: input.prepTimeUnit ?? null,
             cureTime: input.cureTime ?? null,
             cureTimeUnit: input.cureTimeUnit ?? null,
             sectionId: input.sectionId ?? null,
-            createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-            ...(input.deleted ? { deleted: input.deleted } : {}),
-            deletedBy: input.deletedBy ?? null,
+            createdBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== "SYSTEM" ? userId : null,
           },
         });
 
@@ -134,8 +157,8 @@ export class ProcessService {
             data: input.machineIds.map((machineId) => ({
               processId: created.id,
               machineId,
-              createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-              updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+              createdBy: userId !== "SYSTEM" ? userId : null,
+              updatedBy: userId !== "SYSTEM" ? userId : null,
             })),
             skipDuplicates: true,
           });
@@ -147,13 +170,26 @@ export class ProcessService {
             data: iterationItems.map((subname) => ({
               processId: created.id,
               subname,
-              createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-              updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+              createdBy: userId !== "SYSTEM" ? userId : null,
+              updatedBy: userId !== "SYSTEM" ? userId : null,
             })),
           });
         }
 
-        return created;
+        if (input.parameters && input.parameters.length > 0) {
+          await tx.parameter.createMany({
+            data: input.parameters.map((p) => ({
+              processId: created.id,
+              name: p.name,
+              inputType: p.inputType,
+              paramValue: p.paramValue ?? null,
+              createdBy: userId !== "SYSTEM" ? userId : null,
+              updatedBy: userId !== "SYSTEM" ? userId : null,
+            })),
+          });
+        }
+
+        return normalizeProcessRecord(created);
       });
 
       await this.auditService.log({
@@ -201,7 +237,7 @@ export class ProcessService {
         const updated = await tx.process.update({
           where: { id: Number.isNaN(parsedId) ? (id as any) : parsedId },
           data: {
-            ...(input.name ? { name: input.name } : {}),
+            ...(input.name != null ? { name: input.name } : {}),
             ...(input.itemTypeInclusion !== undefined ? { itemTypeInclusion: parseJsonInput(input.itemTypeInclusion) } : {}),
             ...(input.itemTypeExclusion !== undefined ? { itemTypeExclusion: parseJsonInput(input.itemTypeExclusion) } : {}),
             ...(input.numberOfIterations != null ? { numberOfIterations: input.numberOfIterations } : input.iterations != null ? { numberOfIterations: Math.min(input.iterations.length, 10) } : {}),
@@ -213,17 +249,14 @@ export class ProcessService {
             ...(input.hasTooling != null ? { hasTooling: input.hasTooling } : {}),
             ...(input.hasActualParameter != null ? { hasActualParameter: input.hasActualParameter } : {}),
             ...(input.durationType ? { durationType: input.durationType } : {}),
-            ...(input.leadTime ? { leadTime: input.leadTime } : {}),
+            ...(input.leadTime != null ? { leadTime: input.leadTime } : {}),
             ...(input.leadTimeUnit ? { leadTimeUnit: input.leadTimeUnit } : {}),
             ...(input.prepTime !== undefined ? { prepTime: input.prepTime ?? null } : {}),
             ...(input.prepTimeUnit !== undefined ? { prepTimeUnit: input.prepTimeUnit ?? null } : {}),
             ...(input.cureTime !== undefined ? { cureTime: input.cureTime ?? null } : {}),
             ...(input.cureTimeUnit !== undefined ? { cureTimeUnit: input.cureTimeUnit ?? null } : {}),
             ...(input.sectionId !== undefined ? { sectionId: input.sectionId ?? null } : {}),
-            ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-            ...(input.deleted != null ? { deleted: input.deleted } : {}),
-            ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+            updatedBy: userId !== "SYSTEM" ? userId : undefined,
           },
         });
 
@@ -261,7 +294,25 @@ export class ProcessService {
           }
         }
 
-        return updated;
+        if (input.parameters !== undefined) {
+          await tx.parameter.deleteMany({
+            where: { processId: updated.id },
+          });
+          if (input.parameters && input.parameters.length > 0) {
+            await tx.parameter.createMany({
+              data: input.parameters.map((p) => ({
+                processId: updated.id,
+                name: p.name,
+                inputType: p.inputType,
+                paramValue: p.paramValue ?? null,
+                createdBy: userId !== "SYSTEM" ? userId : null,
+                updatedBy: userId !== "SYSTEM" ? userId : null,
+              })),
+            });
+          }
+        }
+
+        return normalizeProcessRecord(updated);
       });
 
       this.processLoader.clear(Number.isNaN(parsedId) ? (id as any) : parsedId);

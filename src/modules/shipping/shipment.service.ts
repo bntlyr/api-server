@@ -37,7 +37,8 @@ export class ShipmentService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     if (Number.isNaN(parsedId)) return null;
     return this.shipmentLoader.byId.load(parsedId);
@@ -46,8 +47,10 @@ export class ShipmentService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: ShipmentFilterInput | null,
+    context?: any,
   ): Promise<ShipmentConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });

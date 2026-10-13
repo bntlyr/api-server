@@ -28,7 +28,8 @@ export class SupplierService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.supplierLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class SupplierService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: SupplierFilterInput | null,
+    context?: any,
   ): Promise<SupplierConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -107,9 +110,8 @@ export class SupplierService {
           currency: input.currency,
           statusCodeId: input.statusCodeId ?? null,
           ...(input.remarks ? { remarks: input.remarks } : {}),
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          deletedBy: input.deletedBy ?? null,
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -172,9 +174,7 @@ export class SupplierService {
           ...(input.currency ? { currency: input.currency } : {}),
           ...(input.statusCodeId !== undefined ? { statusCodeId: input.statusCodeId ?? null } : {}),
           ...(input.remarks ? { remarks: input.remarks } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedBy: userId !== "SYSTEM" ? userId : undefined,
         },
       });
 

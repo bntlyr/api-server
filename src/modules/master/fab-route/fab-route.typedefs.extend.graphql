@@ -5,3 +5,14 @@ extend type FabRoute {
 extend type FabRoute {
   fabRouteSteps: [FabRouteStep!]!
 }
+
+extend input CreateFabRouteInput {
+  ecnNo: String
+  steps: [RouteStepItemInput!]
+}
+
+extend input UpdateFabRouteInput {
+  ecnNo: String
+  steps: [RouteStepItemInput!]
+}
+

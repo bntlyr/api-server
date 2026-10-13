@@ -1,4 +1,5 @@
 import { RawMaterialLoader } from "../raw-material/raw-material.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { RawMaterialRotationService } from "./raw-material-rotation.service.js";
@@ -10,6 +11,7 @@ import { RawMaterialRotationRelationResolver } from "./resolvers/raw-material-ro
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     RawMaterialLoader,
     RawMaterialRotationLoader,
     RawMaterialRotationService,

@@ -37,4 +37,3 @@ extend input CreateItemInput {
 extend input UpdateItemInput {
   mouldIds: [Int!]
 }
-

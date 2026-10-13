@@ -9,7 +9,7 @@ import {
 import type { Request, Response } from "express";
 import * as path from "node:path";
 import { StorageService } from "../services/storage.service.js";
-import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard.js";
+import { JwtAuthGuard, Public } from "../../auth/guards/jwt-auth.guard.js";
 
 const MIME_MAP: Record<string, string> = {
   ".png": "image/png",
@@ -30,13 +30,14 @@ const MIME_MAP: Record<string, string> = {
   ".mp3": "audio/mpeg",
 };
 
-@Controller("api/storage")
+@Controller(["api/storage", "api/bucket-storage"])
 export class StorageController {
   constructor(private readonly storageService: StorageService) {}
 
+  @Public()
   @Get("public/{*path}")
   async servePublicFile(@Req() req: Request, @Res() res: Response) {
-    const rawPath = (req.params as any).path || (req.params as any)[0] || (req.params as any)["*"] || "";
+    const rawPath = this.extractWildcardPath(req);
     const relativePath = `public/${rawPath}`;
     await this.streamFile(relativePath, res);
   }
@@ -44,9 +45,19 @@ export class StorageController {
   @Get("private/{*path}")
   @UseGuards(JwtAuthGuard)
   async servePrivateFile(@Req() req: Request, @Res() res: Response) {
-    const rawPath = (req.params as any).path || (req.params as any)[0] || (req.params as any)["*"] || "";
+    const rawPath = this.extractWildcardPath(req);
     const relativePath = `private/${rawPath}`;
     await this.streamFile(relativePath, res);
+  }
+
+  private extractWildcardPath(req: Request): string {
+    const param =
+      (req.params as any).path ??
+      (req.params as any)[0] ??
+      (req.params as any)["*"] ??
+      "";
+    const joined = Array.isArray(param) ? param.join("/") : String(param);
+    return joined.replace(/^\/+/, "");
   }
 
   private async streamFile(relativePath: string, res: Response) {
@@ -70,11 +81,12 @@ export class StorageController {
       res.setHeader("Cache-Control", "public, max-age=86400, immutable");
 
       stream.pipe(res);
-    } catch (err: any) {
-      if (err instanceof NotFoundException) {
-        throw err;
-      }
-      throw new NotFoundException("File not found");
+    } catch {
+      res.status(404).json({
+        statusCode: 404,
+        message: "File not found",
+        error: "Not Found",
+      });
     }
   }
 }

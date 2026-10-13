@@ -1,8 +1,10 @@
 import { MouldLoader } from "../../mould/mould.loader.js";
 import { ItemTypeLoader } from "../../item-type/item-type.loader.js";
+import { UserLoader } from "../../../user/user.loader.js";
 import type { MouldType as PrismaMouldType } from "../../../../generated//prisma/client.js";
 import { PrismaService } from "../../../../prisma//prisma.service.js";
 import { Parent, ResolveField, Resolver } from "@nestjs/graphql";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 
 @Resolver("MouldType")
 export class MouldTypeRelationResolver {
@@ -10,11 +12,18 @@ export class MouldTypeRelationResolver {
     private readonly prisma: PrismaService,
     private readonly itemTypeLoader: ItemTypeLoader,
     private readonly mouldLoader: MouldLoader,
+    private readonly userLoader: UserLoader,
   ) {}
-  /**
-   * Field resolver / relation resolver for MouldType.
-   * Extend this with relations as the schema grows.
-   */
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() mouldType: PrismaMouldType) {
+    return resolveAuditEmployeeId(mouldType.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() mouldType: PrismaMouldType) {
+    return resolveAuditEmployeeId(mouldType.updatedBy, this.userLoader);
+  }
 
   @ResolveField("itemType")
   async itemType(@Parent() mouldType: PrismaMouldType) {

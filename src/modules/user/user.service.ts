@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service.js";
 import { TokenService } from "../../auth/services/token.service.js";
 import { AuditTrailService } from "../../auth/services/audit-trail.service.js";
+import { pemDecrypt } from "../../auth/helpers/security.helper.js";
 import { extractContextInfo } from "../../graphql/common/context.helper.js";
 import { UserLoader } from "./user.loader.js";
 import type {
@@ -30,15 +31,18 @@ export class UserService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: string) {
+  async findOne(id: string, context?: any) {
+    extractContextInfo(context);
     return this.userLoader.byId.load(id);
   }
 
   async findMany(
     pagination?: PaginationInput | null,
     filter?: UserFilterInput | null,
+    context?: any,
   ): Promise<UserConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: false,
       });
@@ -99,13 +103,17 @@ export class UserService {
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
 
+      const rawPassword = pemDecrypt(input.password) || input.password;
+      const username = (pemDecrypt(input.username) || input.username).trim();
+      const email = (pemDecrypt(input.email) || input.email).trim().toLowerCase();
+
       // Hash password with 12 salt rounds
-      const hashedPassword = await this.tokenService.hashPassword(input.password);
+      const hashedPassword = await this.tokenService.hashPassword(rawPassword);
 
       const user = await this.prisma.user.create({
         data: {
-          username: input.username,
-          email: input.email,
+          username,
+          email,
           name: input.name ?? null,
           password: hashedPassword,
           employeeId: input.employeeId ?? null,
@@ -169,14 +177,18 @@ export class UserService {
 
       let hashedPassword = undefined;
       if (input.password) {
-        hashedPassword = await this.tokenService.hashPassword(input.password);
+        const rawPassword = pemDecrypt(input.password) || input.password;
+        hashedPassword = await this.tokenService.hashPassword(rawPassword);
       }
+
+      const cleanUsername = input.username ? (pemDecrypt(input.username) || input.username).trim() : undefined;
+      const cleanEmail = input.email ? (pemDecrypt(input.email) || input.email).trim().toLowerCase() : undefined;
 
       const user = await this.prisma.user.update({
         where: { id },
         data: {
-          ...(input.username ? { username: input.username } : {}),
-          ...(input.email ? { email: input.email } : {}),
+          ...(cleanUsername ? { username: cleanUsername } : {}),
+          ...(cleanEmail ? { email: cleanEmail } : {}),
           ...(input.name !== undefined ? { name: input.name ?? null } : {}),
           ...(input.employeeId !== undefined ? { employeeId: input.employeeId ?? null } : {}),
           ...(input.employeeName !== undefined ? { employeeName: input.employeeName ?? null } : {}),

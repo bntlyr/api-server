@@ -5,10 +5,12 @@ import { ShipmentTypeLoader } from "./shipment-type.loader.js";
 import { ShipmentTypeQueryResolver } from "./resolvers/shipment-type.query.js";
 import { ShipmentTypeMutationResolver } from "./resolvers/shipment-type.mutation.js";
 import { ShipmentTypeRelationResolver } from "./resolvers/shipment-type.relation.js";
+import { UserLoader } from "../../user/user.loader.js";
 
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     ShipmentTypeLoader,
     ShipmentTypeService,
     ShipmentTypeQueryResolver,

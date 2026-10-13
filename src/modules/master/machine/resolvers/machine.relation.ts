@@ -5,6 +5,8 @@ import { DefaultRouteMachiningLoader } from "../../default-route-machining/defau
 import { ProcessMachiningLoader } from "../../process-machining/process-machining.loader.js";
 import { SectionLoader } from "../../section/section.loader.js";
 import { MachineTypeLoader } from "../../machine-type/machine-type.loader.js";
+import { UserLoader } from "../../../user/user.loader.js";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 import type { Machine as PrismaMachine } from "../../../../generated//prisma/client.js";
 import { PrismaService } from "../../../../prisma//prisma.service.js";
 import { Parent, ResolveField, Resolver } from "@nestjs/graphql";
@@ -20,11 +22,18 @@ export class MachineRelationResolver {
     private readonly itemRouteMachiningLoader: ItemRouteMachiningLoader,
     private readonly fabRouteMachiningLoader: FabRouteMachiningLoader,
     private readonly machineToolLoader: MachineToolLoader,
+    private readonly userLoader: UserLoader,
   ) {}
-  /**
-   * Field resolver / relation resolver for Machine.
-   * Extend this with relations as the schema grows.
-   */
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() machine: PrismaMachine) {
+    return resolveAuditEmployeeId(machine.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() machine: PrismaMachine) {
+    return resolveAuditEmployeeId(machine.updatedBy, this.userLoader);
+  }
 
   @ResolveField("machineType")
   async machineType(@Parent() machine: PrismaMachine) {

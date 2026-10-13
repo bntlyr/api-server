@@ -6,12 +6,14 @@ import { MaterialSupplierQueryResolver } from "./resolvers/material-supplier.que
 import { MaterialSupplierMutationResolver } from "./resolvers/material-supplier.mutation.js";
 import { MaterialSupplierRelationResolver } from "./resolvers/material-supplier.relation.js";
 
+import { UserLoader } from "../../user/user.loader.js";
 import { MaterialModule } from "../material/material.module.js";
 import { SupplierModule } from "../supplier/supplier.module.js";
 
 @Module({
   imports: [PrismaModule, MaterialModule, SupplierModule],
   providers: [
+    UserLoader,
     MaterialSupplierLoader,
     MaterialSupplierService,
     MaterialSupplierQueryResolver,

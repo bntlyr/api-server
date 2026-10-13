@@ -395,7 +395,7 @@ describe("Large-Scale Shipping Simulation & Multi-Pallet Lifecycle", () => {
     }
 
     const addBoxesRes = await shipmentService.addBoxes({
-      shipmentId: shipment.id,
+      shipmentId: String(shipment.id),
       boxContainerIds: Array.from({ length: 25 }, (_, i) => 101 + i),
     });
 

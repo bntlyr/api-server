@@ -5,6 +5,7 @@ import { DefaultRouteMachiningLoader } from "../default-route-machining/default-
 import { ProcessMachiningLoader } from "../process-machining/process-machining.loader.js";
 import { SectionLoader } from "../section/section.loader.js";
 import { MachineTypeLoader } from "../machine-type/machine-type.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { MachineService } from "./machine.service.js";
@@ -16,6 +17,7 @@ import { MachineRelationResolver } from "./resolvers/machine.relation.js";
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     MachineToolLoader,
     FabRouteMachiningLoader,
     ItemRouteMachiningLoader,

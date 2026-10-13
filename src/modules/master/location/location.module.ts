@@ -1,4 +1,5 @@
 import { AreaLoader } from "../area/area.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { LocationService } from "./location.service.js";
@@ -10,6 +11,7 @@ import { LocationRelationResolver } from "./resolvers/location.relation.js";
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     AreaLoader,
     LocationLoader,
     LocationService,

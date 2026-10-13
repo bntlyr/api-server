@@ -21,6 +21,7 @@ export class ItemRouteStepLoader {
     async (itemRouteIds: readonly (number)[]) => {
       const rows = await this.prisma.itemRouteStep.findMany({
         where: { itemRouteId: { in: [...itemRouteIds] } },
+        orderBy: { id: "asc" },
       });
       const groupMap = new Map<number, PrismaItemRouteStep[]>();
       for (const row of rows) {

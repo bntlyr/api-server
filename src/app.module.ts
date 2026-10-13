@@ -107,8 +107,14 @@ import { PrintModule } from './print/print.module.js';
         context: async ({ req, res }: { req: any; res: any }) => {
           let user = undefined;
           const authHeader = req.headers?.authorization;
-          if (authHeader && authHeader.startsWith('Bearer ')) {
-            const token = authHeader.substring(7);
+          const cookieToken = req.cookies?.ACCESS_TOKEN;
+          const token = authHeader
+            ? authHeader.startsWith('Bearer ')
+              ? authHeader.substring(7)
+              : authHeader
+            : cookieToken;
+
+          if (token) {
             user =
               (await authService.validateUserFromToken(token)) ?? undefined;
           }

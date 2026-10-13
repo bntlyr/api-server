@@ -28,7 +28,8 @@ export class BoxTypeService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.boxTypeLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class BoxTypeService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: BoxTypeFilterInput | null,
+    context?: any,
   ): Promise<BoxTypeConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -95,9 +98,8 @@ export class BoxTypeService {
           code: input.code,
           description: input.description ?? null,
           ...(input.weight ? { weight: input.weight } : {}),
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          deletedBy: input.deletedBy ?? null,
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -148,9 +150,7 @@ export class BoxTypeService {
           ...(input.code ? { code: input.code } : {}),
           ...(input.description !== undefined ? { description: input.description ?? null } : {}),
           ...(input.weight ? { weight: input.weight } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedBy: userId !== "SYSTEM" ? userId : undefined,
         },
       });
 

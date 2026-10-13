@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { ItemRouteMachiningService } from "../item-route-machining.service.js";
 import type {
   ItemRouteMachiningFilterInput,
@@ -11,15 +11,16 @@ export class ItemRouteMachiningQueryResolver {
   constructor(private readonly itemRouteMachiningService: ItemRouteMachiningService) {}
 
   @Query("itemRouteMachiningById")
-  async itemRouteMachiningById(@Args("id") id: string) {
-    return this.itemRouteMachiningService.findOne(id);
+  async itemRouteMachiningById(@Args("id") id: string, @Context() context?: any) {
+    return this.itemRouteMachiningService.findOne(id, context);
   }
 
   @Query("itemRouteMachiningsPaginated")
   async itemRouteMachiningsPaginated(
     @Args("pagination", { nullable: true }) pagination?: PaginationInput | null,
     @Args("filter", { nullable: true }) filter?: ItemRouteMachiningFilterInput | null,
+    @Context() context?: any,
   ): Promise<ItemRouteMachiningConnection> {
-    return this.itemRouteMachiningService.findMany(pagination, filter);
+    return this.itemRouteMachiningService.findMany(pagination, filter, context);
   }
 }

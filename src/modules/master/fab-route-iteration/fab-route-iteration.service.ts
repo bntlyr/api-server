@@ -28,7 +28,8 @@ export class FabRouteIterationService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.fabRouteIterationLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class FabRouteIterationService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: FabRouteIterationFilterInput | null,
+    context?: any,
   ): Promise<FabRouteIterationConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -104,10 +107,8 @@ export class FabRouteIterationService {
         data: {
           subname: input.subname,
           fabRouteStepId: input.fabRouteStepId,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -135,8 +136,8 @@ export class FabRouteIterationService {
             itemId: step.fabRoute.fabrication.itemId,
             ecnNo: step.fabRoute.fabrication.item.ecnNo ?? null,
             details: `Added iteration "${fabRouteIteration.subname}" to fabrication step "${step.sequenceNumber} - ${step.name}" in route "${step.fabRoute.name}"`,
-            createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+            createdBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== "SYSTEM" ? userId : null,
           },
         });
       }
@@ -186,10 +187,7 @@ export class FabRouteIterationService {
         data: {
           ...(input.subname ? { subname: input.subname } : {}),
           ...(input.fabRouteStepId ? { fabRouteStepId: input.fabRouteStepId } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deleted != null ? { deleted: input.deleted } : {}),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedBy: userId !== "SYSTEM" ? userId : undefined,
         },
       });
 

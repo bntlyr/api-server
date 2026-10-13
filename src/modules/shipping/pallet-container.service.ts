@@ -28,7 +28,8 @@ export class PalletContainerService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     if (Number.isNaN(parsedId)) return null;
     return this.palletContainerLoader.byId.load(parsedId);

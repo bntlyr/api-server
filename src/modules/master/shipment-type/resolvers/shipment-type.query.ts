@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { ShipmentTypeService } from "../shipment-type.service.js";
 import type {
   ShipmentTypeFilterInput,
@@ -11,15 +11,16 @@ export class ShipmentTypeQueryResolver {
   constructor(private readonly shipmentTypeService: ShipmentTypeService) {}
 
   @Query("shipmentTypeById")
-  async shipmentTypeById(@Args("id") id: string) {
-    return this.shipmentTypeService.findOne(id);
+  async shipmentTypeById(@Args("id") id: string, @Context() context?: any) {
+    return this.shipmentTypeService.findOne(id, context);
   }
 
   @Query("shipmentTypesPaginated")
   async shipmentTypesPaginated(
     @Args("pagination", { nullable: true }) pagination?: PaginationInput | null,
     @Args("filter", { nullable: true }) filter?: ShipmentTypeFilterInput | null,
+    @Context() context?: any,
   ): Promise<ShipmentTypeConnection> {
-    return this.shipmentTypeService.findMany(pagination, filter);
+    return this.shipmentTypeService.findMany(pagination, filter, context);
   }
 }

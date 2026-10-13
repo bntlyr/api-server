@@ -28,7 +28,8 @@ export class MachineTypeService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.machineTypeLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class MachineTypeService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: MachineTypeFilterInput | null,
+    context?: any,
   ): Promise<MachineTypeConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -92,9 +95,8 @@ export class MachineTypeService {
       const machineType = await this.prisma.machineType.create({
         data: {
           name: input.name,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          deletedBy: input.deletedBy ?? null,
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -142,9 +144,7 @@ export class MachineTypeService {
         where: { id: Number.isNaN(parsedId) ? (id as any) : parsedId },
         data: {
           ...(input.name ? { name: input.name } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedBy: userId !== "SYSTEM" ? userId : undefined,
         },
       });
 

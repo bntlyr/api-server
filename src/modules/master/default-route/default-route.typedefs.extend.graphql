@@ -5,3 +5,12 @@ extend type DefaultRoute {
 extend type DefaultRoute {
   defaultRouteSteps: [DefaultRouteStep!]!
 }
+
+extend input CreateDefaultRouteInput {
+  steps: [RouteStepItemInput!]
+}
+
+extend input UpdateDefaultRouteInput {
+  steps: [RouteStepItemInput!]
+}
+

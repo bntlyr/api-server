@@ -2,6 +2,8 @@ import { MaterialSupplierLoader } from "../../material-supplier/material-supplie
 import { RawMaterialLoader } from "../../raw-material/raw-material.loader.js";
 import { SectionLoader } from "../../section/section.loader.js";
 import { MaterialGroupLoader } from "../../material-group/material-group.loader.js";
+import { UserLoader } from "../../../user/user.loader.js";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 import type { Material as PrismaMaterial } from "../../../../generated//prisma/client.js";
 import { PrismaService } from "../../../../prisma//prisma.service.js";
 import { Parent, ResolveField, Resolver } from "@nestjs/graphql";
@@ -14,11 +16,18 @@ export class MaterialRelationResolver {
     private readonly sectionLoader: SectionLoader,
     private readonly rawMaterialLoader: RawMaterialLoader,
     private readonly materialSupplierLoader: MaterialSupplierLoader,
+    private readonly userLoader: UserLoader,
   ) {}
-  /**
-   * Field resolver / relation resolver for Material.
-   * Extend this with relations as the schema grows.
-   */
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() material: PrismaMaterial) {
+    return resolveAuditEmployeeId(material.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() material: PrismaMaterial) {
+    return resolveAuditEmployeeId(material.updatedBy, this.userLoader);
+  }
 
   @ResolveField("materialGroup")
   async materialGroup(@Parent() material: PrismaMaterial) {

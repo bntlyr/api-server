@@ -28,7 +28,8 @@ export class RawMaterialService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.rawMaterialLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class RawMaterialService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: RawMaterialFilterInput | null,
+    context?: any,
   ): Promise<RawMaterialConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -97,12 +100,10 @@ export class RawMaterialService {
           stamping: input.stamping ?? null,
           pylox: input.pylox ?? null,
           itemTypeId: input.itemTypeId,
-          createdById: input.createdById ?? null,
-          updatedById: input.updatedById ?? null,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
+          createdById: userId !== "SYSTEM" ? userId : null,
+          updatedById: userId !== "SYSTEM" ? userId : null,
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -155,12 +156,8 @@ export class RawMaterialService {
           ...(input.stamping !== undefined ? { stamping: input.stamping ?? null } : {}),
           ...(input.pylox !== undefined ? { pylox: input.pylox ?? null } : {}),
           ...(input.itemTypeId ? { itemTypeId: input.itemTypeId } : {}),
-          ...(input.createdById !== undefined ? { createdById: input.createdById ?? null } : {}),
-          ...(input.updatedById !== undefined ? { updatedById: input.updatedById ?? null } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedById: userId !== "SYSTEM" ? userId : undefined,
+          updatedBy: userId !== "SYSTEM" ? userId : undefined,
         },
       });
 

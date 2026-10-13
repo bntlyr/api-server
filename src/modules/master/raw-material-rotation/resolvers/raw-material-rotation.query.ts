@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { RawMaterialRotationService } from "../raw-material-rotation.service.js";
 import type {
   RawMaterialRotationFilterInput,
@@ -11,15 +11,16 @@ export class RawMaterialRotationQueryResolver {
   constructor(private readonly rawMaterialRotationService: RawMaterialRotationService) {}
 
   @Query("rawMaterialRotationById")
-  async rawMaterialRotationById(@Args("id") id: string) {
-    return this.rawMaterialRotationService.findOne(id);
+  async rawMaterialRotationById(@Args("id") id: string, @Context() context?: any) {
+    return this.rawMaterialRotationService.findOne(id, context);
   }
 
   @Query("rawMaterialRotationsPaginated")
   async rawMaterialRotationsPaginated(
     @Args("pagination", { nullable: true }) pagination?: PaginationInput | null,
     @Args("filter", { nullable: true }) filter?: RawMaterialRotationFilterInput | null,
+    @Context() context?: any,
   ): Promise<RawMaterialRotationConnection> {
-    return this.rawMaterialRotationService.findMany(pagination, filter);
+    return this.rawMaterialRotationService.findMany(pagination, filter, context);
   }
 }

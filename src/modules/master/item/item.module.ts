@@ -7,6 +7,7 @@ import { BoxTypeLoader } from "../box-type/box-type.loader.js";
 import { RawMaterialLoader } from "../raw-material/raw-material.loader.js";
 import { ItemTypeLoader } from "../item-type/item-type.loader.js";
 import { CustomerLoader } from "../customer/customer.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { ItemService } from "./item.service.js";
@@ -27,6 +28,7 @@ import { ItemRelationResolver } from "./resolvers/item.relation.js";
     RawMaterialLoader,
     ItemTypeLoader,
     CustomerLoader,
+    UserLoader,
     ItemLoader,
     ItemService,
     ItemQueryResolver,

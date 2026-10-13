@@ -6,6 +6,7 @@ import { ProcessIterationLoader } from "../process-iteration/process-iteration.l
 import { ItemPictureLoader } from "../item-picture/item-picture.loader.js";
 import { ParameterLoader } from "../parameter/parameter.loader.js";
 import { SectionLoader } from "../section/section.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { ProcessService } from "./process.service.js";
@@ -17,6 +18,7 @@ import { ProcessRelationResolver } from "./resolvers/process.relation.js";
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     FabRouteStepLoader,
     ItemRouteStepLoader,
     DefaultRouteStepLoader,

@@ -190,7 +190,7 @@ describe("Shipping Module", () => {
       });
 
       const res = await service.create({
-        shipmentId: 1,
+        shipmentId: "1",
       });
 
       expect(res.userErrors).toHaveLength(0);

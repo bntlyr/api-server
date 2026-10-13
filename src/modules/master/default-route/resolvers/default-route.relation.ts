@@ -1,5 +1,7 @@
 import { DefaultRouteStepLoader } from "../../default-route-step/default-route-step.loader.js";
 import { ItemTypeLoader } from "../../item-type/item-type.loader.js";
+import { UserLoader } from "../../../user/user.loader.js";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 import type { DefaultRoute as PrismaDefaultRoute } from "../../../../generated//prisma/client.js";
 import { PrismaService } from "../../../../prisma//prisma.service.js";
 import { Parent, ResolveField, Resolver } from "@nestjs/graphql";
@@ -10,11 +12,18 @@ export class DefaultRouteRelationResolver {
     private readonly prisma: PrismaService,
     private readonly itemTypeLoader: ItemTypeLoader,
     private readonly defaultRouteStepLoader: DefaultRouteStepLoader,
+    private readonly userLoader: UserLoader,
   ) {}
-  /**
-   * Field resolver / relation resolver for DefaultRoute.
-   * Extend this with relations as the schema grows.
-   */
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() defaultRoute: PrismaDefaultRoute) {
+    return resolveAuditEmployeeId(defaultRoute.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() defaultRoute: PrismaDefaultRoute) {
+    return resolveAuditEmployeeId(defaultRoute.updatedBy, this.userLoader);
+  }
 
   @ResolveField("itemType")
   async itemType(@Parent() defaultRoute: PrismaDefaultRoute) {

@@ -5,3 +5,14 @@ extend type ItemRoute {
 extend type ItemRoute {
   itemRouteSteps: [ItemRouteStep!]!
 }
+
+extend input CreateItemRouteInput {
+  ecnNo: String
+  steps: [RouteStepItemInput!]
+}
+
+extend input UpdateItemRouteInput {
+  ecnNo: String
+  steps: [RouteStepItemInput!]
+}
+

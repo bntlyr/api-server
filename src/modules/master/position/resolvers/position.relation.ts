@@ -3,6 +3,7 @@ import { SectionLoader } from "../../section/section.loader.js";
 import type { Position as PrismaPosition } from "../../../../generated/prisma/client.js";
 import { PrismaService } from "../../../../prisma/prisma.service.js";
 import { Parent, ResolveField, Resolver } from "@nestjs/graphql";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 
 @Resolver("Position")
 export class PositionRelationResolver {
@@ -15,6 +16,16 @@ export class PositionRelationResolver {
    * Field resolver / relation resolver for Position.
    * Extend this with relations as the schema grows.
    */
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() position: PrismaPosition) {
+    return resolveAuditEmployeeId(position.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() position: PrismaPosition) {
+    return resolveAuditEmployeeId(position.updatedBy, this.userLoader);
+  }
 
   @ResolveField("section")
   async section(@Parent() position: PrismaPosition) {

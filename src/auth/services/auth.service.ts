@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { PrismaService } from "../../prisma/prisma.service.js";
 import { TokenService } from "./token.service.js";
 import { AuditTrailService } from "./audit-trail.service.js";
+import { pemDecrypt } from "../helpers/security.helper.js";
 import type { AuthenticatedUser, UserPagePermission } from "../interfaces/auth.interface.js";
 
 export interface LoginDto {
@@ -18,6 +19,8 @@ export interface RegisterDto {
   email: string;
   password: string;
   name?: string;
+  cellphone?: string;
+  employeeId?: string;
   userAgent: string;
   ipAddress?: string;
 }
@@ -31,29 +34,36 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
+    // Decrypt credentials if RSA encrypted
+    const username = (pemDecrypt(dto.username) || dto.username).trim();
+    const email = (pemDecrypt(dto.email) || dto.email).trim().toLowerCase();
+    const rawPassword = pemDecrypt(dto.password) || dto.password;
+
     // 1. Check existing username or email
     const existing = await this.prisma.user.findFirst({
       where: {
-        OR: [{ username: dto.username }, { email: dto.email }],
+        OR: [{ username }, { email }],
       },
     });
 
     if (existing) {
-      if (existing.username === dto.username) {
+      if (existing.username === username) {
         throw new Error("Username already taken");
       }
       throw new Error("Email already registered");
     }
 
     // 2. Hash password with bcrypt 12 salt rounds
-    const hashedPassword = await this.tokenService.hashPassword(dto.password);
+    const hashedPassword = await this.tokenService.hashPassword(rawPassword);
 
     // 3. Create user
     const user = await this.prisma.user.create({
       data: {
-        username: dto.username,
-        email: dto.email,
+        username,
+        email,
         name: dto.name ?? null,
+        cellphone: dto.cellphone ?? null,
+        employeeId: dto.employeeId ?? null,
         password: hashedPassword,
       },
     });
@@ -74,10 +84,14 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    // Decrypt credentials if RSA encrypted
+    const usernameOrEmail = (pemDecrypt(dto.usernameOrEmail) || dto.usernameOrEmail).trim();
+    const rawPassword = pemDecrypt(dto.password) || dto.password;
+
     // 1. Find user by username or email
     const user = await this.prisma.user.findFirst({
       where: {
-        OR: [{ username: dto.usernameOrEmail }, { email: dto.usernameOrEmail }],
+        OR: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
       },
     });
 
@@ -86,7 +100,7 @@ export class AuthService {
     }
 
     // 2. Validate password
-    const isMatch = await this.tokenService.comparePassword(dto.password, user.password);
+    const isMatch = await this.tokenService.comparePassword(rawPassword, user.password);
     if (!isMatch) {
       await this.auditService.log({
         userId: user.id,

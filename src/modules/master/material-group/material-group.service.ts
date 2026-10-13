@@ -28,7 +28,8 @@ export class MaterialGroupService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.materialGroupLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class MaterialGroupService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: MaterialGroupFilterInput | null,
+    context?: any,
   ): Promise<MaterialGroupConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -93,12 +96,10 @@ export class MaterialGroupService {
         data: {
           name: input.name,
           code: input.code,
-          createdById: input.createdById ?? null,
-          updatedById: input.updatedById ?? null,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
+          createdById: userId !== "SYSTEM" ? userId : null,
+          updatedById: userId !== "SYSTEM" ? userId : null,
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -147,12 +148,8 @@ export class MaterialGroupService {
         data: {
           ...(input.name ? { name: input.name } : {}),
           ...(input.code ? { code: input.code } : {}),
-          ...(input.createdById !== undefined ? { createdById: input.createdById ?? null } : {}),
-          ...(input.updatedById !== undefined ? { updatedById: input.updatedById ?? null } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedById: userId !== "SYSTEM" ? userId : undefined,
+          updatedBy: userId !== "SYSTEM" ? userId : undefined,
         },
       });
 

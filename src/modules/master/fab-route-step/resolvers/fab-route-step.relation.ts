@@ -4,6 +4,8 @@ import { FabRouteMachiningLoader } from "../../fab-route-machining/fab-route-mac
 import { FabRouteIterationLoader } from "../../fab-route-iteration/fab-route-iteration.loader.js";
 import { FabRouteParameterLoader } from "../../fab-route-parameter/fab-route-parameter.loader.js";
 import { FabRouteLoader } from "../../fab-route/fab-route.loader.js";
+import { UserLoader } from "../../../user/user.loader.js";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 import type { FabRouteStep as PrismaFabRouteStep } from "../../../../generated//prisma/client.js";
 import { PrismaService } from "../../../../prisma//prisma.service.js";
 import { Parent, ResolveField, Resolver } from "@nestjs/graphql";
@@ -18,11 +20,18 @@ export class FabRouteStepRelationResolver {
     private readonly fabRouteMachiningLoader: FabRouteMachiningLoader,
     private readonly sectionLoader: SectionLoader,
     private readonly processLoader: ProcessLoader,
+    private readonly userLoader: UserLoader,
   ) {}
-  /**
-   * Field resolver / relation resolver for FabRouteStep.
-   * Extend this with relations as the schema grows.
-   */
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() fabRouteStep: PrismaFabRouteStep) {
+    return resolveAuditEmployeeId(fabRouteStep.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() fabRouteStep: PrismaFabRouteStep) {
+    return resolveAuditEmployeeId(fabRouteStep.updatedBy, this.userLoader);
+  }
 
   @ResolveField("fabRoute")
   async fabRoute(@Parent() fabRouteStep: PrismaFabRouteStep) {

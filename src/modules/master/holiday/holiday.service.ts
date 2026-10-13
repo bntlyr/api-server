@@ -28,7 +28,8 @@ export class HolidayService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.holidayLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class HolidayService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: HolidayFilterInput | null,
+    context?: any,
   ): Promise<HolidayConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -93,9 +96,8 @@ export class HolidayService {
         data: {
           name: input.name,
           date: input.date,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          deletedBy: input.deletedBy ?? null,
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -144,9 +146,7 @@ export class HolidayService {
         data: {
           ...(input.name ? { name: input.name } : {}),
           ...(input.date ? { date: input.date } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedBy: userId !== "SYSTEM" ? userId : undefined,
         },
       });
 

@@ -1,6 +1,8 @@
 import { DefaultRouteLoader } from "../default-route/default-route.loader.js";
+import { DefaultRouteStepLoader } from "../default-route-step/default-route-step.loader.js";
 import { ItemLoader } from "../item/item.loader.js";
 import { MouldTypeLoader } from "../mould-type/mould-type.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { ItemTypeService } from "./item-type.service.js";
@@ -13,8 +15,10 @@ import { ItemTypeRelationResolver } from "./resolvers/item-type.relation.js";
   imports: [PrismaModule],
   providers: [
     DefaultRouteLoader,
+    DefaultRouteStepLoader,
     ItemLoader,
     MouldTypeLoader,
+    UserLoader,
     ItemTypeLoader,
     ItemTypeService,
     ItemTypeQueryResolver,

@@ -30,7 +30,8 @@ export class MaterialIssuanceService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     if (Number.isNaN(parsedId)) return null;
     return this.loader.byId.load(parsedId);
@@ -39,8 +40,10 @@ export class MaterialIssuanceService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: MaterialIssuanceFilterInput | null,
+    context?: any,
   ): Promise<MaterialIssuanceConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });

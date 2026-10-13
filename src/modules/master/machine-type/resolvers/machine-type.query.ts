@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { MachineTypeService } from "../machine-type.service.js";
 import type {
   MachineTypeFilterInput,
@@ -11,15 +11,16 @@ export class MachineTypeQueryResolver {
   constructor(private readonly machineTypeService: MachineTypeService) {}
 
   @Query("machineTypeById")
-  async machineTypeById(@Args("id") id: string) {
-    return this.machineTypeService.findOne(id);
+  async machineTypeById(@Args("id") id: string, @Context() context?: any) {
+    return this.machineTypeService.findOne(id, context);
   }
 
   @Query("machineTypesPaginated")
   async machineTypesPaginated(
     @Args("pagination", { nullable: true }) pagination?: PaginationInput | null,
     @Args("filter", { nullable: true }) filter?: MachineTypeFilterInput | null,
+    @Context() context?: any,
   ): Promise<MachineTypeConnection> {
-    return this.machineTypeService.findMany(pagination, filter);
+    return this.machineTypeService.findMany(pagination, filter, context);
   }
 }

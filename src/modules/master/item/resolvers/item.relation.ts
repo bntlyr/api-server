@@ -7,6 +7,8 @@ import { BoxTypeLoader } from "../../box-type/box-type.loader.js";
 import { RawMaterialLoader } from "../../raw-material/raw-material.loader.js";
 import { ItemTypeLoader } from "../../item-type/item-type.loader.js";
 import { CustomerLoader } from "../../customer/customer.loader.js";
+import { UserLoader } from "../../../user/user.loader.js";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 import type { Item as PrismaItem } from "../../../../generated//prisma/client.js";
 import { PrismaService } from "../../../../prisma//prisma.service.js";
 import { Parent, ResolveField, Resolver } from "@nestjs/graphql";
@@ -24,11 +26,18 @@ export class ItemRelationResolver {
     private readonly fabricationLoader: FabricationLoader,
     private readonly itemRouteLoader: ItemRouteLoader,
     private readonly mouldItemLoader: MouldItemLoader,
+    private readonly userLoader: UserLoader,
   ) {}
-  /**
-   * Field resolver / relation resolver for Item.
-   * Extend this with relations as the schema grows.
-   */
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() item: PrismaItem) {
+    return resolveAuditEmployeeId(item.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() item: PrismaItem) {
+    return resolveAuditEmployeeId(item.updatedBy, this.userLoader);
+  }
 
   @ResolveField("customer")
   async customer(@Parent() item: PrismaItem) {

@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { DefaultRouteIterationService } from "../default-route-iteration.service.js";
 import type {
   DefaultRouteIterationFilterInput,
@@ -11,15 +11,16 @@ export class DefaultRouteIterationQueryResolver {
   constructor(private readonly defaultRouteIterationService: DefaultRouteIterationService) {}
 
   @Query("defaultRouteIterationById")
-  async defaultRouteIterationById(@Args("id") id: string) {
-    return this.defaultRouteIterationService.findOne(id);
+  async defaultRouteIterationById(@Args("id") id: string, @Context() context?: any) {
+    return this.defaultRouteIterationService.findOne(id, context);
   }
 
   @Query("defaultRouteIterationsPaginated")
   async defaultRouteIterationsPaginated(
     @Args("pagination", { nullable: true }) pagination?: PaginationInput | null,
     @Args("filter", { nullable: true }) filter?: DefaultRouteIterationFilterInput | null,
+    @Context() context?: any,
   ): Promise<DefaultRouteIterationConnection> {
-    return this.defaultRouteIterationService.findMany(pagination, filter);
+    return this.defaultRouteIterationService.findMany(pagination, filter, context);
   }
 }

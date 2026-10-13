@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { HolidayService } from "../holiday.service.js";
 import type {
   HolidayFilterInput,
@@ -11,15 +11,16 @@ export class HolidayQueryResolver {
   constructor(private readonly holidayService: HolidayService) {}
 
   @Query("holidayById")
-  async holidayById(@Args("id") id: string) {
-    return this.holidayService.findOne(id);
+  async holidayById(@Args("id") id: string, @Context() context?: any) {
+    return this.holidayService.findOne(id, context);
   }
 
   @Query("holidaysPaginated")
   async holidaysPaginated(
     @Args("pagination", { nullable: true }) pagination?: PaginationInput | null,
     @Args("filter", { nullable: true }) filter?: HolidayFilterInput | null,
+    @Context() context?: any,
   ): Promise<HolidayConnection> {
-    return this.holidayService.findMany(pagination, filter);
+    return this.holidayService.findMany(pagination, filter, context);
   }
 }

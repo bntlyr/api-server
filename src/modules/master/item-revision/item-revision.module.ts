@@ -1,4 +1,5 @@
 import { ItemLoader } from "../item/item.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { ItemRevisionService } from "./item-revision.service.js";
@@ -11,6 +12,7 @@ import { ItemRevisionRelationResolver } from "./resolvers/item-revision.relation
   imports: [PrismaModule],
   providers: [
     ItemLoader,
+    UserLoader,
     ItemRevisionLoader,
     ItemRevisionService,
     ItemRevisionQueryResolver,

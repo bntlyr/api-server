@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { FinishedGoodsInventoryService } from "../finished-goods-inventory.service.js";
 import type {
   FinishedGoodsLotConnection,

@@ -1,4 +1,5 @@
 import { RawMaterialLoader } from "../raw-material/raw-material.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { MeltingService } from "./melting.service.js";
@@ -10,6 +11,7 @@ import { MeltingRelationResolver } from "./resolvers/melting.relation.js";
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     RawMaterialLoader,
     MeltingLoader,
     MeltingService,

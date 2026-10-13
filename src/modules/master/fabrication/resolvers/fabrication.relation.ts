@@ -1,5 +1,7 @@
 import { FabRouteLoader } from "../../fab-route/fab-route.loader.js";
 import { ItemLoader } from "../../item/item.loader.js";
+import { UserLoader } from "../../../user/user.loader.js";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 import type { Fabrication as PrismaFabrication } from "../../../../generated//prisma/client.js";
 import { PrismaService } from "../../../../prisma//prisma.service.js";
 import { Parent, ResolveField, Resolver } from "@nestjs/graphql";
@@ -10,11 +12,18 @@ export class FabricationRelationResolver {
     private readonly prisma: PrismaService,
     private readonly itemLoader: ItemLoader,
     private readonly fabRouteLoader: FabRouteLoader,
+    private readonly userLoader: UserLoader,
   ) {}
-  /**
-   * Field resolver / relation resolver for Fabrication.
-   * Extend this with relations as the schema grows.
-   */
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() fabrication: PrismaFabrication) {
+    return resolveAuditEmployeeId(fabrication.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() fabrication: PrismaFabrication) {
+    return resolveAuditEmployeeId(fabrication.updatedBy, this.userLoader);
+  }
 
   @ResolveField("item")
   async item(@Parent() fabrication: PrismaFabrication) {

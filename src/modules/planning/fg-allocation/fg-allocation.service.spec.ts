@@ -99,8 +99,8 @@ describe("FinishedGoodsAllocationService", () => {
 
       const payload = await service.submitFgAllocations(
         {
-          salesOrderId: 5,
-          allocations: [{ lotId: 10, allocationQty: 100, remarks: "Need 100 pcs" }],
+          salesOrderId: "5",
+          allocations: [{ lotId: "10", allocationQty: 100, remarks: "Need 100 pcs" }],
         },
         { user: { id: "planner-01" } },
       );

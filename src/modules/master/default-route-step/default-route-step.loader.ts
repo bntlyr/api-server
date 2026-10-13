@@ -21,6 +21,7 @@ export class DefaultRouteStepLoader {
     async (defaultRouteIds: readonly (number)[]) => {
       const rows = await this.prisma.defaultRouteStep.findMany({
         where: { defaultRouteId: { in: [...defaultRouteIds] } },
+        orderBy: { id: "asc" },
       });
       const groupMap = new Map<number, PrismaDefaultRouteStep[]>();
       for (const row of rows) {

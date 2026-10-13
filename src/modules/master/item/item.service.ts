@@ -17,7 +17,7 @@ import {
   toConnection,
 } from "../../../graphql//common/pagination.helper.js";
 import { validateCreateItemInput, validateUpdateItemInput } from "./helpers/item.helper.js";
-
+import { copyDefaultRouteToItem } from "../default-route-step/helpers/route-step-sync.helper.js";
 import { ItemLoader } from "./item.loader.js";
 
 @Injectable()
@@ -28,7 +28,8 @@ export class ItemService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.itemLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class ItemService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: ItemFilterInput | null,
+    context?: any,
   ): Promise<ItemConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -101,27 +104,27 @@ export class ItemService {
             ...(input.endUser ? { endUser: input.endUser } : {}),
             description: input.description ?? null,
             itemImage: input.itemImage ?? null,
-            ...(input.stdItemWt ? { stdItemWt: input.stdItemWt } : {}),
-            ...(input.castingWt ? { castingWt: input.castingWt } : {}),
+            ...(input.stdItemWt != null ? { stdItemWt: input.stdItemWt } : {}),
+            ...(input.castingWt != null ? { castingWt: input.castingWt } : {}),
             castingTemp: input.castingTemp ?? null,
             mouldTemp: input.mouldTemp ?? null,
-            ...(input.cost ? { cost: input.cost } : {}),
-            ...(input.sellingPrice ? { sellingPrice: input.sellingPrice } : {}),
-            ...(input.materialPrice ? { materialPrice: input.materialPrice } : {}),
-            ...(input.heatPrice ? { heatPrice: input.heatPrice } : {}),
-            ...(input.platePrice ? { platePrice: input.platePrice } : {}),
-            ...(input.otherPrice ? { otherPrice: input.otherPrice } : {}),
-            ...(input.unitPrice ? { unitPrice: input.unitPrice } : {}),
-            ...(input.rejectionRate ? { rejectionRate: input.rejectionRate } : {}),
-            ...(input.qtyPerTree ? { qtyPerTree: input.qtyPerTree } : {}),
-            ...(input.qtyPerShot ? { qtyPerShot: input.qtyPerShot } : {}),
-            ...(input.autoSplitQty ? { autoSplitQty: input.autoSplitQty } : {}),
+            ...(input.cost != null ? { cost: input.cost } : {}),
+            ...(input.sellingPrice != null ? { sellingPrice: input.sellingPrice } : {}),
+            ...(input.materialPrice != null ? { materialPrice: input.materialPrice } : {}),
+            ...(input.heatPrice != null ? { heatPrice: input.heatPrice } : {}),
+            ...(input.platePrice != null ? { platePrice: input.platePrice } : {}),
+            ...(input.otherPrice != null ? { otherPrice: input.otherPrice } : {}),
+            ...(input.unitPrice != null ? { unitPrice: input.unitPrice } : {}),
+            ...(input.rejectionRate != null ? { rejectionRate: input.rejectionRate } : {}),
+            ...(input.qtyPerTree != null ? { qtyPerTree: input.qtyPerTree } : {}),
+            ...(input.qtyPerShot != null ? { qtyPerShot: input.qtyPerShot } : {}),
+            ...(input.autoSplitQty != null ? { autoSplitQty: input.autoSplitQty } : {}),
             drawingProductNo: input.drawingProductNo,
             drawingRevisionNo: input.drawingRevisionNo,
             coatingPattern: input.coatingPattern ?? null,
-            ...(input.stamping ? { stamping: input.stamping } : {}),
-            ...(input.soluble ? { soluble: input.soluble } : {}),
-            ...(input.sizeCheck ? { sizeCheck: input.sizeCheck } : {}),
+            ...(input.stamping != null ? { stamping: input.stamping } : {}),
+            ...(input.soluble != null ? { soluble: input.soluble } : {}),
+            ...(input.sizeCheck != null ? { sizeCheck: input.sizeCheck } : {}),
             similarItem: input.similarItem ?? null,
             remarks: input.remarks ?? null,
             ecnNo: input.ecnNo ?? null,
@@ -129,10 +132,8 @@ export class ItemService {
             itemTypeId: input.itemTypeId ?? null,
             rawMaterialId: input.rawMaterialId ?? null,
             boxTypeId: input.boxTypeId ?? null,
-            createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-            ...(input.deleted ? { deleted: input.deleted } : {}),
-            deletedBy: input.deletedBy ?? null,
+            createdBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== "SYSTEM" ? userId : null,
           },
         });
 
@@ -141,11 +142,21 @@ export class ItemService {
             data: input.mouldIds.map((mouldId) => ({
               itemId: created.id,
               mouldId,
-              createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-              updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+              createdBy: userId !== "SYSTEM" ? userId : null,
+              updatedBy: userId !== "SYSTEM" ? userId : null,
             })),
             skipDuplicates: true,
           });
+        }
+
+        if (created.itemTypeId != null && tx.itemType && tx.itemRoute) {
+          await copyDefaultRouteToItem(
+            tx,
+            created.itemTypeId,
+            created.id,
+            created.itemCode,
+            userId,
+          );
         }
 
         await tx.itemRevision.create({
@@ -153,8 +164,8 @@ export class ItemService {
             itemId: created.id,
             ecnNo: created.ecnNo ?? null,
             details: "Initial item creation",
-            createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+            createdBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== "SYSTEM" ? userId : null,
           },
         });
 
@@ -215,27 +226,27 @@ export class ItemService {
             ...(input.endUser ? { endUser: input.endUser } : {}),
             ...(input.description !== undefined ? { description: input.description ?? null } : {}),
             ...(input.itemImage !== undefined ? { itemImage: input.itemImage ?? null } : {}),
-            ...(input.stdItemWt ? { stdItemWt: input.stdItemWt } : {}),
-            ...(input.castingWt ? { castingWt: input.castingWt } : {}),
+            ...(input.stdItemWt != null ? { stdItemWt: input.stdItemWt } : {}),
+            ...(input.castingWt != null ? { castingWt: input.castingWt } : {}),
             ...(input.castingTemp !== undefined ? { castingTemp: input.castingTemp ?? null } : {}),
             ...(input.mouldTemp !== undefined ? { mouldTemp: input.mouldTemp ?? null } : {}),
-            ...(input.cost ? { cost: input.cost } : {}),
-            ...(input.sellingPrice ? { sellingPrice: input.sellingPrice } : {}),
-            ...(input.materialPrice ? { materialPrice: input.materialPrice } : {}),
-            ...(input.heatPrice ? { heatPrice: input.heatPrice } : {}),
-            ...(input.platePrice ? { platePrice: input.platePrice } : {}),
-            ...(input.otherPrice ? { otherPrice: input.otherPrice } : {}),
-            ...(input.unitPrice ? { unitPrice: input.unitPrice } : {}),
-            ...(input.rejectionRate ? { rejectionRate: input.rejectionRate } : {}),
-            ...(input.qtyPerTree ? { qtyPerTree: input.qtyPerTree } : {}),
-            ...(input.qtyPerShot ? { qtyPerShot: input.qtyPerShot } : {}),
-            ...(input.autoSplitQty ? { autoSplitQty: input.autoSplitQty } : {}),
+            ...(input.cost != null ? { cost: input.cost } : {}),
+            ...(input.sellingPrice != null ? { sellingPrice: input.sellingPrice } : {}),
+            ...(input.materialPrice != null ? { materialPrice: input.materialPrice } : {}),
+            ...(input.heatPrice != null ? { heatPrice: input.heatPrice } : {}),
+            ...(input.platePrice != null ? { platePrice: input.platePrice } : {}),
+            ...(input.otherPrice != null ? { otherPrice: input.otherPrice } : {}),
+            ...(input.unitPrice != null ? { unitPrice: input.unitPrice } : {}),
+            ...(input.rejectionRate != null ? { rejectionRate: input.rejectionRate } : {}),
+            ...(input.qtyPerTree != null ? { qtyPerTree: input.qtyPerTree } : {}),
+            ...(input.qtyPerShot != null ? { qtyPerShot: input.qtyPerShot } : {}),
+            ...(input.autoSplitQty != null ? { autoSplitQty: input.autoSplitQty } : {}),
             ...(input.drawingProductNo ? { drawingProductNo: input.drawingProductNo } : {}),
             ...(input.drawingRevisionNo ? { drawingRevisionNo: input.drawingRevisionNo } : {}),
             ...(input.coatingPattern !== undefined ? { coatingPattern: input.coatingPattern ?? null } : {}),
-            ...(input.stamping ? { stamping: input.stamping } : {}),
-            ...(input.soluble ? { soluble: input.soluble } : {}),
-            ...(input.sizeCheck ? { sizeCheck: input.sizeCheck } : {}),
+            ...(input.stamping != null ? { stamping: input.stamping } : {}),
+            ...(input.soluble != null ? { soluble: input.soluble } : {}),
+            ...(input.sizeCheck != null ? { sizeCheck: input.sizeCheck } : {}),
             ...(input.similarItem !== undefined ? { similarItem: input.similarItem ?? null } : {}),
             ...(input.remarks !== undefined ? { remarks: input.remarks ?? null } : {}),
             ...(input.ecnNo !== undefined ? { ecnNo: input.ecnNo ?? null } : {}),
@@ -243,10 +254,7 @@ export class ItemService {
             ...(input.itemTypeId !== undefined ? { itemTypeId: input.itemTypeId ?? null } : {}),
             ...(input.rawMaterialId !== undefined ? { rawMaterialId: input.rawMaterialId ?? null } : {}),
             ...(input.boxTypeId !== undefined ? { boxTypeId: input.boxTypeId ?? null } : {}),
-            ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-            ...(input.deleted ? { deleted: input.deleted } : {}),
-            ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+            updatedBy: userId !== "SYSTEM" ? userId : undefined,
           },
         });
 

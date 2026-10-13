@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Query, Resolver } from '@nestjs/graphql';
 import { UnitOfMeasurementService } from '../unit-of-measurement.service.js';
 import type {
   UnitOfMeasurementFilterInput,
@@ -13,8 +13,8 @@ export class UnitOfMeasurementQueryResolver {
   ) {}
 
   @Query('unitOfMeasurementById')
-  async unitOfMeasurementById(@Args('id') id: string) {
-    return this.unitOfMeasurementService.findOne(id);
+  async unitOfMeasurementById(@Args('id') id: string, @Context() context?: any) {
+    return this.unitOfMeasurementService.findOne(id, context);
   }
 
   @Query('unitOfMeasurementsPaginated')
@@ -22,7 +22,9 @@ export class UnitOfMeasurementQueryResolver {
     @Args('pagination', { nullable: true }) pagination?: PaginationInput | null,
     @Args('filter', { nullable: true })
     filter?: UnitOfMeasurementFilterInput | null,
+    @Context() context?: any,
   ): Promise<UnitOfMeasurementConnection> {
-    return this.unitOfMeasurementService.findMany(pagination, filter);
+    return this.unitOfMeasurementService.findMany(pagination, filter, context);
   }
 }
+

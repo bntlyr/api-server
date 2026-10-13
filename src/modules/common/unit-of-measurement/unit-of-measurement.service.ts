@@ -30,7 +30,8 @@ export class UnitOfMeasurementService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === 'string' ? parseInt(id, 10) : id;
     return this.unitOfMeasurementLoader.byId.load(
       Number.isNaN(parsedId) ? (id as any) : parsedId,
@@ -40,8 +41,10 @@ export class UnitOfMeasurementService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: UnitOfMeasurementFilterInput | null,
+    context?: any,
   ): Promise<UnitOfMeasurementConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(
         pagination,
         {
@@ -115,10 +118,8 @@ export class UnitOfMeasurementService {
           code: input.code,
           ...(input.type ? { type: input.type } : {}),
           description: input.description ?? null,
-          createdBy: input.createdBy ?? (userId !== 'SYSTEM' ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== 'SYSTEM' ? userId : null),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
+          createdBy: userId !== 'SYSTEM' ? userId : null,
+          updatedBy: userId !== 'SYSTEM' ? userId : null,
         },
       });
 
@@ -171,17 +172,7 @@ export class UnitOfMeasurementService {
           ...(input.description !== undefined
             ? { description: input.description ?? null }
             : {}),
-          ...(input.createdBy !== undefined
-            ? { createdBy: input.createdBy ?? null }
-            : {}),
-          updatedBy:
-            input.updatedBy ?? (userId !== 'SYSTEM' ? userId : undefined),
-          ...(input.deleted !== undefined && input.deleted !== null
-            ? { deleted: input.deleted }
-            : {}),
-          ...(input.deletedBy !== undefined
-            ? { deletedBy: input.deletedBy ?? null }
-            : {}),
+          updatedBy: userId !== 'SYSTEM' ? userId : undefined,
         },
       });
 

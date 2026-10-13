@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { FabRouteParameterService } from "../fab-route-parameter.service.js";
 import type {
   FabRouteParameterFilterInput,
@@ -11,15 +11,16 @@ export class FabRouteParameterQueryResolver {
   constructor(private readonly fabRouteParameterService: FabRouteParameterService) {}
 
   @Query("fabRouteParameterById")
-  async fabRouteParameterById(@Args("id") id: string) {
-    return this.fabRouteParameterService.findOne(id);
+  async fabRouteParameterById(@Args("id") id: string, @Context() context?: any) {
+    return this.fabRouteParameterService.findOne(id, context);
   }
 
   @Query("fabRouteParametersPaginated")
   async fabRouteParametersPaginated(
     @Args("pagination", { nullable: true }) pagination?: PaginationInput | null,
     @Args("filter", { nullable: true }) filter?: FabRouteParameterFilterInput | null,
+    @Context() context?: any,
   ): Promise<FabRouteParameterConnection> {
-    return this.fabRouteParameterService.findMany(pagination, filter);
+    return this.fabRouteParameterService.findMany(pagination, filter, context);
   }
 }

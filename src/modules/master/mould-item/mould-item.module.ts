@@ -8,10 +8,12 @@ import { MouldItemRelationResolver } from "./resolvers/mould-item.relation.js";
 
 import { MouldModule } from "../mould/mould.module.js";
 import { ItemModule } from "../item/item.module.js";
+import { UserLoader } from "../../user/user.loader.js";
 
 @Module({
   imports: [PrismaModule, MouldModule, ItemModule],
   providers: [
+    UserLoader,
     MouldItemLoader,
     MouldItemService,
     MouldItemQueryResolver,

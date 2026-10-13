@@ -7,10 +7,12 @@ import { ToolMutationResolver } from "./resolvers/tool.mutation.js";
 import { ToolRelationResolver } from "./resolvers/tool.relation.js";
 
 import { MachineToolLoader } from "../machine-tool/machine-tool.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     MachineToolLoader,
     ToolLoader,
     ToolService,

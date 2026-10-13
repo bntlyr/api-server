@@ -28,7 +28,8 @@ export class ItemRouteParameterService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.itemRouteParameterLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class ItemRouteParameterService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: ItemRouteParameterFilterInput | null,
+    context?: any,
   ): Promise<ItemRouteParameterConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -95,10 +98,8 @@ export class ItemRouteParameterService {
           ...(input.inputType ? { inputType: input.inputType } : {}),
           paramValue: input.paramValue ?? null,
           itemRouteStepId: input.itemRouteStepId,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -113,8 +114,8 @@ export class ItemRouteParameterService {
             itemId: step.itemRoute.itemId,
             ecnNo: step.itemRoute.item.ecnNo ?? null,
             details: `Added parameter "${itemRouteParameter.name}" to step "${step.sequenceNumber} - ${step.name}" in route "${step.itemRoute.name}"`,
-            createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+            createdBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== "SYSTEM" ? userId : null,
           },
         });
       }
@@ -166,10 +167,7 @@ export class ItemRouteParameterService {
           ...(input.inputType ? { inputType: input.inputType } : {}),
           ...(input.paramValue !== undefined ? { paramValue: input.paramValue ?? null } : {}),
           ...(input.itemRouteStepId ? { itemRouteStepId: input.itemRouteStepId } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deleted != null ? { deleted: input.deleted } : {}),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedBy: userId !== "SYSTEM" ? userId : undefined,
         },
       });
 

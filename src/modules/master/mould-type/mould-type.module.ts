@@ -1,5 +1,6 @@
 import { MouldLoader } from "../mould/mould.loader.js";
 import { ItemTypeLoader } from "../item-type/item-type.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { MouldTypeService } from "./mould-type.service.js";
@@ -11,6 +12,7 @@ import { MouldTypeRelationResolver } from "./resolvers/mould-type.relation.js";
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     MouldLoader,
     ItemTypeLoader,
     MouldTypeLoader,

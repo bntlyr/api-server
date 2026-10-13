@@ -4,6 +4,7 @@ import { DefaultRouteMachiningLoader } from "../default-route-machining/default-
 import { DefaultRouteIterationLoader } from "../default-route-iteration/default-route-iteration.loader.js";
 import { DefaultRouteParameterLoader } from "../default-route-parameter/default-route-parameter.loader.js";
 import { DefaultRouteLoader } from "../default-route/default-route.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { DefaultRouteStepService } from "./default-route-step.service.js";
@@ -21,6 +22,7 @@ import { DefaultRouteStepRelationResolver } from "./resolvers/default-route-step
     DefaultRouteIterationLoader,
     DefaultRouteParameterLoader,
     DefaultRouteLoader,
+    UserLoader,
     DefaultRouteStepLoader,
     DefaultRouteStepService,
     DefaultRouteStepQueryResolver,

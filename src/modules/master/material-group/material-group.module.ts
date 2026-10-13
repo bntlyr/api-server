@@ -1,4 +1,5 @@
 import { MaterialLoader } from "../material/material.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { MaterialGroupService } from "./material-group.service.js";
@@ -10,6 +11,7 @@ import { MaterialGroupRelationResolver } from "./resolvers/material-group.relati
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     MaterialLoader,
     MaterialGroupLoader,
     MaterialGroupService,

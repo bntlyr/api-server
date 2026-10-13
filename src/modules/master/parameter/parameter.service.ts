@@ -28,7 +28,8 @@ export class ParameterService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.parameterLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class ParameterService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: ParameterFilterInput | null,
+    context?: any,
   ): Promise<ParameterConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -95,10 +98,8 @@ export class ParameterService {
           ...(input.inputType ? { inputType: input.inputType } : {}),
           paramValue: input.paramValue ?? null,
           processId: input.processId ?? null,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -149,10 +150,7 @@ export class ParameterService {
           ...(input.inputType ? { inputType: input.inputType } : {}),
           ...(input.paramValue !== undefined ? { paramValue: input.paramValue ?? null } : {}),
           ...(input.processId !== undefined ? { processId: input.processId ?? null } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedBy: userId !== "SYSTEM" ? userId : undefined,
         },
       });
 

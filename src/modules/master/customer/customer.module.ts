@@ -8,9 +8,12 @@ import { CustomerQueryResolver } from "./resolvers/customer.query.js";
 import { CustomerMutationResolver } from "./resolvers/customer.mutation.js";
 import { CustomerRelationResolver } from "./resolvers/customer.relation.js";
 
+import { UserLoader } from "../../user/user.loader.js";
+
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     StatusCodeLoader,
     ItemLoader,
     CustomerLoader,

@@ -28,7 +28,8 @@ export class CoatingDefectService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.coatingDefectLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class CoatingDefectService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: CoatingDefectFilterInput | null,
+    context?: any,
   ): Promise<CoatingDefectConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -113,10 +116,8 @@ export class CoatingDefectService {
           ...(input.aCoating ? { aCoating: input.aCoating } : {}),
           ...(input.totalDefects ? { totalDefects: input.totalDefects } : {}),
           remarks: input.remarks ?? null,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -185,10 +186,7 @@ export class CoatingDefectService {
           ...(input.aCoating ? { aCoating: input.aCoating } : {}),
           ...(input.totalDefects ? { totalDefects: input.totalDefects } : {}),
           ...(input.remarks !== undefined ? { remarks: input.remarks ?? null } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedBy: userId !== "SYSTEM" ? userId : undefined,
         },
       });
 

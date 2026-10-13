@@ -28,7 +28,8 @@ export class BookingService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.bookingLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class BookingService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: BookingFilterInput | null,
+    context?: any,
   ): Promise<BookingConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -109,10 +112,8 @@ export class BookingService {
           productionSlipId: input.productionSlipId,
           productionProcessId: input.productionProcessId,
           salesOrderId: input.salesOrderId,
-          createdById: input.createdById ?? null,
-          updatedById: input.updatedById ?? null,
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
+          createdById: userId !== "SYSTEM" ? userId : null,
+          updatedById: userId !== "SYSTEM" ? userId : null,
         } as any,
       });
 
@@ -176,10 +177,7 @@ export class BookingService {
           ...(input.remarks !== undefined ? { remarks: input.remarks ?? null } : {}),
           ...(input.productionSlipId ? { productionSlipId: input.productionSlipId } : {}),
           ...(input.productionProcessId ? { productionProcessId: input.productionProcessId } : {}),
-          ...(input.createdById !== undefined ? { createdById: input.createdById ?? null } : {}),
-          ...(input.updatedById !== undefined ? { updatedById: input.updatedById ?? null } : {}),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedById: userId !== "SYSTEM" ? userId : undefined,
         } as any,
       });
 

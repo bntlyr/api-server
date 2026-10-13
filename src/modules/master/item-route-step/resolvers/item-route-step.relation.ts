@@ -4,6 +4,8 @@ import { ItemRouteMachiningLoader } from "../../item-route-machining/item-route-
 import { ItemRouteIterationLoader } from "../../item-route-iteration/item-route-iteration.loader.js";
 import { ItemRouteParameterLoader } from "../../item-route-parameter/item-route-parameter.loader.js";
 import { ItemRouteLoader } from "../../item-route/item-route.loader.js";
+import { UserLoader } from "../../../user/user.loader.js";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 import type { ItemRouteStep as PrismaItemRouteStep } from "../../../../generated//prisma/client.js";
 import { PrismaService } from "../../../../prisma//prisma.service.js";
 import { Parent, ResolveField, Resolver } from "@nestjs/graphql";
@@ -18,11 +20,18 @@ export class ItemRouteStepRelationResolver {
     private readonly itemRouteMachiningLoader: ItemRouteMachiningLoader,
     private readonly sectionLoader: SectionLoader,
     private readonly processLoader: ProcessLoader,
+    private readonly userLoader: UserLoader,
   ) {}
-  /**
-   * Field resolver / relation resolver for ItemRouteStep.
-   * Extend this with relations as the schema grows.
-   */
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() itemRouteStep: PrismaItemRouteStep) {
+    return resolveAuditEmployeeId(itemRouteStep.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() itemRouteStep: PrismaItemRouteStep) {
+    return resolveAuditEmployeeId(itemRouteStep.updatedBy, this.userLoader);
+  }
 
   @ResolveField("itemRoute")
   async itemRoute(@Parent() itemRouteStep: PrismaItemRouteStep) {

@@ -25,10 +25,11 @@ extend type FabRouteStep {
 extend input CreateFabRouteStepInput {
   machineIds: [Int!]
   iterations: [String!]
+  parameters: [RouteStepParameterInput!]
 }
 
 extend input UpdateFabRouteStepInput {
   machineIds: [Int!]
   iterations: [String!]
+  parameters: [RouteStepParameterInput!]
 }
-

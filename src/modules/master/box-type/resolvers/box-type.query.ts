@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { BoxTypeService } from "../box-type.service.js";
 import type {
   BoxTypeFilterInput,
@@ -11,15 +11,16 @@ export class BoxTypeQueryResolver {
   constructor(private readonly boxTypeService: BoxTypeService) {}
 
   @Query("boxTypeById")
-  async boxTypeById(@Args("id") id: string) {
-    return this.boxTypeService.findOne(id);
+  async boxTypeById(@Args("id") id: string, @Context() context?: any) {
+    return this.boxTypeService.findOne(id, context);
   }
 
   @Query("boxTypesPaginated")
   async boxTypesPaginated(
     @Args("pagination", { nullable: true }) pagination?: PaginationInput | null,
     @Args("filter", { nullable: true }) filter?: BoxTypeFilterInput | null,
+    @Context() context?: any,
   ): Promise<BoxTypeConnection> {
-    return this.boxTypeService.findMany(pagination, filter);
+    return this.boxTypeService.findMany(pagination, filter, context);
   }
 }

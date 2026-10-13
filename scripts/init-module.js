@@ -63,7 +63,17 @@ function parsePrismaModel(content) {
   const lines = content.split("\n");
   const fields = [];
   const standardTypes = ["String", "Int", "Float", "Boolean", "DateTime", "Json", "BigInt", "Decimal"];
-  const auditFieldNames = ["createdAt", "createdBy", "updatedAt", "updatedBy", "deletedAt", "deletedBy"];
+  const auditFieldNames = [
+    "createdAt",
+    "createdBy",
+    "createdById",
+    "updatedAt",
+    "updatedBy",
+    "updatedById",
+    "deletedAt",
+    "deletedBy",
+    "deleted",
+  ];
 
   let inModel = false;
   for (const rawLine of lines) {
@@ -143,19 +153,16 @@ function parsePrismaModel(content) {
 const parsedFields = parsePrismaModel(prismaContent);
 const idField = parsedFields.find((f) => f.isId) || { name: "id", type: "Int", gqlType: "ID", isOptional: false };
 const isNumericId = idField.type === "Int" || idField.type === "BigInt";
+const hasField = (name) => parsedFields.some((f) => f.name === name);
 
-// Editable fields for Create
-const createFields = parsedFields.filter(
-  (f) => !f.isId && !["createdAt", "updatedAt", "deletedAt"].includes(f.name)
-);
+// Editable fields for Create (exclude ID and all audit/soft-delete fields)
+const createFields = parsedFields.filter((f) => !f.isId && !f.isAudit);
 
-// Editable fields for Update
-const updateFields = parsedFields.filter(
-  (f) => !f.isId && !["createdAt", "updatedAt", "deletedAt"].includes(f.name)
-);
+// Editable fields for Update (exclude ID and all audit/soft-delete fields)
+const updateFields = parsedFields.filter((f) => !f.isId && !f.isAudit);
 
 // Searchable string fields (e.g. title, content, email, name)
-const stringFields = parsedFields.filter((f) => f.type === "String" && !["createdBy", "updatedBy", "deletedBy"].includes(f.name));
+const stringFields = parsedFields.filter((f) => f.type === "String" && !f.isAudit);
 const searchFieldNames = stringFields.map((f) => f.name);
 
 // 2. Output generated GraphQL schema to gitignored directory: src/generated/graphql/schemas/
@@ -172,7 +179,7 @@ const filterGqlFields = parsedFields
 
 const createGqlFields = createFields
   .map((f) => {
-    const isRequired = !f.isOptional && !f.hasDefault && !["createdBy", "updatedBy", "deletedBy"].includes(f.name);
+    const isRequired = !f.isOptional && !f.hasDefault;
     return `  ${f.name}: ${f.gqlType}${isRequired ? "!" : ""}`;
   })
   .join("\n");
@@ -279,7 +286,7 @@ export const ${camelName}TypeDefsExtend = \`#graphql
 
 // Helper
 const requiredCreateFields = createFields.filter(
-  (f) => !f.isOptional && !f.hasDefault && !["createdBy", "updatedBy", "deletedBy"].includes(f.name)
+  (f) => !f.isOptional && !f.hasDefault
 );
 
 const validationChecks = requiredCreateFields
@@ -307,38 +314,40 @@ export function validateUpdate${modelName}Input(_input: Update${modelName}Input)
 `;
 
 // Service
-const createDataFields = createFields
-  .map((f) => {
-    if (f.name === "createdBy") {
-      return `          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),`;
-    }
-    if (f.name === "updatedBy") {
-      return `          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),`;
-    }
-    if (f.isOptional || ["deletedBy"].includes(f.name)) {
+const createAuditLines = [
+  ...(hasField("createdBy") ? [`          createdBy: userId,`] : []),
+  ...(hasField("createdById") ? [`          createdById: userId,`] : []),
+  ...(hasField("updatedBy") ? [`          updatedBy: userId,`] : []),
+  ...(hasField("updatedById") ? [`          updatedById: userId,`] : []),
+];
+
+const createDataFields = [
+  ...createFields.map((f) => {
+    if (f.isOptional) {
       return `          ${f.name}: input.${f.name} ?? null,`;
     }
     if (f.hasDefault) {
-      return `          ...(input.${f.name} ? { ${f.name}: input.${f.name} } : {}),`;
+      return `          ...(input.${f.name} != null ? { ${f.name}: input.${f.name} } : {}),`;
     }
     return `          ${f.name}: input.${f.name},`;
-  })
-  .join("\n");
+  }),
+  ...createAuditLines,
+].join("\n");
 
-const updateDataFields = updateFields
-  .map((f) => {
-    if (f.name === "updatedBy") {
-      return `          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),`;
-    }
-    if (f.name === "createdBy") {
-      return `          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),`;
-    }
-    if (f.isOptional || ["deletedBy"].includes(f.name)) {
+const updateAuditLines = [
+  ...(hasField("updatedBy") ? [`          updatedBy: userId,`] : []),
+  ...(hasField("updatedById") ? [`          updatedById: userId,`] : []),
+];
+
+const updateDataFields = [
+  ...updateFields.map((f) => {
+    if (f.isOptional) {
       return `          ...(input.${f.name} !== undefined ? { ${f.name}: input.${f.name} ?? null } : {}),`;
     }
-    return `          ...(input.${f.name} ? { ${f.name}: input.${f.name} } : {}),`;
-  })
-  .join("\n");
+    return `          ...(input.${f.name} != null ? { ${f.name}: input.${f.name} } : {}),`;
+  }),
+  ...updateAuditLines,
+].join("\n");
 
 const serviceContent = `import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../prisma/prisma.service.js";
@@ -370,7 +379,8 @@ export class ${modelName}Service {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: ${isNumericId ? "number | string" : "string"}) {
+  async findOne(id: ${isNumericId ? "number | string" : "string"}, context?: any) {
+    extractContextInfo(context);
     const parsedId = ${isNumericId ? `typeof id === "string" ? parseInt(id, 10) : id` : `id`};
     return this.${camelName}Loader.byId.load(${isNumericId ? `Number.isNaN(parsedId) ? (id as any) : parsedId` : `parsedId`});
   }
@@ -378,8 +388,10 @@ export class ${modelName}Service {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: ${modelName}FilterInput | null,
+    context?: any,
   ): Promise<${modelName}Connection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: ${isNumericId},
       });
@@ -438,7 +450,7 @@ ${createDataFields}
       });
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
+        userId,
         action: "CREATE_${modelName.toUpperCase()}",
         method: "GRAPHQL_MUTATION",
         tableName: "${modelName}",
@@ -487,7 +499,7 @@ ${updateDataFields}
       this.${camelName}Loader.clear(${isNumericId ? "Number.isNaN(parsedId) ? (id as any) : parsedId" : "id"});
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
+        userId,
         action: "UPDATE_${modelName.toUpperCase()}",
         method: "GRAPHQL_MUTATION",
         tableName: "${modelName}",
@@ -521,7 +533,7 @@ ${updateDataFields}
       this.${camelName}Loader.clear(${isNumericId ? "Number.isNaN(parsedId) ? (id as any) : parsedId" : "id"});
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
+        userId,
         action: "DELETE_${modelName.toUpperCase()}",
         method: "GRAPHQL_MUTATION",
         tableName: "${modelName}",
@@ -554,7 +566,7 @@ ${updateDataFields}
       this.${camelName}Loader.clear(${isNumericId ? "Number.isNaN(parsedId) ? (id as any) : parsedId" : "id"});
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
+        userId,
         action: "RESTORE_${modelName.toUpperCase()}",
         method: "GRAPHQL_MUTATION",
         tableName: "${modelName}",
@@ -579,7 +591,7 @@ ${updateDataFields}
 `;
 
 // Query Resolver
-const queryContent = `import { Args, Query, Resolver } from "@nestjs/graphql";
+const queryContent = `import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { ${modelName}Service } from "../${kebabName}.service.js";
 import type {
   ${modelName}FilterInput,
@@ -592,16 +604,17 @@ export class ${modelName}QueryResolver {
   constructor(private readonly ${camelName}Service: ${modelName}Service) {}
 
   @Query("${camelName}ById")
-  async ${camelName}ById(@Args("id") id: string) {
-    return this.${camelName}Service.findOne(id);
+  async ${camelName}ById(@Args("id") id: string, @Context() context: any) {
+    return this.${camelName}Service.findOne(id, context);
   }
 
   @Query("${pluralCamelName}Paginated")
   async ${pluralCamelName}Paginated(
     @Args("pagination", { nullable: true }) pagination?: PaginationInput | null,
     @Args("filter", { nullable: true }) filter?: ${modelName}FilterInput | null,
+    @Context() context?: any,
   ): Promise<${modelName}Connection> {
-    return this.${camelName}Service.findMany(pagination, filter);
+    return this.${camelName}Service.findMany(pagination, filter, context);
   }
 }
 `;
@@ -767,12 +780,15 @@ if (existsSync(appModulePath)) {
 }
 
 // Run Prisma generate and Codegen to refresh generated types
-try {
-  console.log("🔄 Generating Prisma Client...");
-  execSync("npx prisma generate", { stdio: "inherit" });
-  console.log("🔄 Running GraphQL Codegen...");
-  execSync("npm run codegen", { stdio: "inherit" });
-  console.log("✅ Codegen completed successfully.");
-} catch (error) {
-  console.error("Codegen encountered an error:", error);
+if (!args.includes("--no-codegen")) {
+  try {
+    console.log("🔄 Generating Prisma Client...");
+    execSync("npx prisma generate", { stdio: "inherit" });
+    console.log("🔄 Running GraphQL Codegen...");
+    execSync("npm run codegen", { stdio: "inherit" });
+    console.log("✅ Codegen completed successfully.");
+  } catch (error) {
+    console.error("Codegen encountered an error:", error);
+  }
 }
+

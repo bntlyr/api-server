@@ -28,7 +28,8 @@ export class MouldService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.mouldLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class MouldService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: MouldFilterInput | null,
+    context?: any,
   ): Promise<MouldConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -95,12 +98,10 @@ export class MouldService {
             name: input.name,
             code: input.code,
             numberOfCopies: input.numberOfCopies,
-            ...(input.compatibleItems ? { compatibleItems: input.compatibleItems } : {}),
+            ...(input.compatibleItems != null ? { compatibleItems: input.compatibleItems } : {}),
             mouldTypeId: input.mouldTypeId ?? null,
-            createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-            ...(input.deleted ? { deleted: input.deleted } : {}),
-            deletedBy: input.deletedBy ?? null,
+            createdBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== "SYSTEM" ? userId : null,
           },
         });
 
@@ -109,8 +110,8 @@ export class MouldService {
             data: input.itemIds.map((itemId) => ({
               mouldId: created.id,
               itemId,
-              createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-              updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+              createdBy: userId !== "SYSTEM" ? userId : null,
+              updatedBy: userId !== "SYSTEM" ? userId : null,
             })),
             skipDuplicates: true,
           });
@@ -164,15 +165,12 @@ export class MouldService {
         const updated = await tx.mould.update({
           where: { id: Number.isNaN(parsedId) ? (id as any) : parsedId },
           data: {
-            ...(input.name ? { name: input.name } : {}),
-            ...(input.code ? { code: input.code } : {}),
-            ...(input.numberOfCopies ? { numberOfCopies: input.numberOfCopies } : {}),
-            ...(input.compatibleItems ? { compatibleItems: input.compatibleItems } : {}),
+            ...(input.name != null ? { name: input.name } : {}),
+            ...(input.code != null ? { code: input.code } : {}),
+            ...(input.numberOfCopies != null ? { numberOfCopies: input.numberOfCopies } : {}),
+            ...(input.compatibleItems != null ? { compatibleItems: input.compatibleItems } : {}),
             ...(input.mouldTypeId !== undefined ? { mouldTypeId: input.mouldTypeId ?? null } : {}),
-            ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-            ...(input.deleted ? { deleted: input.deleted } : {}),
-            ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+            updatedBy: userId !== "SYSTEM" ? userId : undefined,
           },
         });
 

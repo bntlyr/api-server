@@ -40,9 +40,15 @@ Every domain entity in `src/modules/<entity>/` must follow this layout:
 ## Pagination & Mutation Payloads
 - List queries use cursor-based pagination with `PaginationInput` (`first`, `after`), `PageInfo`, `edges`, and `nodes` via `pagination.helper.ts`.
 - Mutations return payload types with `userErrors: [UserError!]!` formatted via `error.helper.ts`.
-- All mutation resolvers pass `@Context() context` into domain services.
-- Services use `extractContextInfo(context)` from `context.helper.ts` to retrieve `userId`, `ipAddress`, and `userAgent`.
+- All query and mutation resolvers must pass `@Context() context` into domain services.
+- Services must call `extractContextInfo(context)` from `context.helper.ts` to validate that the user is logged in and retrieve `userId`, `ipAddress`, and `userAgent`.
 - Every mutation (`create`, `update`, `delete`, `restore`) logs an audit event using `AuditTrailService.log()` and assigns `createdBy`, `updatedBy`, `deletedBy` accordingly.
+
+## Strict Backend-Only Audit Attribution (Never Trust Client Inputs)
+- **NEVER** include audit or soft-delete fields (`createdBy`, `createdById`, `updatedBy`, `updatedById`, `deletedBy`, `deleted`, `createdAt`, `updatedAt`, `deletedAt`) in any GraphQL `Create*Input`, `Update*Input`, or custom mutation `input` type.
+- **NEVER** read `input.createdBy`, `input.updatedBy`, `input.deletedBy`, or `input.deleted` in domain services.
+- Always populate `createdBy` and `updatedBy` on `create`, and `updatedBy` on `update`, exclusively from the authenticated `userId` extracted via `extractContextInfo(context)`.
+
 
 ## CLI Generators
 - Create Prisma Model: `npm run add <ModelName>`
@@ -50,5 +56,31 @@ Every domain entity in `src/modules/<entity>/` must follow this layout:
 - Connect Models: `npm run connect <SourceModel> <TargetModel> [--prisma | --graphql] [--type=1:m | 1:1]`
 - Disconnect Models: `npm run disconnect <SourceModel> <TargetModel>` (or `npx disconnect ...`)
 - Delete Model: `npm run delete:model <ModelName>` (or `npx delete-model ...`)
+
+## Audit User Resolution (createdBy / updatedBy)
+- Prisma models store the acting user's UUID in `createdBy` and `updatedBy`.
+- Every domain entity with audit fields must resolve `createdBy` and `updatedBy` in `<entity>.relation.ts`:
+  ```typescript
+  @ResolveField("createdBy")
+  async createdBy(@Parent() entity: PrismaEntity) {
+    return resolveAuditEmployeeId(entity.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() entity: PrismaEntity) {
+    return resolveAuditEmployeeId(entity.updatedBy, this.userLoader);
+  }
+  ```
+- Register `UserLoader` in `<entity>.module.ts` providers.
+
+## Prisma Mutation Invariants: Booleans & Numbers
+- When constructing Prisma `data` objects in domain services (`create` and `update`):
+  - **NEVER** use truthiness checks for booleans or numbers (e.g. `input.active ? { active: input.active } : {}`).
+  - **ALWAYS** check `input.field != null` (or `!== undefined`) so that `false` and `0` are correctly persisted:
+    ```typescript
+    ...(input.compatibleItems != null ? { compatibleItems: input.compatibleItems } : {}),
+    ...(input.numberOfCopies != null ? { numberOfCopies: input.numberOfCopies } : {}),
+    ```
+
 
 

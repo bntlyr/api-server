@@ -3,6 +3,24 @@ import DataLoader from "dataloader";
 import { PrismaService } from "../../../prisma//prisma.service.js";
 import type { Process as PrismaProcess } from "../../../generated//prisma/client.js";
 
+function normalizeProcess(row: PrismaProcess): PrismaProcess {
+  return {
+    ...row,
+    itemTypeInclusion:
+      row.itemTypeInclusion == null
+        ? null
+        : typeof row.itemTypeInclusion === "string"
+          ? row.itemTypeInclusion
+          : JSON.stringify(row.itemTypeInclusion),
+    itemTypeExclusion:
+      row.itemTypeExclusion == null
+        ? null
+        : typeof row.itemTypeExclusion === "string"
+          ? row.itemTypeExclusion
+          : JSON.stringify(row.itemTypeExclusion),
+  } as PrismaProcess;
+}
+
 @Injectable({ scope: Scope.REQUEST })
 export class ProcessLoader {
   constructor(private readonly prisma: PrismaService) {}
@@ -12,12 +30,12 @@ export class ProcessLoader {
       const rows = await this.prisma.process.findMany({
         where: { id: { in: [...ids] } },
       });
-      const map = new Map(rows.map((row) => [row.id, row]));
+      const map = new Map(rows.map((row) => [row.id, normalizeProcess(row)]));
       return ids.map((id) => map.get(id) ?? null);
     },
   );
 
-    public readonly bySectionId = new DataLoader<number, PrismaProcess[]>(
+  public readonly bySectionId = new DataLoader<number, PrismaProcess[]>(
     async (sectionIds: readonly (number)[]) => {
       const rows = await this.prisma.process.findMany({
         where: { sectionId: { in: [...sectionIds] } },
@@ -26,7 +44,7 @@ export class ProcessLoader {
       for (const row of rows) {
         if (row.sectionId != null) {
           const list = groupMap.get(row.sectionId) ?? [];
-          list.push(row);
+          list.push(normalizeProcess(row));
           groupMap.set(row.sectionId, list);
         }
       }
@@ -39,7 +57,7 @@ export class ProcessLoader {
       this.byId.clear(id);
     } else {
       this.byId.clearAll();
-    if (this.bySectionId) this.bySectionId.clearAll();
+      if (this.bySectionId) this.bySectionId.clearAll();
     }
   }
 }

@@ -1,5 +1,6 @@
 import { ItemRouteStepLoader } from "../item-route-step/item-route-step.loader.js";
 import { ItemLoader } from "../item/item.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { ItemRouteService } from "./item-route.service.js";
@@ -13,6 +14,7 @@ import { ItemRouteRelationResolver } from "./resolvers/item-route.relation.js";
   providers: [
     ItemRouteStepLoader,
     ItemLoader,
+    UserLoader,
     ItemRouteLoader,
     ItemRouteService,
     ItemRouteQueryResolver,

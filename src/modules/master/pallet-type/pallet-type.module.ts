@@ -5,10 +5,12 @@ import { PalletTypeLoader } from "./pallet-type.loader.js";
 import { PalletTypeQueryResolver } from "./resolvers/pallet-type.query.js";
 import { PalletTypeMutationResolver } from "./resolvers/pallet-type.mutation.js";
 import { PalletTypeRelationResolver } from "./resolvers/pallet-type.relation.js";
+import { UserLoader } from "../../user/user.loader.js";
 
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     PalletTypeLoader,
     PalletTypeService,
     PalletTypeQueryResolver,

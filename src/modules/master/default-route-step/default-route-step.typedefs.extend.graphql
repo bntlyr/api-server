@@ -22,13 +22,47 @@ extend type DefaultRouteStep {
   process: Process
 }
 
+input RouteStepParameterInput {
+  name: String!
+  inputType: String!
+  paramValue: String
+}
+
+input RouteStepItemInput {
+  sequenceNumber: String!
+  name: String!
+  subname: String
+  isParent: Boolean
+  processId: Int
+  sectionId: Int
+  numberOfIterations: Int
+  hasMachining: Boolean
+  hasIterating: Boolean
+  hasChecking: Boolean
+  hasRework: Boolean
+  hasPacking: Boolean
+  hasTooling: Boolean
+  hasActualParameter: Boolean
+  durationType: String
+  leadTime: Float
+  leadTimeUnit: String
+  prepTime: Float
+  prepTimeUnit: String
+  cureTime: Float
+  cureTimeUnit: String
+  machineIds: [Int!]
+  iterations: [String!]
+  parameters: [RouteStepParameterInput!]
+}
+
 extend input CreateDefaultRouteStepInput {
   machineIds: [Int!]
   iterations: [String!]
+  parameters: [RouteStepParameterInput!]
 }
 
 extend input UpdateDefaultRouteStepInput {
   machineIds: [Int!]
   iterations: [String!]
+  parameters: [RouteStepParameterInput!]
 }
-

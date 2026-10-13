@@ -17,7 +17,8 @@ import {
   toConnection,
 } from "../../../graphql//common/pagination.helper.js";
 import { validateCreateItemRouteInput, validateUpdateItemRouteInput } from "./helpers/item-route.helper.js";
-
+import { syncItemRouteSteps } from "../default-route-step/helpers/route-step-sync.helper.js";
+import { ItemRouteStepLoader } from "../item-route-step/item-route-step.loader.js";
 import { ItemRouteLoader } from "./item-route.loader.js";
 
 @Injectable()
@@ -26,9 +27,11 @@ export class ItemRouteService {
     private readonly prisma: PrismaService,
     private readonly itemRouteLoader: ItemRouteLoader,
     private readonly auditService: AuditTrailService,
+    private readonly itemRouteStepLoader?: ItemRouteStepLoader,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.itemRouteLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +39,10 @@ export class ItemRouteService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: ItemRouteFilterInput | null,
+    context?: any,
   ): Promise<ItemRouteConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -89,17 +94,30 @@ export class ItemRouteService {
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
 
-      const itemRoute = await this.prisma.itemRoute.create({
-        data: {
-          name: input.name,
-          ...(input.type ? { type: input.type } : {}),
-          itemId: input.itemId,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
-        },
-      });
+      const executeCreate = async (tx: any) => {
+        const created = await tx.itemRoute.create({
+          data: {
+            name: input.name,
+            ...(input.type ? { type: input.type } : {}),
+            itemId: input.itemId,
+            createdBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== "SYSTEM" ? userId : null,
+          },
+        });
+
+        if (input.steps != null) {
+          await syncItemRouteSteps(tx, created.id, input.steps, userId);
+        }
+
+        return created;
+      };
+
+      const itemRoute =
+        typeof this.prisma.$transaction === "function"
+          ? await this.prisma.$transaction(executeCreate)
+          : await executeCreate(this.prisma);
+
+      this.itemRouteLoader.byItemId.clear(itemRoute.itemId);
 
       const item = await this.prisma.item.findUnique({
         where: { id: itemRoute.itemId },
@@ -109,10 +127,10 @@ export class ItemRouteService {
       await this.prisma.itemRevision.create({
         data: {
           itemId: itemRoute.itemId,
-          ecnNo: item?.ecnNo ?? null,
+          ecnNo: input.ecnNo ?? item?.ecnNo ?? null,
           details: `Created ${itemRoute.type} route "${itemRoute.name}"`,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -156,20 +174,34 @@ export class ItemRouteService {
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
       const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
-      const itemRoute = await this.prisma.itemRoute.update({
-        where: { id: Number.isNaN(parsedId) ? (id as any) : parsedId },
-        data: {
-          ...(input.name ? { name: input.name } : {}),
-          ...(input.type ? { type: input.type } : {}),
-          ...(input.itemId ? { itemId: input.itemId } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
-        },
-      });
+      const targetId = Number.isNaN(parsedId) ? (id as any) : parsedId;
 
-      this.itemRouteLoader.clear(Number.isNaN(parsedId) ? (id as any) : parsedId);
+      const executeUpdate = async (tx: any) => {
+        const updated = await tx.itemRoute.update({
+          where: { id: targetId },
+          data: {
+            ...(input.name ? { name: input.name } : {}),
+            ...(input.type ? { type: input.type } : {}),
+            ...(input.itemId ? { itemId: input.itemId } : {}),
+            updatedBy: userId !== "SYSTEM" ? userId : undefined,
+          },
+        });
+
+        if (input.steps != null) {
+          await syncItemRouteSteps(tx, updated.id, input.steps, userId);
+        }
+
+        return updated;
+      };
+
+      const itemRoute =
+        typeof this.prisma.$transaction === "function"
+          ? await this.prisma.$transaction(executeUpdate)
+          : await executeUpdate(this.prisma);
+
+      this.itemRouteLoader.clear(targetId);
+      this.itemRouteLoader.byItemId.clear(itemRoute.itemId);
+      this.itemRouteStepLoader?.byItemRouteId?.clear(targetId);
 
       const item = await this.prisma.item.findUnique({
         where: { id: itemRoute.itemId },
@@ -180,7 +212,7 @@ export class ItemRouteService {
       await this.prisma.itemRevision.create({
         data: {
           itemId: itemRoute.itemId,
-          ecnNo: item?.ecnNo ?? null,
+          ecnNo: input.ecnNo ?? item?.ecnNo ?? null,
           details: `Updated route "${itemRoute.name}" fields: ${changedFields.join(", ")}`,
           createdBy: userId !== "SYSTEM" ? userId : null,
           updatedBy: userId !== "SYSTEM" ? userId : null,

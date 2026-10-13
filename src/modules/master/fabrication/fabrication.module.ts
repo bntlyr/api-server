@@ -1,5 +1,7 @@
 import { FabRouteLoader } from "../fab-route/fab-route.loader.js";
+import { FabRouteStepLoader } from "../fab-route-step/fab-route-step.loader.js";
 import { ItemLoader } from "../item/item.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { FabricationService } from "./fabrication.service.js";
@@ -12,7 +14,9 @@ import { FabricationRelationResolver } from "./resolvers/fabrication.relation.js
   imports: [PrismaModule],
   providers: [
     FabRouteLoader,
+    FabRouteStepLoader,
     ItemLoader,
+    UserLoader,
     FabricationLoader,
     FabricationService,
     FabricationQueryResolver,

@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { ItemRouteService } from "../item-route.service.js";
 import type {
   ItemRouteFilterInput,
@@ -11,15 +11,16 @@ export class ItemRouteQueryResolver {
   constructor(private readonly itemRouteService: ItemRouteService) {}
 
   @Query("itemRouteById")
-  async itemRouteById(@Args("id") id: string) {
-    return this.itemRouteService.findOne(id);
+  async itemRouteById(@Args("id") id: string, @Context() context?: any) {
+    return this.itemRouteService.findOne(id, context);
   }
 
   @Query("itemRoutesPaginated")
   async itemRoutesPaginated(
     @Args("pagination", { nullable: true }) pagination?: PaginationInput | null,
     @Args("filter", { nullable: true }) filter?: ItemRouteFilterInput | null,
+    @Context() context?: any,
   ): Promise<ItemRouteConnection> {
-    return this.itemRouteService.findMany(pagination, filter);
+    return this.itemRouteService.findMany(pagination, filter, context);
   }
 }

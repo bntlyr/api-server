@@ -30,13 +30,21 @@ extend type Process {
   fabRouteSteps: [FabRouteStep!]!
 }
 
+input ProcessParameterInput {
+  id: ID
+  name: String!
+  inputType: String!
+  paramValue: String
+}
+
 extend input CreateProcessInput {
   machineIds: [Int!]
   iterations: [String!]
+  parameters: [ProcessParameterInput!]
 }
 
 extend input UpdateProcessInput {
   machineIds: [Int!]
   iterations: [String!]
+  parameters: [ProcessParameterInput!]
 }
-

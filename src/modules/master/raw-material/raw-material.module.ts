@@ -2,6 +2,7 @@ import { ItemLoader } from "../item/item.loader.js";
 import { MaterialLoader } from "../material/material.loader.js";
 import { MeltingLoader } from "../melting/melting.loader.js";
 import { RawMaterialRotationLoader } from "../raw-material-rotation/raw-material-rotation.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { RawMaterialService } from "./raw-material.service.js";
@@ -13,6 +14,7 @@ import { RawMaterialRelationResolver } from "./resolvers/raw-material.relation.j
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     ItemLoader,
     MaterialLoader,
     MeltingLoader,

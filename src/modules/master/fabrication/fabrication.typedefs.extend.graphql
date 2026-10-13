@@ -5,3 +5,14 @@ extend type Fabrication {
 extend type Fabrication {
   fabRoutes: [FabRoute!]!
 }
+
+extend input CreateFabricationInput {
+  ecnNo: String
+  steps: [RouteStepItemInput!]
+}
+
+extend input UpdateFabricationInput {
+  ecnNo: String
+  steps: [RouteStepItemInput!]
+}
+

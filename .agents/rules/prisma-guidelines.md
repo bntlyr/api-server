@@ -28,6 +28,7 @@ description: Prisma 7 and database conventions for the api-server project
 ## Soft Delete Standard
 - Include `deletedAt DateTime?` and `@@index([deletedAt])` on all soft-deletable models.
 - Never manually write `where: { deletedAt: null }` in standard repository queries; the global `softDeleteExtension` handles this automatically for read queries.
+- `softDeleteExtension` automatically records `deletedAt: new Date()`, `deletedBy: getCurrentUserId()`, and `deleted: true` (where applicable) on `delete`/`deleteMany`, and resets `deletedAt: null`, `deletedBy: null`, `deleted: false`, and `updatedBy: getCurrentUserId()` on `restore`.
 - Use `prisma.<model>.restore(where)` to undelete and `prisma.<model>.hardDelete(where)` for physical deletions when required.
 
 ## Prisma Client Instantiation

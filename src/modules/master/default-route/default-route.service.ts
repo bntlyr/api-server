@@ -17,7 +17,8 @@ import {
   toConnection,
 } from "../../../graphql//common/pagination.helper.js";
 import { validateCreateDefaultRouteInput, validateUpdateDefaultRouteInput } from "./helpers/default-route.helper.js";
-
+import { syncDefaultRouteSteps } from "../default-route-step/helpers/route-step-sync.helper.js";
+import { DefaultRouteStepLoader } from "../default-route-step/default-route-step.loader.js";
 import { DefaultRouteLoader } from "./default-route.loader.js";
 
 @Injectable()
@@ -26,9 +27,11 @@ export class DefaultRouteService {
     private readonly prisma: PrismaService,
     private readonly defaultRouteLoader: DefaultRouteLoader,
     private readonly auditService: AuditTrailService,
+    private readonly defaultRouteStepLoader?: DefaultRouteStepLoader,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.defaultRouteLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +39,10 @@ export class DefaultRouteService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: DefaultRouteFilterInput | null,
+    context?: any,
   ): Promise<DefaultRouteConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -89,17 +94,30 @@ export class DefaultRouteService {
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
 
-      const defaultRoute = await this.prisma.defaultRoute.create({
-        data: {
-          name: input.name,
-          description: input.description ?? null,
-          itemTypeId: input.itemTypeId,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
-        },
-      });
+      const executeCreate = async (tx: any) => {
+        const created = await tx.defaultRoute.create({
+          data: {
+            name: input.name,
+            description: input.description ?? null,
+            itemTypeId: input.itemTypeId,
+            createdBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== "SYSTEM" ? userId : null,
+          },
+        });
+
+        if (input.steps != null) {
+          await syncDefaultRouteSteps(tx, created.id, input.steps, userId);
+        }
+
+        return created;
+      };
+
+      const defaultRoute =
+        typeof this.prisma.$transaction === "function"
+          ? await this.prisma.$transaction(executeCreate)
+          : await executeCreate(this.prisma);
+
+      this.defaultRouteLoader.byItemTypeId.clear(defaultRoute.itemTypeId);
 
       await this.auditService.log({
         userId: userId ?? "SYSTEM",
@@ -141,20 +159,34 @@ export class DefaultRouteService {
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
       const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
-      const defaultRoute = await this.prisma.defaultRoute.update({
-        where: { id: Number.isNaN(parsedId) ? (id as any) : parsedId },
-        data: {
-          ...(input.name ? { name: input.name } : {}),
-          ...(input.description !== undefined ? { description: input.description ?? null } : {}),
-          ...(input.itemTypeId ? { itemTypeId: input.itemTypeId } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
-        },
-      });
+      const targetId = Number.isNaN(parsedId) ? (id as any) : parsedId;
 
-      this.defaultRouteLoader.clear(Number.isNaN(parsedId) ? (id as any) : parsedId);
+      const executeUpdate = async (tx: any) => {
+        const updated = await tx.defaultRoute.update({
+          where: { id: targetId },
+          data: {
+            ...(input.name ? { name: input.name } : {}),
+            ...(input.description !== undefined ? { description: input.description ?? null } : {}),
+            ...(input.itemTypeId ? { itemTypeId: input.itemTypeId } : {}),
+            updatedBy: userId !== "SYSTEM" ? userId : undefined,
+          },
+        });
+
+        if (input.steps != null) {
+          await syncDefaultRouteSteps(tx, updated.id, input.steps, userId);
+        }
+
+        return updated;
+      };
+
+      const defaultRoute =
+        typeof this.prisma.$transaction === "function"
+          ? await this.prisma.$transaction(executeUpdate)
+          : await executeUpdate(this.prisma);
+
+      this.defaultRouteLoader.clear(targetId);
+      this.defaultRouteLoader.byItemTypeId.clear(defaultRoute.itemTypeId);
+      this.defaultRouteStepLoader?.byDefaultRouteId?.clear(targetId);
 
       await this.auditService.log({
         userId: userId ?? "SYSTEM",

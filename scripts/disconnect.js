@@ -171,8 +171,8 @@ export function disconnectModels(sourceInput, targetInput) {
   // 7. Refresh Base Schemas & Codegen
   try {
     console.log("🔄 Refreshing GraphQL Base Schemas & Codegen...");
-    execSync(`node scripts/init-module.js ${sourcePascal}`, { stdio: "ignore" });
-    execSync(`node scripts/init-module.js ${targetPascal}`, { stdio: "ignore" });
+    execSync(`node scripts/init-module.js ${sourcePascal} --no-codegen`, { stdio: "ignore" });
+    execSync(`node scripts/init-module.js ${targetPascal} --no-codegen`, { stdio: "ignore" });
     execSync("npm run codegen", { stdio: "inherit" });
     console.log(`🎉 Successfully disconnected ${sourcePascal} and ${targetPascal}!`);
   } catch (error) {

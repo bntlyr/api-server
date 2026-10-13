@@ -28,7 +28,8 @@ export class PalletTypeService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.palletTypeLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class PalletTypeService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: PalletTypeFilterInput | null,
+    context?: any,
   ): Promise<PalletTypeConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -95,9 +98,8 @@ export class PalletTypeService {
           description: input.description,
           ...(input.unitPrice ? { unitPrice: input.unitPrice } : {}),
           ...(input.weight ? { weight: input.weight } : {}),
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          deletedBy: input.deletedBy ?? null,
+          createdBy: userId !== "SYSTEM" ? userId : null,
+          updatedBy: userId !== "SYSTEM" ? userId : null,
         },
       });
 
@@ -148,9 +150,7 @@ export class PalletTypeService {
           ...(input.description ? { description: input.description } : {}),
           ...(input.unitPrice ? { unitPrice: input.unitPrice } : {}),
           ...(input.weight ? { weight: input.weight } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+          updatedBy: userId !== "SYSTEM" ? userId : undefined,
         },
       });
 

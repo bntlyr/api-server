@@ -17,7 +17,10 @@ description: Authentication, session management, single active device enforcemen
 - Validate on every authenticated request that the session ID exists in the DB, is not revoked, and is not soft-deleted.
 
 ## Authorization & RBAC
+- **Global Auth Enforcement (`APP_GUARD`)**: `JwtAuthGuard` must be registered globally via `APP_GUARD` in `AuthModule` so every GraphQL query, mutation, and HTTP endpoint requires an authenticated user by default. Only explicitly public endpoints (`login`, `register`, `refreshTokens`, `logout`, `auth/public-key`, `health`) may use `@Public()`.
 - User page permissions are defined in `UserPage` (`canView`, `canModify`, `canUnassign`).
 - **Super Admin Bypass**: If `user.superAdmin` is `true`, all page and action permission checks (`PagePermissionGuard`) are bypassed with full access rights.
 - Protect routes and GraphQL resolvers using `JwtAuthGuard` and `PagePermissionGuard`.
 - Use the `@CurrentUser()` decorator or context user to retrieve authenticated session state.
+- **Strict Context Validation**: `extractContextInfo(context)` must verify that an authenticated user exists in `context` (`context.user` / `req.user`), throwing `UnauthorizedException` if missing, and populate `requestContextStorage` (`AsyncLocalStorage`) with the active `userId`.
+

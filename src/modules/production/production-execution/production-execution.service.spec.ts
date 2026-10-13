@@ -34,8 +34,18 @@ describe("ProductionExecutionService", () => {
       user: {
         findMany: vi.fn().mockResolvedValue([]),
       },
+      boxContainer: {
+        upsert: vi.fn().mockResolvedValue({ id: 1 }),
+      },
       boxContainerItem: {
         findMany: vi.fn().mockResolvedValue([]),
+        findFirst: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue({ id: 1 }),
+        update: vi.fn().mockResolvedValue({ id: 1 }),
+      },
+      fabrication: {
+        findFirst: vi.fn().mockResolvedValue({ id: 0 }),
+        create: vi.fn().mockResolvedValue({ id: 0 }),
       },
       finishedGoodsLot: {
         upsert: vi.fn(),

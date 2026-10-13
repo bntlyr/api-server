@@ -4,6 +4,7 @@ import { ItemRouteMachiningLoader } from "../item-route-machining/item-route-mac
 import { ItemRouteIterationLoader } from "../item-route-iteration/item-route-iteration.loader.js";
 import { ItemRouteParameterLoader } from "../item-route-parameter/item-route-parameter.loader.js";
 import { ItemRouteLoader } from "../item-route/item-route.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { ItemRouteStepService } from "./item-route-step.service.js";
@@ -21,6 +22,7 @@ import { ItemRouteStepRelationResolver } from "./resolvers/item-route-step.relat
     ItemRouteIterationLoader,
     ItemRouteParameterLoader,
     ItemRouteLoader,
+    UserLoader,
     ItemRouteStepLoader,
     ItemRouteStepService,
     ItemRouteStepQueryResolver,

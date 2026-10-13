@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { SalesOrderService } from "../sales-order.service.js";
 import type {
   SalesOrderConnection,

@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { FinishedGoodsAllocationService } from "../fg-allocation.service.js";
 import type {
   AvailableFgStockForOrder,

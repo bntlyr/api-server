@@ -17,7 +17,9 @@ import {
   toConnection,
 } from "../../../graphql//common/pagination.helper.js";
 import { validateCreateFabricationInput, validateUpdateFabricationInput } from "./helpers/fabrication.helper.js";
-
+import { syncFabRouteSteps } from "../default-route-step/helpers/route-step-sync.helper.js";
+import { FabRouteLoader } from "../fab-route/fab-route.loader.js";
+import { FabRouteStepLoader } from "../fab-route-step/fab-route-step.loader.js";
 import { FabricationLoader } from "./fabrication.loader.js";
 
 @Injectable()
@@ -26,9 +28,12 @@ export class FabricationService {
     private readonly prisma: PrismaService,
     private readonly fabricationLoader: FabricationLoader,
     private readonly auditService: AuditTrailService,
+    private readonly fabRouteLoader?: FabRouteLoader,
+    private readonly fabRouteStepLoader?: FabRouteStepLoader,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.fabricationLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +41,10 @@ export class FabricationService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: FabricationFilterInput | null,
+    context?: any,
   ): Promise<FabricationConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -88,20 +95,43 @@ export class FabricationService {
 
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
+      const actorId = userId !== "SYSTEM" ? userId : null;
 
-      const fabrication = await this.prisma.fabrication.create({
-        data: {
-          code: input.code,
-          itemId: input.itemId,
-          ...(input.sellingPrice ? { sellingPrice: input.sellingPrice } : {}),
-          ...(input.unitPrice ? { unitPrice: input.unitPrice } : {}),
-          fabImage: input.fabImage ?? null,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
-        },
-      });
+      const executeCreate = async (tx: any) => {
+        const created = await tx.fabrication.create({
+          data: {
+            code: input.code,
+            itemId: input.itemId,
+            ...(input.sellingPrice != null ? { sellingPrice: input.sellingPrice } : {}),
+            ...(input.unitPrice != null ? { unitPrice: input.unitPrice } : {}),
+            fabImage: input.fabImage ?? null,
+            createdBy: actorId,
+            updatedBy: actorId,
+          },
+        });
+
+        if (input.steps != null && tx.fabRoute) {
+          const defaultFabRoute = await tx.fabRoute.create({
+            data: {
+              name: `${created.code} Route`,
+              type: "Default",
+              fabricationId: created.id,
+              createdBy: actorId,
+              updatedBy: actorId,
+            },
+          });
+          await syncFabRouteSteps(tx, defaultFabRoute.id, input.steps, userId);
+        }
+
+        return created;
+      };
+
+      const fabrication =
+        typeof this.prisma.$transaction === "function"
+          ? await this.prisma.$transaction(executeCreate)
+          : await executeCreate(this.prisma);
+
+      this.fabricationLoader.byItemId.clear(fabrication.itemId);
 
       const item = await this.prisma.item.findUnique({
         where: { id: fabrication.itemId },
@@ -111,10 +141,10 @@ export class FabricationService {
       await this.prisma.itemRevision.create({
         data: {
           itemId: fabrication.itemId,
-          ecnNo: item?.ecnNo ?? null,
+          ecnNo: input.ecnNo ?? item?.ecnNo ?? null,
           details: `Created fabrication "${fabrication.code}"`,
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+          createdBy: actorId,
+          updatedBy: actorId,
         },
       });
 
@@ -157,23 +187,59 @@ export class FabricationService {
 
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
+      const actorId = userId !== "SYSTEM" ? userId : null;
       const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
-      const fabrication = await this.prisma.fabrication.update({
-        where: { id: Number.isNaN(parsedId) ? (id as any) : parsedId },
-        data: {
-          ...(input.code ? { code: input.code } : {}),
-          ...(input.itemId ? { itemId: input.itemId } : {}),
-          ...(input.sellingPrice ? { sellingPrice: input.sellingPrice } : {}),
-          ...(input.unitPrice ? { unitPrice: input.unitPrice } : {}),
-          ...(input.fabImage !== undefined ? { fabImage: input.fabImage ?? null } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
-        },
-      });
+      const targetId = Number.isNaN(parsedId) ? (id as any) : parsedId;
 
-      this.fabricationLoader.clear(Number.isNaN(parsedId) ? (id as any) : parsedId);
+      let syncedFabRouteId: number | null = null;
+
+      const executeUpdate = async (tx: any) => {
+        const updated = await tx.fabrication.update({
+          where: { id: targetId },
+          data: {
+            ...(input.code ? { code: input.code } : {}),
+            ...(input.itemId ? { itemId: input.itemId } : {}),
+            ...(input.sellingPrice != null ? { sellingPrice: input.sellingPrice } : {}),
+            ...(input.unitPrice != null ? { unitPrice: input.unitPrice } : {}),
+            ...(input.fabImage !== undefined ? { fabImage: input.fabImage ?? null } : {}),
+            updatedBy: userId !== "SYSTEM" ? userId : undefined,
+          },
+        });
+
+        if (input.steps != null && tx.fabRoute) {
+          let defaultFabRoute = await tx.fabRoute.findFirst({
+            where: { fabricationId: updated.id, type: "Default" },
+          });
+          if (!defaultFabRoute) {
+            defaultFabRoute = await tx.fabRoute.create({
+              data: {
+                name: `${updated.code} Route`,
+                type: "Default",
+                fabricationId: updated.id,
+                createdBy: actorId,
+                updatedBy: actorId,
+              },
+            });
+          }
+          syncedFabRouteId = defaultFabRoute.id;
+          await syncFabRouteSteps(tx, defaultFabRoute.id, input.steps, userId);
+        }
+
+        return updated;
+      };
+
+      const fabrication =
+        typeof this.prisma.$transaction === "function"
+          ? await this.prisma.$transaction(executeUpdate)
+          : await executeUpdate(this.prisma);
+
+      this.fabricationLoader.clear(targetId);
+      this.fabricationLoader.byItemId.clear(fabrication.itemId);
+      this.fabRouteLoader?.byFabricationId?.clear(targetId);
+      if (syncedFabRouteId != null) {
+        this.fabRouteLoader?.clear(syncedFabRouteId);
+        this.fabRouteStepLoader?.byFabRouteId?.clear(syncedFabRouteId);
+      }
 
       const item = await this.prisma.item.findUnique({
         where: { id: fabrication.itemId },
@@ -184,10 +250,10 @@ export class FabricationService {
       await this.prisma.itemRevision.create({
         data: {
           itemId: fabrication.itemId,
-          ecnNo: item?.ecnNo ?? null,
+          ecnNo: input.ecnNo ?? item?.ecnNo ?? null,
           details: `Updated fabrication "${fabrication.code}" fields: ${changedFields.join(", ")}`,
-          createdBy: userId !== "SYSTEM" ? userId : null,
-          updatedBy: userId !== "SYSTEM" ? userId : null,
+          createdBy: actorId,
+          updatedBy: actorId,
         },
       });
 

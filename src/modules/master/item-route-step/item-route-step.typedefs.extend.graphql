@@ -25,10 +25,11 @@ extend type ItemRouteStep {
 extend input CreateItemRouteStepInput {
   machineIds: [Int!]
   iterations: [String!]
+  parameters: [RouteStepParameterInput!]
 }
 
 extend input UpdateItemRouteStepInput {
   machineIds: [Int!]
   iterations: [String!]
+  parameters: [RouteStepParameterInput!]
 }
-

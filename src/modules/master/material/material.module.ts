@@ -2,6 +2,7 @@ import { MaterialSupplierLoader } from "../material-supplier/material-supplier.l
 import { RawMaterialLoader } from "../raw-material/raw-material.loader.js";
 import { SectionLoader } from "../section/section.loader.js";
 import { MaterialGroupLoader } from "../material-group/material-group.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { MaterialService } from "./material.service.js";
@@ -13,6 +14,7 @@ import { MaterialRelationResolver } from "./resolvers/material.relation.js";
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     MaterialSupplierLoader,
     RawMaterialLoader,
     SectionLoader,

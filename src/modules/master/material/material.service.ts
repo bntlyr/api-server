@@ -28,7 +28,8 @@ export class MaterialService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.materialLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class MaterialService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: MaterialFilterInput | null,
+    context?: any,
   ): Promise<MaterialConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -94,7 +97,7 @@ export class MaterialService {
           data: {
             name: input.name,
             oldCode: input.oldCode ?? null,
-            ...(input.minStock ? { minStock: input.minStock } : {}),
+            ...(input.minStock != null ? { minStock: input.minStock } : {}),
             note: input.note ?? null,
             modelNo: input.modelNo ?? null,
             shelfLife: input.shelfLife ?? null,
@@ -102,17 +105,15 @@ export class MaterialService {
             description: input.description ?? null,
             category: input.category,
             type: input.type,
-            ...(input.unitOfMeasurement ? { unitOfMeasurement: input.unitOfMeasurement } : {}),
-            ...(input.weight ? { weight: input.weight } : {}),
-            ...(input.weightUom ? { weightUom: input.weightUom } : {}),
-            ...(input.cost ? { cost: input.cost } : {}),
+            ...(input.unitOfMeasurement != null ? { unitOfMeasurement: input.unitOfMeasurement } : {}),
+            ...(input.weight != null ? { weight: input.weight } : {}),
+            ...(input.weightUom != null ? { weightUom: input.weightUom } : {}),
+            ...(input.cost != null ? { cost: input.cost } : {}),
             materialGroupId: input.materialGroupId ?? null,
             sectionId: input.sectionId ?? null,
             rawMaterialId: input.rawMaterialId ?? null,
-            createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-            ...(input.deleted ? { deleted: input.deleted } : {}),
-            deletedBy: input.deletedBy ?? null,
+            createdBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== "SYSTEM" ? userId : null,
           },
         });
 
@@ -121,8 +122,8 @@ export class MaterialService {
             data: input.supplierIds.map((supplierId) => ({
               materialId: created.id,
               supplierId,
-              createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-              updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+              createdBy: userId !== "SYSTEM" ? userId : null,
+              updatedBy: userId !== "SYSTEM" ? userId : null,
             })),
             skipDuplicates: true,
           });
@@ -176,27 +177,24 @@ export class MaterialService {
         const updated = await tx.material.update({
           where: { id: Number.isNaN(parsedId) ? (id as any) : parsedId },
           data: {
-            ...(input.name ? { name: input.name } : {}),
+            ...(input.name != null ? { name: input.name } : {}),
             ...(input.oldCode !== undefined ? { oldCode: input.oldCode ?? null } : {}),
-            ...(input.minStock ? { minStock: input.minStock } : {}),
+            ...(input.minStock != null ? { minStock: input.minStock } : {}),
             ...(input.note !== undefined ? { note: input.note ?? null } : {}),
             ...(input.modelNo !== undefined ? { modelNo: input.modelNo ?? null } : {}),
             ...(input.shelfLife !== undefined ? { shelfLife: input.shelfLife ?? null } : {}),
-            ...(input.stockKeepingUnit ? { stockKeepingUnit: input.stockKeepingUnit } : {}),
+            ...(input.stockKeepingUnit != null ? { stockKeepingUnit: input.stockKeepingUnit } : {}),
             ...(input.description !== undefined ? { description: input.description ?? null } : {}),
-            ...(input.category ? { category: input.category } : {}),
-            ...(input.type ? { type: input.type } : {}),
-            ...(input.unitOfMeasurement ? { unitOfMeasurement: input.unitOfMeasurement } : {}),
-            ...(input.weight ? { weight: input.weight } : {}),
-            ...(input.weightUom ? { weightUom: input.weightUom } : {}),
-            ...(input.cost ? { cost: input.cost } : {}),
+            ...(input.category != null ? { category: input.category } : {}),
+            ...(input.type != null ? { type: input.type } : {}),
+            ...(input.unitOfMeasurement != null ? { unitOfMeasurement: input.unitOfMeasurement } : {}),
+            ...(input.weight != null ? { weight: input.weight } : {}),
+            ...(input.weightUom != null ? { weightUom: input.weightUom } : {}),
+            ...(input.cost != null ? { cost: input.cost } : {}),
             ...(input.materialGroupId !== undefined ? { materialGroupId: input.materialGroupId ?? null } : {}),
             ...(input.sectionId !== undefined ? { sectionId: input.sectionId ?? null } : {}),
             ...(input.rawMaterialId !== undefined ? { rawMaterialId: input.rawMaterialId ?? null } : {}),
-            ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-            ...(input.deleted ? { deleted: input.deleted } : {}),
-            ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+            updatedBy: userId !== "SYSTEM" ? userId : undefined,
           },
         });
 

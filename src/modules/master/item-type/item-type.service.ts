@@ -17,7 +17,9 @@ import {
   toConnection,
 } from "../../../graphql//common/pagination.helper.js";
 import { validateCreateItemTypeInput, validateUpdateItemTypeInput } from "./helpers/item-type.helper.js";
-
+import { syncDefaultRouteSteps } from "../default-route-step/helpers/route-step-sync.helper.js";
+import { DefaultRouteLoader } from "../default-route/default-route.loader.js";
+import { DefaultRouteStepLoader } from "../default-route-step/default-route-step.loader.js";
 import { ItemTypeLoader } from "./item-type.loader.js";
 
 @Injectable()
@@ -26,9 +28,12 @@ export class ItemTypeService {
     private readonly prisma: PrismaService,
     private readonly itemTypeLoader: ItemTypeLoader,
     private readonly auditService: AuditTrailService,
+    private readonly defaultRouteLoader?: DefaultRouteLoader,
+    private readonly defaultRouteStepLoader?: DefaultRouteStepLoader,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.itemTypeLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +41,10 @@ export class ItemTypeService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: ItemTypeFilterInput | null,
+    context?: any,
   ): Promise<ItemTypeConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -88,19 +95,40 @@ export class ItemTypeService {
 
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
+      const actorId = userId !== "SYSTEM" ? userId : null;
 
-      const itemType = await this.prisma.itemType.create({
-        data: {
-          name: input.name,
-          code: input.code,
-          ...(input.cycleType ? { cycleType: input.cycleType } : {}),
-          ...(input.routeSetUp ? { routeSetUp: input.routeSetUp } : {}),
-          createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          deletedBy: input.deletedBy ?? null,
-        },
-      });
+      const executeCreate = async (tx: any) => {
+        const created = await tx.itemType.create({
+          data: {
+            name: input.name,
+            code: input.code,
+            ...(input.cycleType ? { cycleType: input.cycleType } : {}),
+            ...(input.routeSetUp != null ? { routeSetUp: input.routeSetUp } : {}),
+            createdBy: actorId,
+            updatedBy: actorId,
+          },
+        });
+
+        if (created.routeSetUp && input.steps && input.steps.length > 0 && tx.defaultRoute) {
+          const defaultRoute = await tx.defaultRoute.create({
+            data: {
+              name: `${created.code} Default Route`,
+              description: `Default route for ${created.name}`,
+              itemTypeId: created.id,
+              createdBy: actorId,
+              updatedBy: actorId,
+            },
+          });
+          await syncDefaultRouteSteps(tx, defaultRoute.id, input.steps, userId);
+        }
+
+        return created;
+      };
+
+      const itemType =
+        typeof this.prisma.$transaction === "function"
+          ? await this.prisma.$transaction(executeCreate)
+          : await executeCreate(this.prisma);
 
       await this.auditService.log({
         userId: userId ?? "SYSTEM",
@@ -141,22 +169,67 @@ export class ItemTypeService {
 
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
+      const actorId = userId !== "SYSTEM" ? userId : null;
       const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
-      const itemType = await this.prisma.itemType.update({
-        where: { id: Number.isNaN(parsedId) ? (id as any) : parsedId },
-        data: {
-          ...(input.name ? { name: input.name } : {}),
-          ...(input.code ? { code: input.code } : {}),
-          ...(input.cycleType ? { cycleType: input.cycleType } : {}),
-          ...(input.routeSetUp ? { routeSetUp: input.routeSetUp } : {}),
-          ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-          updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-          ...(input.deleted ? { deleted: input.deleted } : {}),
-          ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
-        },
-      });
+      const targetId = Number.isNaN(parsedId) ? (id as any) : parsedId;
 
-      this.itemTypeLoader.clear(Number.isNaN(parsedId) ? (id as any) : parsedId);
+      let syncedDefaultRouteId: number | null = null;
+
+      const executeUpdate = async (tx: any) => {
+        const updated = await tx.itemType.update({
+          where: { id: targetId },
+          data: {
+            ...(input.name ? { name: input.name } : {}),
+            ...(input.code ? { code: input.code } : {}),
+            ...(input.cycleType ? { cycleType: input.cycleType } : {}),
+            ...(input.routeSetUp != null ? { routeSetUp: input.routeSetUp } : {}),
+            updatedBy: userId !== "SYSTEM" ? userId : undefined,
+          },
+        });
+
+        if (tx.defaultRoute) {
+          if (input.routeSetUp === false) {
+            const existingRoute = await tx.defaultRoute.findFirst({
+              where: { itemTypeId: updated.id },
+            });
+            if (existingRoute) {
+              syncedDefaultRouteId = existingRoute.id;
+              await syncDefaultRouteSteps(tx, existingRoute.id, [], userId);
+            }
+          } else if (input.steps != null) {
+            let defaultRoute = await tx.defaultRoute.findFirst({
+              where: { itemTypeId: updated.id },
+            });
+            if (!defaultRoute) {
+              defaultRoute = await tx.defaultRoute.create({
+                data: {
+                  name: `${updated.code} Default Route`,
+                  description: `Default route for ${updated.name}`,
+                  itemTypeId: updated.id,
+                  createdBy: actorId,
+                  updatedBy: actorId,
+                },
+              });
+            }
+            syncedDefaultRouteId = defaultRoute.id;
+            await syncDefaultRouteSteps(tx, defaultRoute.id, input.steps, userId);
+          }
+        }
+
+        return updated;
+      };
+
+      const itemType =
+        typeof this.prisma.$transaction === "function"
+          ? await this.prisma.$transaction(executeUpdate)
+          : await executeUpdate(this.prisma);
+
+      this.itemTypeLoader.clear(targetId);
+      this.defaultRouteLoader?.byItemTypeId?.clear(targetId);
+      if (syncedDefaultRouteId != null) {
+        this.defaultRouteLoader?.clear(syncedDefaultRouteId);
+        this.defaultRouteStepLoader?.byDefaultRouteId?.clear(syncedDefaultRouteId);
+      }
 
       await this.auditService.log({
         userId: userId ?? "SYSTEM",

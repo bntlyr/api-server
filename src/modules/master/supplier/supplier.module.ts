@@ -8,10 +8,12 @@ import { SupplierRelationResolver } from "./resolvers/supplier.relation.js";
 
 import { StatusCodeLoader } from "../../common/status-code/status-code.loader.js";
 import { MaterialSupplierLoader } from "../material-supplier/material-supplier.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     StatusCodeLoader,
     MaterialSupplierLoader,
     SupplierLoader,

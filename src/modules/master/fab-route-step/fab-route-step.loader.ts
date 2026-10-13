@@ -21,6 +21,7 @@ export class FabRouteStepLoader {
     async (fabRouteIds: readonly (number)[]) => {
       const rows = await this.prisma.fabRouteStep.findMany({
         where: { fabRouteId: { in: [...fabRouteIds] } },
+        orderBy: { id: "asc" },
       });
       const groupMap = new Map<number, PrismaFabRouteStep[]>();
       for (const row of rows) {

@@ -37,6 +37,8 @@ input RegisterInput {
   email: String!
   password: String!
   name: String
+  cellphone: String
+  employeeId: String
 }
 
 extend type Query {

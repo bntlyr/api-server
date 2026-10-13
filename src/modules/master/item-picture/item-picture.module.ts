@@ -1,5 +1,6 @@
 import { ProcessLoader } from "../process/process.loader.js";
 import { ItemLoader } from "../item/item.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { ItemPictureService } from "./item-picture.service.js";
@@ -13,6 +14,7 @@ import { ItemPictureRelationResolver } from "./resolvers/item-picture.relation.j
   providers: [
     ProcessLoader,
     ItemLoader,
+    UserLoader,
     ItemPictureLoader,
     ItemPictureService,
     ItemPictureQueryResolver,

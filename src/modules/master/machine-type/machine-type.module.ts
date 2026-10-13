@@ -1,4 +1,5 @@
 import { MachineLoader } from "../machine/machine.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { MachineTypeService } from "./machine-type.service.js";
@@ -10,6 +11,7 @@ import { MachineTypeRelationResolver } from "./resolvers/machine-type.relation.j
 @Module({
   imports: [PrismaModule],
   providers: [
+    UserLoader,
     MachineLoader,
     MachineTypeLoader,
     MachineTypeService,

@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 import { BookingService } from "../booking.service.js";
 import type {
   BookingFilterInput,
@@ -11,16 +11,17 @@ export class BookingQueryResolver {
   constructor(private readonly bookingService: BookingService) {}
 
   @Query("bookingById")
-  async bookingById(@Args("id") id: string) {
-    return this.bookingService.findOne(id);
+  async bookingById(@Args("id") id: string, @Context() context?: any) {
+    return this.bookingService.findOne(id, context);
   }
 
   @Query("bookingsPaginated")
   async bookingsPaginated(
     @Args("pagination", { nullable: true }) pagination?: PaginationInput | null,
     @Args("filter", { nullable: true }) filter?: BookingFilterInput | null,
+    @Context() context?: any,
   ): Promise<BookingConnection> {
-    return this.bookingService.findMany(pagination, filter);
+    return this.bookingService.findMany(pagination, filter, context);
   }
 
   @Query("checkRemakeEligibility")

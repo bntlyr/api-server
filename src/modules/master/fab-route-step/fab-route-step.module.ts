@@ -4,6 +4,7 @@ import { FabRouteMachiningLoader } from "../fab-route-machining/fab-route-machin
 import { FabRouteIterationLoader } from "../fab-route-iteration/fab-route-iteration.loader.js";
 import { FabRouteParameterLoader } from "../fab-route-parameter/fab-route-parameter.loader.js";
 import { FabRouteLoader } from "../fab-route/fab-route.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "../../../prisma//index.js";
 import { FabRouteStepService } from "./fab-route-step.service.js";
@@ -21,6 +22,7 @@ import { FabRouteStepRelationResolver } from "./resolvers/fab-route-step.relatio
     FabRouteIterationLoader,
     FabRouteParameterLoader,
     FabRouteLoader,
+    UserLoader,
     FabRouteStepLoader,
     FabRouteStepService,
     FabRouteStepQueryResolver,

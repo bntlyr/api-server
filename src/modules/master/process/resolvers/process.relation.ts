@@ -6,6 +6,8 @@ import { ProcessIterationLoader } from "../../process-iteration/process-iteratio
 import { ItemPictureLoader } from "../../item-picture/item-picture.loader.js";
 import { ParameterLoader } from "../../parameter/parameter.loader.js";
 import { SectionLoader } from "../../section/section.loader.js";
+import { UserLoader } from "../../../user/user.loader.js";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 import type { Process as PrismaProcess } from "../../../../generated//prisma/client.js";
 import { PrismaService } from "../../../../prisma//prisma.service.js";
 import { Parent, ResolveField, Resolver } from "@nestjs/graphql";
@@ -22,11 +24,18 @@ export class ProcessRelationResolver {
     private readonly defaultRouteStepLoader: DefaultRouteStepLoader,
     private readonly itemRouteStepLoader: ItemRouteStepLoader,
     private readonly fabRouteStepLoader: FabRouteStepLoader,
+    private readonly userLoader: UserLoader,
   ) {}
-  /**
-   * Field resolver / relation resolver for Process.
-   * Extend this with relations as the schema grows.
-   */
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() process: PrismaProcess) {
+    return resolveAuditEmployeeId(process.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() process: PrismaProcess) {
+    return resolveAuditEmployeeId(process.updatedBy, this.userLoader);
+  }
 
   @ResolveField("section")
   async section(@Parent() process: PrismaProcess) {
@@ -67,5 +76,19 @@ export class ProcessRelationResolver {
   @ResolveField("fabRouteSteps")
   async fabRouteSteps(@Parent() process: PrismaProcess) {
     return this.fabRouteStepLoader.byProcessId.load(process.id);
+  }
+
+  @ResolveField("itemTypeInclusion")
+  async itemTypeInclusion(@Parent() process: PrismaProcess) {
+    const val = (process as any).itemTypeInclusion;
+    if (val === null || val === undefined) return null;
+    return typeof val === "string" ? val : JSON.stringify(val);
+  }
+
+  @ResolveField("itemTypeExclusion")
+  async itemTypeExclusion(@Parent() process: PrismaProcess) {
+    const val = (process as any).itemTypeExclusion;
+    if (val === null || val === undefined) return null;
+    return typeof val === "string" ? val : JSON.stringify(val);
   }
 }

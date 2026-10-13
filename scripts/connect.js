@@ -361,8 +361,8 @@ updateRelationResolver(targetResolverPath, targetPascal, sourcePascal, targetRes
 // 9. Refresh Base Schemas and GraphQL Codegen
 try {
   console.log("🔄 Refreshing GraphQL Base Schemas & Codegen...");
-  execSync(`node scripts/init-module.js ${sourcePascal}`, { stdio: "ignore" });
-  execSync(`node scripts/init-module.js ${targetPascal}`, { stdio: "ignore" });
+  execSync(`node scripts/init-module.js ${sourcePascal} --no-codegen`, { stdio: "ignore" });
+  execSync(`node scripts/init-module.js ${targetPascal} --no-codegen`, { stdio: "ignore" });
   execSync("npm run codegen", { stdio: "inherit" });
   console.log(`🎉 Connection between ${sourcePascal} and ${targetPascal} with DataLoaders completed successfully!`);
 } catch (error) {

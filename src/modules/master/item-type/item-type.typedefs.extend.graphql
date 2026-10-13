@@ -9,3 +9,12 @@ extend type ItemType {
 extend type ItemType {
   defaultRoute: DefaultRoute
 }
+
+extend input CreateItemTypeInput {
+  steps: [RouteStepItemInput!]
+}
+
+extend input UpdateItemTypeInput {
+  steps: [RouteStepItemInput!]
+}
+

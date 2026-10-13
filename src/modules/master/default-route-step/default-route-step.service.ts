@@ -28,7 +28,8 @@ export class DefaultRouteStepService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.defaultRouteStepLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class DefaultRouteStepService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: DefaultRouteStepFilterInput | null,
+    context?: any,
   ): Promise<DefaultRouteStepConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -94,30 +97,28 @@ export class DefaultRouteStepService {
           data: {
             sequenceNumber: input.sequenceNumber,
             name: input.name,
-            ...(input.subname ? { subname: input.subname } : {}),
-            ...(input.isParent ? { isParent: input.isParent } : {}),
+            ...(input.subname !== undefined ? { subname: input.subname ?? "" } : {}),
+            ...(input.isParent != null ? { isParent: input.isParent } : {}),
             processId: input.processId ?? null,
             sectionId: input.sectionId ?? null,
             numberOfIterations: input.numberOfIterations ?? (input.iterations?.length ? Math.min(input.iterations.length, 10) : 0),
             hasMachining: input.hasMachining ?? (Boolean(input.machineIds && input.machineIds.length > 0)),
             hasIterating: input.hasIterating ?? (Boolean(input.iterations && input.iterations.length > 0)),
-            ...(input.hasChecking ? { hasChecking: input.hasChecking } : {}),
-            ...(input.hasRework ? { hasRework: input.hasRework } : {}),
-            ...(input.hasPacking ? { hasPacking: input.hasPacking } : {}),
-            ...(input.hasTooling ? { hasTooling: input.hasTooling } : {}),
-            ...(input.hasActualParameter ? { hasActualParameter: input.hasActualParameter } : {}),
+            ...(input.hasChecking != null ? { hasChecking: input.hasChecking } : {}),
+            ...(input.hasRework != null ? { hasRework: input.hasRework } : {}),
+            ...(input.hasPacking != null ? { hasPacking: input.hasPacking } : {}),
+            ...(input.hasTooling != null ? { hasTooling: input.hasTooling } : {}),
+            ...(input.hasActualParameter != null ? { hasActualParameter: input.hasActualParameter } : {}),
             ...(input.durationType ? { durationType: input.durationType } : {}),
-            ...(input.leadTime ? { leadTime: input.leadTime } : {}),
+            ...(input.leadTime != null ? { leadTime: input.leadTime } : {}),
             ...(input.leadTimeUnit ? { leadTimeUnit: input.leadTimeUnit } : {}),
             prepTime: input.prepTime ?? null,
             prepTimeUnit: input.prepTimeUnit ?? null,
             cureTime: input.cureTime ?? null,
             cureTimeUnit: input.cureTimeUnit ?? null,
             defaultRouteId: input.defaultRouteId,
-            createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-            ...(input.deleted ? { deleted: input.deleted } : {}),
-            deletedBy: input.deletedBy ?? null,
+            createdBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== "SYSTEM" ? userId : null,
           },
         });
 
@@ -126,8 +127,8 @@ export class DefaultRouteStepService {
             data: input.machineIds.map((machineId) => ({
               defaultRouteStepId: created.id,
               machineId,
-              createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-              updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+              createdBy: userId !== "SYSTEM" ? userId : null,
+              updatedBy: userId !== "SYSTEM" ? userId : null,
             })),
             skipDuplicates: true,
           });
@@ -139,8 +140,21 @@ export class DefaultRouteStepService {
             data: iterationItems.map((subname) => ({
               defaultRouteStepId: created.id,
               subname,
-              createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-              updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+              createdBy: userId !== "SYSTEM" ? userId : null,
+              updatedBy: userId !== "SYSTEM" ? userId : null,
+            })),
+          });
+        }
+
+        if (input.parameters && input.parameters.length > 0 && tx.defaultRouteParameter) {
+          await tx.defaultRouteParameter.createMany({
+            data: input.parameters.map((p) => ({
+              defaultRouteStepId: created.id,
+              name: p.name,
+              inputType: p.inputType || "Text",
+              paramValue: p.paramValue ?? null,
+              createdBy: userId !== "SYSTEM" ? userId : null,
+              updatedBy: userId !== "SYSTEM" ? userId : null,
             })),
           });
         }
@@ -195,7 +209,7 @@ export class DefaultRouteStepService {
           data: {
             ...(input.sequenceNumber ? { sequenceNumber: input.sequenceNumber } : {}),
             ...(input.name ? { name: input.name } : {}),
-            ...(input.subname ? { subname: input.subname } : {}),
+            ...(input.subname !== undefined ? { subname: input.subname ?? "" } : {}),
             ...(input.isParent != null ? { isParent: input.isParent } : {}),
             ...(input.processId !== undefined ? { processId: input.processId ?? null } : {}),
             ...(input.sectionId !== undefined ? { sectionId: input.sectionId ?? null } : {}),
@@ -208,17 +222,14 @@ export class DefaultRouteStepService {
             ...(input.hasTooling != null ? { hasTooling: input.hasTooling } : {}),
             ...(input.hasActualParameter != null ? { hasActualParameter: input.hasActualParameter } : {}),
             ...(input.durationType ? { durationType: input.durationType } : {}),
-            ...(input.leadTime ? { leadTime: input.leadTime } : {}),
+            ...(input.leadTime != null ? { leadTime: input.leadTime } : {}),
             ...(input.leadTimeUnit ? { leadTimeUnit: input.leadTimeUnit } : {}),
             ...(input.prepTime !== undefined ? { prepTime: input.prepTime ?? null } : {}),
             ...(input.prepTimeUnit !== undefined ? { prepTimeUnit: input.prepTimeUnit ?? null } : {}),
             ...(input.cureTime !== undefined ? { cureTime: input.cureTime ?? null } : {}),
             ...(input.cureTimeUnit !== undefined ? { cureTimeUnit: input.cureTimeUnit ?? null } : {}),
             ...(input.defaultRouteId ? { defaultRouteId: input.defaultRouteId } : {}),
-            ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-            ...(input.deleted != null ? { deleted: input.deleted } : {}),
-            ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+            updatedBy: userId !== "SYSTEM" ? userId : undefined,
           },
         });
 
@@ -249,6 +260,24 @@ export class DefaultRouteStepService {
               data: iterationItems.map((subname) => ({
                 defaultRouteStepId: updated.id,
                 subname,
+                createdBy: userId !== "SYSTEM" ? userId : null,
+                updatedBy: userId !== "SYSTEM" ? userId : null,
+              })),
+            });
+          }
+        }
+
+        if (input.parameters !== undefined && tx.defaultRouteParameter) {
+          await tx.defaultRouteParameter.deleteMany({
+            where: { defaultRouteStepId: updated.id },
+          });
+          if (input.parameters && input.parameters.length > 0) {
+            await tx.defaultRouteParameter.createMany({
+              data: input.parameters.map((p) => ({
+                defaultRouteStepId: updated.id,
+                name: p.name,
+                inputType: p.inputType || "Text",
+                paramValue: p.paramValue ?? null,
                 createdBy: userId !== "SYSTEM" ? userId : null,
                 updatedBy: userId !== "SYSTEM" ? userId : null,
               })),

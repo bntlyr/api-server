@@ -28,7 +28,8 @@ export class MachineService {
     private readonly auditService: AuditTrailService,
   ) {}
 
-  async findOne(id: number | string) {
+  async findOne(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     return this.machineLoader.byId.load(Number.isNaN(parsedId) ? (id as any) : parsedId);
   }
@@ -36,8 +37,10 @@ export class MachineService {
   async findMany(
     pagination?: PaginationInput | null,
     filter?: MachineFilterInput | null,
+    context?: any,
   ): Promise<MachineConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -99,9 +102,8 @@ export class MachineService {
             numberOfTools: input.numberOfTools,
             machineTypeId: input.machineTypeId,
             sectionId: input.sectionId,
-            createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
-            deletedBy: input.deletedBy ?? null,
+            createdBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== "SYSTEM" ? userId : null,
           },
         });
 
@@ -110,8 +112,8 @@ export class MachineService {
             data: input.toolIds.map((toolId) => ({
               machineId: created.id,
               toolId,
-              createdBy: input.createdBy ?? (userId !== "SYSTEM" ? userId : null),
-              updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : null),
+              createdBy: userId !== "SYSTEM" ? userId : null,
+              updatedBy: userId !== "SYSTEM" ? userId : null,
             })),
             skipDuplicates: true,
           });
@@ -165,16 +167,14 @@ export class MachineService {
         const updated = await tx.machine.update({
           where: { id: Number.isNaN(parsedId) ? (id as any) : parsedId },
           data: {
-            ...(input.name ? { name: input.name } : {}),
-            ...(input.brand ? { brand: input.brand } : {}),
-            ...(input.specificName ? { specificName: input.specificName } : {}),
-            ...(input.rotary ? { rotary: input.rotary } : {}),
-            ...(input.numberOfTools ? { numberOfTools: input.numberOfTools } : {}),
-            ...(input.machineTypeId ? { machineTypeId: input.machineTypeId } : {}),
-            ...(input.sectionId ? { sectionId: input.sectionId } : {}),
-            ...(input.createdBy !== undefined ? { createdBy: input.createdBy ?? null } : {}),
-            updatedBy: input.updatedBy ?? (userId !== "SYSTEM" ? userId : undefined),
-            ...(input.deletedBy !== undefined ? { deletedBy: input.deletedBy ?? null } : {}),
+            ...(input.name != null ? { name: input.name } : {}),
+            ...(input.brand != null ? { brand: input.brand } : {}),
+            ...(input.specificName != null ? { specificName: input.specificName } : {}),
+            ...(input.rotary != null ? { rotary: input.rotary } : {}),
+            ...(input.numberOfTools != null ? { numberOfTools: input.numberOfTools } : {}),
+            ...(input.machineTypeId != null ? { machineTypeId: input.machineTypeId } : {}),
+            ...(input.sectionId != null ? { sectionId: input.sectionId } : {}),
+            updatedBy: userId !== "SYSTEM" ? userId : undefined,
           },
         });
 

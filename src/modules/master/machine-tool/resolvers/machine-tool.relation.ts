@@ -3,12 +3,26 @@ import type { MachineTool as PrismaMachineTool } from "../../../../generated//pr
 import { MachineLoader } from "../../machine/machine.loader.js";
 import { ToolLoader } from "../../tool/tool.loader.js";
 
+import { UserLoader } from "../../../user/user.loader.js";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
+
 @Resolver("MachineTool")
 export class MachineToolRelationResolver {
   constructor(
     private readonly machineLoader: MachineLoader,
     private readonly toolLoader: ToolLoader,
+    private readonly userLoader: UserLoader,
   ) {}
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() machineTool: PrismaMachineTool) {
+    return resolveAuditEmployeeId(machineTool.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() machineTool: PrismaMachineTool) {
+    return resolveAuditEmployeeId(machineTool.updatedBy, this.userLoader);
+  }
 
   @ResolveField("machine")
   async machine(@Parent() machineTool: PrismaMachineTool) {
