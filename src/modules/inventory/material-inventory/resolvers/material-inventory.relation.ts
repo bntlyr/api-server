@@ -3,6 +3,8 @@ import { AreaLoader } from "../../../master/area/area.loader.js";
 import { LocationLoader } from "../../../master/location/location.loader.js";
 import { MaterialLoader } from "../../../master/material/material.loader.js";
 import { SupplierLoader } from "../../../master/supplier/supplier.loader.js";
+import { UserLoader } from "../../../user/user.loader.js";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 import { MaterialInventoryLoader } from "../material-inventory.loader.js";
 import { MaterialInventoryService } from "../material-inventory.service.js";
 import type {
@@ -19,7 +21,18 @@ export class MaterialInventoryLotRelationResolver {
     private readonly locationLoader: LocationLoader,
     private readonly supplierLoader: SupplierLoader,
     private readonly lotLoader: MaterialInventoryLoader,
+    private readonly userLoader: UserLoader,
   ) {}
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() lot: PrismaMaterialInventoryLot) {
+    return resolveAuditEmployeeId(lot.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() lot: PrismaMaterialInventoryLot) {
+    return resolveAuditEmployeeId(lot.updatedBy, this.userLoader);
+  }
 
   @ResolveField("material")
   async material(@Parent() lot: PrismaMaterialInventoryLot) {
@@ -67,7 +80,18 @@ export class MaterialInventoryTransactionRelationResolver {
     private readonly areaLoader: AreaLoader,
     private readonly locationLoader: LocationLoader,
     private readonly lotLoader: MaterialInventoryLoader,
+    private readonly userLoader: UserLoader,
   ) {}
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() tx: PrismaMaterialInventoryTransaction) {
+    return resolveAuditEmployeeId(tx.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() tx: PrismaMaterialInventoryTransaction) {
+    return resolveAuditEmployeeId(tx.updatedBy, this.userLoader);
+  }
 
   @ResolveField("material")
   async material(@Parent() tx: PrismaMaterialInventoryTransaction) {

@@ -260,4 +260,55 @@ export class MaterialIssuanceService {
       };
     }
   }
+
+  async delete(id: number | string, context?: any): Promise<MaterialIssuancePayload> {
+    try {
+      const { userId, ipAddress, userAgent } = extractContextInfo(context);
+      const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
+      if (Number.isNaN(parsedId)) {
+        return {
+          issuance: null,
+          userErrors: [createError("Invalid Material Issuance ID", "id", "INVALID_INPUT")],
+        };
+      }
+
+      const existing = await this.prisma.materialIssuance.findUnique({
+        where: { id: parsedId },
+      });
+      if (!existing) {
+        return {
+          issuance: null,
+          userErrors: [createError("Material Issuance not found", "id", "NOT_FOUND")],
+        };
+      }
+
+      const deleted = await this.prisma.materialIssuance.delete({
+        where: { id: parsedId },
+      });
+
+      this.loader.clear(parsedId);
+
+      await this.auditService.log({
+        userId: userId ?? "SYSTEM",
+        action: "DELETE_MATERIAL_ISSUANCE",
+        method: "GRAPHQL_MUTATION",
+        tableName: "MaterialIssuance",
+        recordId: String(parsedId),
+        description: `Deleted Material Issuance ${existing.mrsNo}`,
+        values: deleted as any,
+        ipAddress,
+        userAgent,
+      });
+
+      return {
+        issuance: deleted as any,
+        userErrors: [],
+      };
+    } catch (error) {
+      return {
+        issuance: null,
+        userErrors: [createError((error as Error).message)],
+      };
+    }
+  }
 }

@@ -6,6 +6,7 @@ import { AreaLoader } from "../../../master/area/area.loader.js";
 import { LocationLoader } from "../../../master/location/location.loader.js";
 import { MaterialInventoryLoader } from "../../material-inventory/material-inventory.loader.js";
 import { MaterialIssuanceLoader } from "../material-issuance.loader.js";
+import { resolveAuditEmployeeId } from "../../../../graphql/common/audit-user.helper.js";
 import type {
   MaterialIssuance as PrismaMaterialIssuance,
   MaterialIssuanceItem as PrismaMaterialIssuanceItem,
@@ -18,6 +19,16 @@ export class MaterialIssuanceRelationResolver {
     private readonly userLoader: UserLoader,
     private readonly issuanceLoader: MaterialIssuanceLoader,
   ) {}
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() issuance: PrismaMaterialIssuance) {
+    return resolveAuditEmployeeId(issuance.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() issuance: PrismaMaterialIssuance) {
+    return resolveAuditEmployeeId(issuance.updatedBy, this.userLoader);
+  }
 
   @ResolveField("section")
   async section(@Parent() issuance: PrismaMaterialIssuance) {
@@ -44,7 +55,18 @@ export class MaterialIssuanceItemRelationResolver {
     private readonly lotLoader: MaterialInventoryLoader,
     private readonly areaLoader: AreaLoader,
     private readonly locationLoader: LocationLoader,
+    private readonly userLoader: UserLoader,
   ) {}
+
+  @ResolveField("createdBy")
+  async createdBy(@Parent() item: PrismaMaterialIssuanceItem) {
+    return resolveAuditEmployeeId(item.createdBy, this.userLoader);
+  }
+
+  @ResolveField("updatedBy")
+  async updatedBy(@Parent() item: PrismaMaterialIssuanceItem) {
+    return resolveAuditEmployeeId(item.updatedBy, this.userLoader);
+  }
 
   @ResolveField("material")
   async material(@Parent() item: PrismaMaterialIssuanceItem) {

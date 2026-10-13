@@ -4,6 +4,7 @@ import { AreaLoader } from "../../master/area/area.loader.js";
 import { LocationLoader } from "../../master/location/location.loader.js";
 import { MaterialLoader } from "../../master/material/material.loader.js";
 import { SupplierLoader } from "../../master/supplier/supplier.loader.js";
+import { UserLoader } from "../../user/user.loader.js";
 import { MaterialInventoryLoader } from "./material-inventory.loader.js";
 import { MaterialInventoryService } from "./material-inventory.service.js";
 import { MaterialInventoryQueryResolver } from "./resolvers/material-inventory.query.js";
@@ -21,6 +22,7 @@ import {
     LocationLoader,
     MaterialLoader,
     SupplierLoader,
+    UserLoader,
     MaterialInventoryLoader,
     MaterialInventoryService,
     MaterialInventoryQueryResolver,

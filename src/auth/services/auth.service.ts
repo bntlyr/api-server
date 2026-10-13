@@ -226,6 +226,17 @@ export class AuthService {
     return true;
   }
 
+  async verifyCurrentPassword(userId: string, password: string): Promise<boolean> {
+    const rawPassword = pemDecrypt(password) || password;
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user || user.deletedAt) {
+      return false;
+    }
+    return this.tokenService.comparePassword(rawPassword, user.password);
+  }
+
   async getUserPermissions(userId: string): Promise<UserPagePermission[]> {
     const userPages = await this.prisma.userPage.findMany({
       where: { userId },

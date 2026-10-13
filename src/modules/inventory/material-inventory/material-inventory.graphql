@@ -142,6 +142,7 @@ input MaterialInventoryLotFilterInput {
   materialGroupId: IntFilterInput
   rawMaterialId: IntFilterInput
   sectionId: IntFilterInput
+  status: String
 
   AND: [MaterialInventoryLotFilterInput!]
   OR: [MaterialInventoryLotFilterInput!]
@@ -197,6 +198,7 @@ input MaterialInventorySummaryFilterInput {
   materialGroupId: IntFilterInput
   rawMaterialId: IntFilterInput
   sectionId: IntFilterInput
+  status: String
   AND: [MaterialInventorySummaryFilterInput!]
   OR: [MaterialInventorySummaryFilterInput!]
   NOT: [MaterialInventorySummaryFilterInput!]
@@ -234,10 +236,22 @@ input TransferMaterialLocationInput {
   materialInventoryLotId: Int!
   toAreaId: Int!
   toLocationId: Int!
-  quantity: Float!
+  quantity: Float
   status: MaterialInventoryStatus
   reason: String
   remarks: String
+}
+
+input UpdateMaterialInventoryLotInput {
+  qcSampling: String
+  receivingReportNo: String
+  purchaseOrderNo: String
+  invoiceNo: String
+  supplierId: Int
+  incomingDate: DateTime
+  manufactureDate: DateTime
+  expirationDate: DateTime
+  reason: String
 }
 
 input ChangeMaterialLotStatusInput {
@@ -337,4 +351,8 @@ extend type Mutation {
   transferMaterialLocation(input: TransferMaterialLocationInput!): MaterialInventoryOperationPayload!
   changeMaterialLotStatus(input: ChangeMaterialLotStatusInput!): MaterialInventoryOperationPayload!
   discardMaterialInventory(input: DiscardMaterialInventoryInput!): MaterialInventoryOperationPayload!
+  updateMaterialInventoryLot(
+    id: ID!
+    input: UpdateMaterialInventoryLotInput!
+  ): MaterialInventoryOperationPayload!
 }

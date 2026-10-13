@@ -133,4 +133,29 @@ export class AuthResolver {
       };
     }
   }
+
+  @Mutation("verifyCurrentPassword")
+  async verifyCurrentPassword(
+    @Args("password") password: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ) {
+    if (!user?.userId) {
+      return {
+        valid: false,
+        userErrors: [{ message: "Unauthorized" }],
+      };
+    }
+    try {
+      const valid = await this.authService.verifyCurrentPassword(user.userId, password);
+      return {
+        valid,
+        userErrors: valid ? [] : [{ message: "Incorrect password." }],
+      };
+    } catch (error) {
+      return {
+        valid: false,
+        userErrors: [{ message: (error as Error).message }],
+      };
+    }
+  }
 }

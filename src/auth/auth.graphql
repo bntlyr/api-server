@@ -26,6 +26,11 @@ type LogoutPayload {
   userErrors: [UserError!]!
 }
 
+type VerifyPasswordPayload {
+  valid: Boolean!
+  userErrors: [UserError!]!
+}
+
 input LoginInput {
   usernameOrEmail: String!
   password: String!
@@ -50,4 +55,5 @@ extend type Mutation {
   login(input: LoginInput!): AuthPayload!
   refreshTokens(refreshToken: String!): AuthPayload!
   logout(refreshToken: String!): LogoutPayload!
+  verifyCurrentPassword(password: String!): VerifyPasswordPayload!
 }

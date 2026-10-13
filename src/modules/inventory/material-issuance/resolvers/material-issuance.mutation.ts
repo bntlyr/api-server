@@ -16,4 +16,12 @@ export class MaterialIssuanceMutationResolver {
   ): Promise<MaterialIssuancePayload> {
     return this.service.create(input, context);
   }
+
+  @Mutation("deleteMaterialIssuance")
+  async deleteMaterialIssuance(
+    @Args("id") id: string,
+    @Context() context: any,
+  ): Promise<MaterialIssuancePayload> {
+    return this.service.delete(id, context);
+  }
 }

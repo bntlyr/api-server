@@ -80,7 +80,7 @@ export function validateTransferLocationInput(input: TransferMaterialLocationInp
   if (!input.toLocationId || input.toLocationId <= 0) {
     return "Valid destination Location ID is required";
   }
-  if (!input.quantity || input.quantity <= 0) {
+  if (input.quantity != null && input.quantity <= 0) {
     return "Transfer quantity must be greater than 0";
   }
   return null;
@@ -133,6 +133,21 @@ export function validateDiscardInput(input: DiscardMaterialInventoryInput): stri
   return null;
 }
 
+function toStringFilter(val: any): any {
+  if (!val) return undefined;
+  if (typeof val === "string") {
+    return { contains: val, mode: "insensitive" };
+  }
+  if (typeof val === "object") {
+    const out: Record<string, any> = { ...val };
+    if (out.contains !== undefined || out.startsWith !== undefined || out.endsWith !== undefined) {
+      out.mode = "insensitive";
+    }
+    return out;
+  }
+  return val;
+}
+
 /**
  * Transforms GraphQL filter inputs into Prisma where clauses with support for relational material filters
  */
@@ -169,10 +184,10 @@ export function buildLotWhereClause(filter?: any): Record<string, any> {
 
   // Material relation filters
   const materialWhere: Record<string, any> = {};
-  if (filter.sku) materialWhere.stockKeepingUnit = filter.sku;
-  if (filter.oldCode) materialWhere.oldCode = filter.oldCode;
-  if (filter.materialName) materialWhere.name = filter.materialName;
-  if (filter.materialDescription) materialWhere.description = filter.materialDescription;
+  if (filter.sku) materialWhere.stockKeepingUnit = toStringFilter(filter.sku);
+  if (filter.oldCode) materialWhere.oldCode = toStringFilter(filter.oldCode);
+  if (filter.materialName) materialWhere.name = toStringFilter(filter.materialName);
+  if (filter.materialDescription) materialWhere.description = toStringFilter(filter.materialDescription);
   if (filter.materialGroupId) materialWhere.materialGroupId = filter.materialGroupId;
   if (filter.rawMaterialId) materialWhere.rawMaterialId = filter.rawMaterialId;
   if (filter.sectionId) materialWhere.sectionId = filter.sectionId;
@@ -184,16 +199,24 @@ export function buildLotWhereClause(filter?: any): Record<string, any> {
   // Direct lot filters
   if (filter.id) where.id = filter.id;
   if (filter.materialId) where.materialId = filter.materialId;
-  if (filter.lotNo) where.lotNo = filter.lotNo;
+  if (filter.lotNo) where.lotNo = toStringFilter(filter.lotNo);
   if (filter.areaId) where.areaId = filter.areaId;
   if (filter.locationId) where.locationId = filter.locationId;
   if (filter.supplierId) where.supplierId = filter.supplierId;
-  if (filter.receivingReportNo) where.receivingReportNo = filter.receivingReportNo;
-  if (filter.purchaseOrderNo) where.purchaseOrderNo = filter.purchaseOrderNo;
-  if (filter.invoiceNo) where.invoiceNo = filter.invoiceNo;
+  if (filter.receivingReportNo) where.receivingReportNo = toStringFilter(filter.receivingReportNo);
+  if (filter.purchaseOrderNo) where.purchaseOrderNo = toStringFilter(filter.purchaseOrderNo);
+  if (filter.invoiceNo) where.invoiceNo = toStringFilter(filter.invoiceNo);
   if (filter.incomingDate) where.incomingDate = filter.incomingDate;
   if (filter.manufactureDate) where.manufactureDate = filter.manufactureDate;
   if (filter.expirationDate) where.expirationDate = filter.expirationDate;
+
+  if (filter.status) {
+    const st = String(filter.status).toUpperCase();
+    if (st === "AVAILABLE") where.availableQty = { gt: 0 };
+    else if (st === "PENDING") where.pendingQty = { gt: 0 };
+    else if (st === "DEFECTIVE") where.defectiveQty = { gt: 0 };
+    else if (st === "ALLOCATED") where.allocatedQty = { gt: 0 };
+  }
 
   if (filter.AND) where.AND = filter.AND.map((f: any) => buildLotWhereClause(f));
   if (filter.OR) where.OR = filter.OR.map((f: any) => buildLotWhereClause(f));
@@ -230,28 +253,33 @@ export function buildTransactionWhereClause(filter?: any): Record<string, any> {
 
   // Material relation filters
   const materialWhere: Record<string, any> = {};
-  if (filter.sku) materialWhere.stockKeepingUnit = filter.sku;
-  if (filter.oldCode) materialWhere.oldCode = filter.oldCode;
-  if (filter.materialName) materialWhere.name = filter.materialName;
+  if (filter.sku) materialWhere.stockKeepingUnit = toStringFilter(filter.sku);
+  if (filter.oldCode) materialWhere.oldCode = toStringFilter(filter.oldCode);
+  if (filter.materialName) materialWhere.name = toStringFilter(filter.materialName);
   if (Object.keys(materialWhere).length > 0) {
     where.material = materialWhere;
   }
 
   // Lot relation filters
   const lotWhere: Record<string, any> = {};
-  if (filter.receivingReportNo) lotWhere.receivingReportNo = filter.receivingReportNo;
-  if (filter.purchaseOrderNo) lotWhere.purchaseOrderNo = filter.purchaseOrderNo;
+  if (filter.receivingReportNo) lotWhere.receivingReportNo = toStringFilter(filter.receivingReportNo);
+  if (filter.purchaseOrderNo) lotWhere.purchaseOrderNo = toStringFilter(filter.purchaseOrderNo);
   if (filter.supplierId) lotWhere.supplierId = filter.supplierId;
   if (Object.keys(lotWhere).length > 0) {
     where.lot = lotWhere;
   }
 
   // Location filters
+  const andConditions: Record<string, any>[] = [];
   if (filter.areaId) {
-    where.OR = [{ fromAreaId: filter.areaId }, { toAreaId: filter.areaId }];
+    andConditions.push({
+      OR: [{ fromAreaId: filter.areaId }, { toAreaId: filter.areaId }],
+    });
   }
   if (filter.locationId) {
-    where.OR = [{ fromLocationId: filter.locationId }, { toLocationId: filter.locationId }];
+    andConditions.push({
+      OR: [{ fromLocationId: filter.locationId }, { toLocationId: filter.locationId }],
+    });
   }
   if (filter.fromAreaId) where.fromAreaId = filter.fromAreaId;
   if (filter.fromLocationId) where.fromLocationId = filter.fromLocationId;
@@ -260,18 +288,23 @@ export function buildTransactionWhereClause(filter?: any): Record<string, any> {
 
   // Direct transaction fields
   if (filter.id) where.id = filter.id;
-  if (filter.transactionNo) where.transactionNo = filter.transactionNo;
-  if (filter.transactionType) where.transactionType = filter.transactionType;
-  if (filter.direction) where.direction = filter.direction;
+  if (filter.transactionNo) where.transactionNo = toStringFilter(filter.transactionNo);
+  if (filter.transactionType) where.transactionType = toStringFilter(filter.transactionType);
+  if (filter.direction) where.direction = toStringFilter(filter.direction);
   if (filter.transactionDate) where.transactionDate = filter.transactionDate;
   if (filter.materialId) where.materialId = filter.materialId;
   if (filter.materialInventoryLotId) where.materialInventoryLotId = filter.materialInventoryLotId;
-  if (filter.lotNo) where.lotNo = filter.lotNo;
-  if (filter.referenceNo) where.referenceNo = filter.referenceNo;
-  if (filter.fromStatus) where.fromStatus = filter.fromStatus;
-  if (filter.toStatus) where.toStatus = filter.toStatus;
+  if (filter.lotNo) where.lotNo = toStringFilter(filter.lotNo);
+  if (filter.referenceNo) where.referenceNo = toStringFilter(filter.referenceNo);
+  if (filter.fromStatus) where.fromStatus = toStringFilter(filter.fromStatus);
+  if (filter.toStatus) where.toStatus = toStringFilter(filter.toStatus);
 
-  if (filter.AND) where.AND = filter.AND.map((f: any) => buildTransactionWhereClause(f));
+  if (filter.AND) {
+    andConditions.push(...filter.AND.map((f: any) => buildTransactionWhereClause(f)));
+  }
+  if (andConditions.length > 0) {
+    where.AND = andConditions;
+  }
   if (filter.OR) where.OR = filter.OR.map((f: any) => buildTransactionWhereClause(f));
   if (filter.NOT) where.NOT = filter.NOT.map((f: any) => buildTransactionWhereClause(f));
 
@@ -296,15 +329,28 @@ export function buildSummaryWhereClause(filter?: any): Record<string, any> {
   }
 
   if (filter.materialId) where.id = filter.materialId;
-  if (filter.sku) where.stockKeepingUnit = filter.sku;
-  if (filter.oldCode) where.oldCode = filter.oldCode;
-  if (filter.materialName) where.name = filter.materialName;
-  if (filter.description) where.description = filter.description;
-  if (filter.category) where.category = filter.category;
-  if (filter.type) where.type = filter.type;
+  if (filter.sku) where.stockKeepingUnit = toStringFilter(filter.sku);
+  if (filter.oldCode) where.oldCode = toStringFilter(filter.oldCode);
+  if (filter.materialName) where.name = toStringFilter(filter.materialName);
+  if (filter.description) where.description = toStringFilter(filter.description);
+  if (filter.category) where.category = toStringFilter(filter.category);
+  if (filter.type) where.type = toStringFilter(filter.type);
   if (filter.materialGroupId) where.materialGroupId = filter.materialGroupId;
   if (filter.rawMaterialId) where.rawMaterialId = filter.rawMaterialId;
   if (filter.sectionId) where.sectionId = filter.sectionId;
+
+  if (filter.status) {
+    const st = String(filter.status).toUpperCase();
+    if (st === "AVAILABLE") {
+      where.inventoryLots = { some: { availableQty: { gt: 0 }, deletedAt: null } };
+    } else if (st === "PENDING") {
+      where.inventoryLots = { some: { pendingQty: { gt: 0 }, deletedAt: null } };
+    } else if (st === "DEFECTIVE") {
+      where.inventoryLots = { some: { defectiveQty: { gt: 0 }, deletedAt: null } };
+    } else if (st === "ALLOCATED") {
+      where.inventoryLots = { some: { allocatedQty: { gt: 0 }, deletedAt: null } };
+    }
+  }
 
   if (filter.AND) where.AND = filter.AND.map((f: any) => buildSummaryWhereClause(f));
   if (filter.OR) where.OR = filter.OR.map((f: any) => buildSummaryWhereClause(f));

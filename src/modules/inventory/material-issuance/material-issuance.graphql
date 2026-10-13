@@ -50,6 +50,7 @@ input MaterialIssuanceFilterInput {
   id: IntFilterInput
   mrsNo: StringFilterInput
   mrsDate: DateTimeFilterInput
+  createdAt: DateTimeFilterInput
   sectionId: IntFilterInput
   requestorId: StringFilterInput
   remarks: StringFilterInput
@@ -102,4 +103,5 @@ extend type Query {
 
 extend type Mutation {
   createMaterialIssuance(input: CreateMaterialIssuanceInput!): MaterialIssuancePayload!
+  deleteMaterialIssuance(id: ID!): MaterialIssuancePayload!
 }

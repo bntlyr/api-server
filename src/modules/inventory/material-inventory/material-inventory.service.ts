@@ -22,6 +22,7 @@ import type {
   MaterialInventoryTransactionFilterInput,
   PaginationInput,
   TransferMaterialLocationInput,
+  UpdateMaterialInventoryLotInput,
 } from "../../../generated/graphql/types.js";
 import {
   buildLotWhereClause,
@@ -48,7 +49,8 @@ export class MaterialInventoryService {
   // ----------------------------------------------------
   // QUERIES: Lots
   // ----------------------------------------------------
-  async findLotById(id: number | string) {
+  async findLotById(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     if (Number.isNaN(parsedId)) return null;
     return this.loader.lotById.load(parsedId);
@@ -57,8 +59,10 @@ export class MaterialInventoryService {
   async findLots(
     pagination?: PaginationInput | null,
     filter?: MaterialInventoryLotFilterInput | null,
+    context?: any,
   ): Promise<MaterialInventoryLotConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -102,6 +106,7 @@ export class MaterialInventoryService {
     materialId: number | string,
     pagination?: PaginationInput | null,
     filter?: MaterialInventoryLotFilterInput | null,
+    context?: any,
   ): Promise<MaterialInventoryLotConnection> {
     const parsedMaterialId = typeof materialId === "string" ? parseInt(materialId, 10) : materialId;
     if (Number.isNaN(parsedMaterialId)) {
@@ -124,13 +129,14 @@ export class MaterialInventoryService {
       materialId: { equals: parsedMaterialId },
     };
 
-    return this.findLots(pagination, mergedFilter);
+    return this.findLots(pagination, mergedFilter, context);
   }
 
   // ----------------------------------------------------
   // QUERIES: Transactions
   // ----------------------------------------------------
-  async findTransactionById(id: number | string) {
+  async findTransactionById(id: number | string, context?: any) {
+    extractContextInfo(context);
     const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
     if (Number.isNaN(parsedId)) return null;
     return this.loader.transactionById.load(parsedId);
@@ -139,8 +145,10 @@ export class MaterialInventoryService {
   async findTransactions(
     pagination?: PaginationInput | null,
     filter?: MaterialInventoryTransactionFilterInput | null,
+    context?: any,
   ): Promise<MaterialInventoryTransactionConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -183,7 +191,13 @@ export class MaterialInventoryService {
   // ----------------------------------------------------
   // QUERIES: Summary / Aggregation
   // ----------------------------------------------------
-  async findSummaryByMaterialId(materialId: number | string): Promise<MaterialInventorySummary | null> {
+  async findSummaryByMaterialId(
+    materialId: number | string,
+    context?: any,
+  ): Promise<MaterialInventorySummary | null> {
+    if (context) {
+      extractContextInfo(context);
+    }
     const parsedMaterialId = typeof materialId === "string" ? parseInt(materialId, 10) : materialId;
     if (Number.isNaN(parsedMaterialId)) return null;
 
@@ -228,8 +242,10 @@ export class MaterialInventoryService {
   async findSummaries(
     pagination?: PaginationInput | null,
     filter?: MaterialInventorySummaryFilterInput | null,
+    context?: any,
   ): Promise<MaterialInventorySummaryConnection> {
     try {
+      extractContextInfo(context);
       const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
         isNumericId: true,
       });
@@ -575,16 +591,6 @@ export class MaterialInventoryService {
 
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
-      const qty = new Prisma.Decimal(input.quantity);
-      const statusField =
-        input.status === "PENDING"
-          ? "pendingQty"
-          : input.status === "DEFECTIVE"
-            ? "defectiveQty"
-            : input.status === "ALLOCATED"
-              ? "allocatedQty"
-              : "availableQty";
-      const statusName = input.status ?? "AVAILABLE";
 
       const sourceLot = await this.prisma.materialInventoryLot.findUnique({
         where: { id: input.materialInventoryLotId },
@@ -608,6 +614,130 @@ export class MaterialInventoryService {
         };
       }
 
+      const txNo = generateTransactionNo("TRF");
+
+      // Whole-lot transfer when quantity is omitted
+      if (input.quantity == null) {
+        const totalQty =
+          Number(sourceLot.availableQty) +
+          Number(sourceLot.allocatedQty) +
+          Number(sourceLot.pendingQty) +
+          Number(sourceLot.defectiveQty);
+
+        const result = await this.prisma.$transaction(async (tx) => {
+          const existingDest = await tx.materialInventoryLot.findUnique({
+            where: {
+              materialId_lotNo_receivingReportNo_areaId_locationId: {
+                materialId: sourceLot.materialId,
+                lotNo: sourceLot.lotNo,
+                receivingReportNo: sourceLot.receivingReportNo ?? "",
+                areaId: input.toAreaId,
+                locationId: input.toLocationId,
+              },
+            },
+          });
+
+          let updatedSourceLot = sourceLot;
+          let destinationLot;
+
+          if (existingDest) {
+            updatedSourceLot = await tx.materialInventoryLot.update({
+              where: { id: sourceLot.id },
+              data: {
+                availableQty: 0,
+                allocatedQty: 0,
+                pendingQty: 0,
+                defectiveQty: 0,
+                deleted: true,
+                deletedAt: new Date(),
+                deletedBy: userId !== "SYSTEM" ? userId : null,
+                updatedBy: userId !== "SYSTEM" ? userId : null,
+              },
+            });
+
+            destinationLot = await tx.materialInventoryLot.update({
+              where: { id: existingDest.id },
+              data: {
+                availableQty: { increment: sourceLot.availableQty },
+                allocatedQty: { increment: sourceLot.allocatedQty },
+                pendingQty: { increment: sourceLot.pendingQty },
+                defectiveQty: { increment: sourceLot.defectiveQty },
+                updatedBy: userId !== "SYSTEM" ? userId : null,
+              },
+            });
+          } else {
+            destinationLot = await tx.materialInventoryLot.update({
+              where: { id: sourceLot.id },
+              data: {
+                areaId: input.toAreaId,
+                locationId: input.toLocationId,
+                ...(input.reason ? { reason: input.reason.trim() } : {}),
+                updatedBy: userId !== "SYSTEM" ? userId : null,
+              },
+            });
+            updatedSourceLot = destinationLot;
+          }
+
+          const transaction = await tx.materialInventoryTransaction.create({
+            data: {
+              transactionNo: txNo,
+              transactionType: "TRANSFER_LOCATION",
+              direction: "INTERNAL",
+              transactionDate: new Date(),
+              materialId: sourceLot.materialId,
+              materialInventoryLotId: destinationLot.id,
+              lotNo: sourceLot.lotNo,
+              fromAreaId: sourceLot.areaId,
+              fromLocationId: sourceLot.locationId,
+              toAreaId: input.toAreaId,
+              toLocationId: input.toLocationId,
+              fromStatus: "AVAILABLE",
+              toStatus: "AVAILABLE",
+              quantity: new Prisma.Decimal(totalQty),
+              balanceAfter: totalQty,
+              reason: input.reason?.trim() ?? "Location Transfer",
+              remarks: input.remarks?.trim() ?? null,
+              createdBy: userId !== "SYSTEM" ? userId : null,
+            },
+          });
+
+          return { updatedSourceLot, destinationLot, transaction };
+        });
+
+        this.loader.clear(result.updatedSourceLot.id);
+        this.loader.clear(result.destinationLot.id);
+
+        await this.auditService.log({
+          userId: userId ?? "SYSTEM",
+          action: "MATERIAL_INVENTORY_TRANSFER_LOCATION",
+          method: "GRAPHQL_MUTATION",
+          tableName: "MaterialInventoryLot",
+          recordId: String(result.destinationLot.id),
+          description: `Transferred Lot ${sourceLot.lotNo} from Area ${sourceLot.areaId}/Loc ${sourceLot.locationId} to Area ${input.toAreaId}/Loc ${input.toLocationId}`,
+          values: result as any,
+          ipAddress,
+          userAgent,
+        });
+
+        return {
+          lot: result.updatedSourceLot as any,
+          destinationLot: result.destinationLot as any,
+          transaction: result.transaction as any,
+          userErrors: [],
+        };
+      }
+
+      const qty = new Prisma.Decimal(input.quantity);
+      const statusField =
+        input.status === "PENDING"
+          ? "pendingQty"
+          : input.status === "DEFECTIVE"
+            ? "defectiveQty"
+            : input.status === "ALLOCATED"
+              ? "allocatedQty"
+              : "availableQty";
+      const statusName = input.status ?? "AVAILABLE";
+
       const currentAvailable = Number(sourceLot[statusField]);
       if (currentAvailable < input.quantity) {
         return {
@@ -623,8 +753,6 @@ export class MaterialInventoryService {
           ],
         };
       }
-
-      const txNo = generateTransactionNo("TRF");
 
       const result = await this.prisma.$transaction(async (tx) => {
         // 1. Decrement source lot
@@ -796,6 +924,7 @@ export class MaterialInventoryService {
           data: {
             [fromField]: { decrement: qty },
             [toField]: { increment: qty },
+            reason: input.reason.trim(),
             updatedBy: userId !== "SYSTEM" ? userId : null,
           },
         });
@@ -914,6 +1043,7 @@ export class MaterialInventoryService {
           where: { id: lot.id },
           data: {
             defectiveQty: { decrement: qty },
+            reason: input.reason.trim(),
             updatedBy: userId !== "SYSTEM" ? userId : null,
           },
         });
@@ -923,6 +1053,7 @@ export class MaterialInventoryService {
           data: {
             transactionNo: txNo,
             transactionType: "DISCARD",
+            direction: "OUTBOUND",
             transactionDate: new Date(),
             materialId: lot.materialId,
             materialInventoryLotId: lot.id,
@@ -960,6 +1091,92 @@ export class MaterialInventoryService {
         lot: result.updatedLot as any,
         destinationLot: null,
         transaction: result.transaction as any,
+        userErrors: [],
+      };
+    } catch (error) {
+      return {
+        lot: null,
+        destinationLot: null,
+        transaction: null,
+        userErrors: [createError((error as Error).message)],
+      };
+    }
+  }
+
+  // ----------------------------------------------------
+  // MUTATION: 5. Update Lot Metadata (QC Sampling, Dates, etc.)
+  // ----------------------------------------------------
+  async updateLot(
+    id: number | string,
+    input: UpdateMaterialInventoryLotInput,
+    context?: any,
+  ): Promise<MaterialInventoryOperationPayload> {
+    try {
+      const { userId, ipAddress, userAgent } = extractContextInfo(context);
+      const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
+      if (Number.isNaN(parsedId)) {
+        return {
+          lot: null,
+          destinationLot: null,
+          transaction: null,
+          userErrors: [createError("Invalid Lot ID", "id", "INVALID_INPUT")],
+        };
+      }
+
+      const existing = await this.prisma.materialInventoryLot.findUnique({
+        where: { id: parsedId },
+      });
+      if (!existing) {
+        return {
+          lot: null,
+          destinationLot: null,
+          transaction: null,
+          userErrors: [createError("Inventory lot not found", "id", "NOT_FOUND")],
+        };
+      }
+
+      const updatedLot = await this.prisma.materialInventoryLot.update({
+        where: { id: parsedId },
+        data: {
+          ...(input.qcSampling !== undefined ? { qcSampling: input.qcSampling } : {}),
+          ...(input.receivingReportNo !== undefined
+            ? { receivingReportNo: input.receivingReportNo ?? "" }
+            : {}),
+          ...(input.purchaseOrderNo !== undefined ? { purchaseOrderNo: input.purchaseOrderNo } : {}),
+          ...(input.invoiceNo !== undefined ? { invoiceNo: input.invoiceNo } : {}),
+          ...(input.supplierId !== undefined ? { supplierId: input.supplierId } : {}),
+          ...(input.incomingDate !== undefined
+            ? { incomingDate: input.incomingDate ? new Date(input.incomingDate) : null }
+            : {}),
+          ...(input.manufactureDate !== undefined
+            ? { manufactureDate: input.manufactureDate ? new Date(input.manufactureDate) : null }
+            : {}),
+          ...(input.expirationDate !== undefined
+            ? { expirationDate: input.expirationDate ? new Date(input.expirationDate) : null }
+            : {}),
+          ...(input.reason !== undefined && input.reason !== null ? { reason: input.reason } : {}),
+          updatedBy: userId !== "SYSTEM" ? userId : null,
+        },
+      });
+
+      this.loader.clear(updatedLot.id);
+
+      await this.auditService.log({
+        userId: userId ?? "SYSTEM",
+        action: "MATERIAL_INVENTORY_UPDATE_LOT",
+        method: "GRAPHQL_MUTATION",
+        tableName: "MaterialInventoryLot",
+        recordId: String(updatedLot.id),
+        description: `Updated lot metadata for Lot ${updatedLot.lotNo}`,
+        values: updatedLot as any,
+        ipAddress,
+        userAgent,
+      });
+
+      return {
+        lot: updatedLot as any,
+        destinationLot: null,
+        transaction: null,
         userErrors: [],
       };
     } catch (error) {

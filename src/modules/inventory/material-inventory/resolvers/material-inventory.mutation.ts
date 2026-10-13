@@ -7,6 +7,7 @@ import type {
   ManualOutMaterialInput,
   MaterialInventoryOperationPayload,
   TransferMaterialLocationInput,
+  UpdateMaterialInventoryLotInput,
 } from "../../../../generated/graphql/types.js";
 
 @Resolver()
@@ -51,5 +52,14 @@ export class MaterialInventoryMutationResolver {
     @Context() context: any,
   ): Promise<MaterialInventoryOperationPayload> {
     return this.service.manualOut(input, context);
+  }
+
+  @Mutation("updateMaterialInventoryLot")
+  async updateMaterialInventoryLot(
+    @Args("id") id: string,
+    @Args("input") input: UpdateMaterialInventoryLotInput,
+    @Context() context: any,
+  ): Promise<MaterialInventoryOperationPayload> {
+    return this.service.updateLot(id, input, context);
   }
 }
