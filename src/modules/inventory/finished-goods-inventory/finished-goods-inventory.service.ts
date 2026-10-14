@@ -1,12 +1,12 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../../../prisma/prisma.service.js";
-import { AuditTrailService } from "../../../auth/services/audit-trail.service.js";
-import { extractContextInfo } from "../../../graphql/common/context.helper.js";
-import { createError } from "../../../graphql/common/error.helper.js";
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../../prisma/prisma.service.js';
+import { AuditTrailService } from '../../../auth/services/audit-trail.service.js';
+import { extractContextInfo } from '../../../graphql/common/context.helper.js';
+import { createError } from '../../../graphql/common/error.helper.js';
 import {
   getPrismaPaginationArgs,
   toConnection,
-} from "../../../graphql/common/pagination.helper.js";
+} from '../../../graphql/common/pagination.helper.js';
 import type {
   BatchFinishedGoodsPayload,
   BatchManualInFinishedGoodsInput,
@@ -27,7 +27,7 @@ import type {
   PaginationInput,
   PrintFinishedGoodsStickerInput,
   UpdateFinishedGoodsBoxTypeInput,
-} from "../../../generated/graphql/types.js";
+} from '../../../generated/graphql/types.js';
 import {
   buildFGLotWhereClause,
   buildFGSummaryWhereClause,
@@ -42,9 +42,9 @@ import {
   validateManualOutInput,
   validateMoveInput,
   validateUpdateBoxTypeInput,
-} from "./helpers/finished-goods-inventory.helper.js";
-import { FinishedGoodsInventoryLoader } from "./finished-goods-inventory.loader.js";
-import { Prisma } from "../../../generated/prisma/client.js";
+} from './helpers/finished-goods-inventory.helper.js';
+import { FinishedGoodsInventoryLoader } from './finished-goods-inventory.loader.js';
+import { Prisma } from '../../../generated/prisma/client.js';
 
 @Injectable()
 export class FinishedGoodsInventoryService {
@@ -58,7 +58,7 @@ export class FinishedGoodsInventoryService {
   // QUERIES: Lots
   // ----------------------------------------------------
   async findLotById(id: number | string) {
-    const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
+    const parsedId = typeof id === 'string' ? parseInt(id, 10) : id;
     if (Number.isNaN(parsedId)) return null;
     return this.loader.lotById.load(parsedId);
   }
@@ -68,9 +68,12 @@ export class FinishedGoodsInventoryService {
     filter?: FinishedGoodsLotFilterInput | null,
   ): Promise<FinishedGoodsLotConnection> {
     try {
-      const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
-        isNumericId: true,
-      });
+      const { take, skip, cursor, limit } = getPrismaPaginationArgs(
+        pagination,
+        {
+          isNumericId: true,
+        },
+      );
 
       const where = buildFGLotWhereClause(filter);
 
@@ -80,12 +83,17 @@ export class FinishedGoodsInventoryService {
           take,
           skip,
           cursor,
-          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         }),
         this.prisma.finishedGoodsLot.count({ where }),
       ]);
 
-      const connection = toConnection(items, limit, totalCount, Boolean(pagination?.after));
+      const connection = toConnection(
+        items,
+        limit,
+        totalCount,
+        Boolean(pagination?.after),
+      );
 
       return {
         ...connection,
@@ -113,8 +121,12 @@ export class FinishedGoodsInventoryService {
     pagination?: PaginationInput | null,
     filter?: FinishedGoodsLotFilterInput | null,
   ): Promise<FinishedGoodsLotConnection> {
-    const parsedItemId = typeof itemId === "string" ? parseInt(itemId, 10) : itemId;
-    const parsedFabId = typeof fabricationId === "string" ? parseInt(fabricationId, 10) : fabricationId;
+    const parsedItemId =
+      typeof itemId === 'string' ? parseInt(itemId, 10) : itemId;
+    const parsedFabId =
+      typeof fabricationId === 'string'
+        ? parseInt(fabricationId, 10)
+        : fabricationId;
     if (Number.isNaN(parsedItemId) || Number.isNaN(parsedFabId)) {
       return {
         edges: [],
@@ -126,7 +138,13 @@ export class FinishedGoodsInventoryService {
           endCursor: null,
         },
         totalCount: 0,
-        userErrors: [createError("Invalid Item ID or Fabrication ID", undefined, "INVALID_INPUT")],
+        userErrors: [
+          createError(
+            'Invalid Item ID or Fabrication ID',
+            undefined,
+            'INVALID_INPUT',
+          ),
+        ],
       } as unknown as FinishedGoodsLotConnection;
     }
 
@@ -143,7 +161,7 @@ export class FinishedGoodsInventoryService {
   // QUERIES: Transactions
   // ----------------------------------------------------
   async findTransactionById(id: number | string) {
-    const parsedId = typeof id === "string" ? parseInt(id, 10) : id;
+    const parsedId = typeof id === 'string' ? parseInt(id, 10) : id;
     if (Number.isNaN(parsedId)) return null;
     return this.loader.transactionById.load(parsedId);
   }
@@ -153,9 +171,12 @@ export class FinishedGoodsInventoryService {
     filter?: FinishedGoodsTransactionFilterInput | null,
   ): Promise<FinishedGoodsTransactionConnection> {
     try {
-      const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
-        isNumericId: true,
-      });
+      const { take, skip, cursor, limit } = getPrismaPaginationArgs(
+        pagination,
+        {
+          isNumericId: true,
+        },
+      );
 
       const where = buildFGTransactionWhereClause(filter);
 
@@ -165,12 +186,17 @@ export class FinishedGoodsInventoryService {
           take,
           skip,
           cursor,
-          orderBy: [{ transactionDate: "desc" }, { id: "desc" }],
+          orderBy: [{ transactionDate: 'desc' }, { id: 'desc' }],
         }),
         this.prisma.finishedGoodsTransaction.count({ where }),
       ]);
 
-      const connection = toConnection(items, limit, totalCount, Boolean(pagination?.after));
+      const connection = toConnection(
+        items,
+        limit,
+        totalCount,
+        Boolean(pagination?.after),
+      );
 
       return {
         ...connection,
@@ -199,8 +225,12 @@ export class FinishedGoodsInventoryService {
     itemId: number | string,
     fabricationId: number | string,
   ): Promise<FinishedGoodsSummary | null> {
-    const parsedItemId = typeof itemId === "string" ? parseInt(itemId, 10) : itemId;
-    const parsedFabId = typeof fabricationId === "string" ? parseInt(fabricationId, 10) : fabricationId;
+    const parsedItemId =
+      typeof itemId === 'string' ? parseInt(itemId, 10) : itemId;
+    const parsedFabId =
+      typeof fabricationId === 'string'
+        ? parseInt(fabricationId, 10)
+        : fabricationId;
     if (Number.isNaN(parsedItemId) || Number.isNaN(parsedFabId)) return null;
 
     const [item, fabrication, lots] = await Promise.all([
@@ -209,7 +239,7 @@ export class FinishedGoodsInventoryService {
       this.prisma.finishedGoodsLot.findMany({
         where: { itemId: parsedItemId, fabricationId: parsedFabId },
         include: { area: true },
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       }),
     ]);
 
@@ -226,7 +256,7 @@ export class FinishedGoodsInventoryService {
     let stockDefectiveQty = 0;
 
     for (const lot of lots) {
-      const isPacking = lot.area?.category?.toUpperCase().includes("PACKING");
+      const isPacking = lot.area?.category?.toUpperCase().includes('PACKING');
       const avl = Number(lot.availableQty);
       const alc = Number(lot.allocatedQty);
       const chk = Number(lot.checkingQty);
@@ -245,17 +275,33 @@ export class FinishedGoodsInventoryService {
       }
     }
 
-    const packingTotalQty = packingAvailableQty + packingAllocatedQty + packingCheckingQty + packingDefectiveQty;
-    const stockTotalQty = stockAvailableQty + stockAllocatedQty + stockCheckingQty + stockDefectiveQty;
+    const packingTotalQty =
+      packingAvailableQty +
+      packingAllocatedQty +
+      packingCheckingQty +
+      packingDefectiveQty;
+    const stockTotalQty =
+      stockAvailableQty +
+      stockAllocatedQty +
+      stockCheckingQty +
+      stockDefectiveQty;
 
     const totalAvailableQty = packingAvailableQty + stockAvailableQty;
     const totalAllocatedQty = packingAllocatedQty + stockAllocatedQty;
     const totalCheckingQty = packingCheckingQty + stockCheckingQty;
     const totalDefectiveQty = packingDefectiveQty + stockDefectiveQty;
-    const totalOnHandQty = totalAvailableQty + totalAllocatedQty + totalCheckingQty + totalDefectiveQty;
+    const totalOnHandQty =
+      totalAvailableQty +
+      totalAllocatedQty +
+      totalCheckingQty +
+      totalDefectiveQty;
 
     const formattedItemCode = formatFGItemCode(item.itemCode, fabrication.code);
-    const unitPrice = Number(fabrication.unitPrice && Number(fabrication.unitPrice) > 0 ? fabrication.unitPrice : item.unitPrice ?? 0);
+    const unitPrice = Number(
+      fabrication.unitPrice && Number(fabrication.unitPrice) > 0
+        ? fabrication.unitPrice
+        : (item.unitPrice ?? 0),
+    );
     const stdItemWt = Number(item.stdItemWt ?? 0);
     const totalWeight = totalOnHandQty * stdItemWt;
     const totalPrice = totalOnHandQty * unitPrice;
@@ -269,7 +315,7 @@ export class FinishedGoodsInventoryService {
       itemCode: formattedItemCode,
       displayItemCode: formattedItemCode,
       itemName: item.itemName,
-      description: item.description ?? "",
+      description: item.description ?? '',
       noLots: lots.length,
       lotCount: lots.length,
       stdItemWt,
@@ -301,9 +347,12 @@ export class FinishedGoodsInventoryService {
     filter?: FinishedGoodsSummaryFilterInput | null,
   ): Promise<FinishedGoodsSummaryConnection> {
     try {
-      const { take, skip, cursor, limit } = getPrismaPaginationArgs(pagination, {
-        isNumericId: true,
-      });
+      const { take, skip, cursor, limit } = getPrismaPaginationArgs(
+        pagination,
+        {
+          isNumericId: true,
+        },
+      );
 
       const where = buildFGSummaryWhereClause(filter);
 
@@ -313,7 +362,7 @@ export class FinishedGoodsInventoryService {
           take,
           skip,
           cursor,
-          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           include: {
             item: true,
             finishedGoodsLots: {
@@ -336,7 +385,9 @@ export class FinishedGoodsInventoryService {
         let stockDefectiveQty = 0;
 
         for (const lot of fab.finishedGoodsLots) {
-          const isPacking = lot.area?.category?.toUpperCase().includes("PACKING");
+          const isPacking = lot.area?.category
+            ?.toUpperCase()
+            .includes('PACKING');
           const avl = Number(lot.availableQty);
           const alc = Number(lot.allocatedQty);
           const chk = Number(lot.checkingQty);
@@ -355,17 +406,33 @@ export class FinishedGoodsInventoryService {
           }
         }
 
-        const packingTotalQty = packingAvailableQty + packingAllocatedQty + packingCheckingQty + packingDefectiveQty;
-        const stockTotalQty = stockAvailableQty + stockAllocatedQty + stockCheckingQty + stockDefectiveQty;
+        const packingTotalQty =
+          packingAvailableQty +
+          packingAllocatedQty +
+          packingCheckingQty +
+          packingDefectiveQty;
+        const stockTotalQty =
+          stockAvailableQty +
+          stockAllocatedQty +
+          stockCheckingQty +
+          stockDefectiveQty;
 
         const totalAvailableQty = packingAvailableQty + stockAvailableQty;
         const totalAllocatedQty = packingAllocatedQty + stockAllocatedQty;
         const totalCheckingQty = packingCheckingQty + stockCheckingQty;
         const totalDefectiveQty = packingDefectiveQty + stockDefectiveQty;
-        const totalOnHandQty = totalAvailableQty + totalAllocatedQty + totalCheckingQty + totalDefectiveQty;
+        const totalOnHandQty =
+          totalAvailableQty +
+          totalAllocatedQty +
+          totalCheckingQty +
+          totalDefectiveQty;
 
         const formattedItemCode = formatFGItemCode(fab.item.itemCode, fab.code);
-        const unitPrice = Number(fab.unitPrice && Number(fab.unitPrice) > 0 ? fab.unitPrice : fab.item.unitPrice ?? 0);
+        const unitPrice = Number(
+          fab.unitPrice && Number(fab.unitPrice) > 0
+            ? fab.unitPrice
+            : (fab.item.unitPrice ?? 0),
+        );
         const stdItemWt = Number(fab.item.stdItemWt ?? 0);
         const totalWeight = totalOnHandQty * stdItemWt;
         const totalPrice = totalOnHandQty * unitPrice;
@@ -379,7 +446,7 @@ export class FinishedGoodsInventoryService {
           itemCode: formattedItemCode,
           displayItemCode: formattedItemCode,
           itemName: fab.item.itemName,
-          description: fab.item.description ?? "",
+          description: fab.item.description ?? '',
           noLots: fab.finishedGoodsLots.length,
           lotCount: fab.finishedGoodsLots.length,
           stdItemWt,
@@ -406,7 +473,12 @@ export class FinishedGoodsInventoryService {
         };
       });
 
-      const connection = toConnection(summaries, limit, totalCount, Boolean(pagination?.after));
+      const connection = toConnection(
+        summaries,
+        limit,
+        totalCount,
+        Boolean(pagination?.after),
+      );
 
       return {
         ...connection,
@@ -428,6 +500,126 @@ export class FinishedGoodsInventoryService {
     }
   }
 
+  private async upsertLot(
+    tx: any,
+    params: {
+      itemId: number;
+      fabricationId: number;
+      orderNo: string;
+      lotNo: string;
+      chargeNo: string;
+      areaId: number;
+      locationId: number;
+      boxId?: number | null;
+      qtyField: string;
+      qty: Prisma.Decimal;
+      trialLotNo?: string;
+      invoiceNo?: string | null;
+      incomingDate?: Date | null;
+      manufactureDate?: Date | null;
+      reason?: string;
+      remarks?: string | null;
+      userId?: string | null;
+    },
+  ) {
+    const boxId = params.boxId ?? null;
+
+    if (boxId !== null) {
+      return tx.finishedGoodsLot.upsert({
+        where: {
+          itemId_fabricationId_orderNo_lotNo_chargeNo_areaId_locationId_boxId: {
+            itemId: params.itemId,
+            fabricationId: params.fabricationId,
+            orderNo: params.orderNo,
+            lotNo: params.lotNo,
+            chargeNo: params.chargeNo,
+            areaId: params.areaId,
+            locationId: params.locationId,
+            boxId,
+          },
+        },
+        update: {
+          [params.qtyField]: { increment: params.qty },
+          ...(params.trialLotNo !== undefined ? { trialLotNo: params.trialLotNo } : {}),
+          ...(params.invoiceNo ? { invoiceNo: params.invoiceNo } : {}),
+          ...(params.incomingDate ? { incomingDate: params.incomingDate } : {}),
+          ...(params.manufactureDate ? { manufactureDate: params.manufactureDate } : {}),
+          ...(params.reason ? { reason: params.reason } : {}),
+          ...(params.remarks !== undefined ? { remarks: params.remarks } : {}),
+          updatedBy: params.userId,
+        },
+        create: {
+          itemId: params.itemId,
+          fabricationId: params.fabricationId,
+          orderNo: params.orderNo,
+          lotNo: params.lotNo,
+          chargeNo: params.chargeNo,
+          trialLotNo: params.trialLotNo ?? '',
+          invoiceNo: params.invoiceNo ?? null,
+          areaId: params.areaId,
+          locationId: params.locationId,
+          boxId,
+          [params.qtyField]: params.qty,
+          incomingDate: params.incomingDate ?? null,
+          manufactureDate: params.manufactureDate ?? null,
+          reason: params.reason ?? '-',
+          remarks: params.remarks ?? null,
+          createdBy: params.userId,
+        },
+      });
+    }
+
+    const existing = await tx.finishedGoodsLot.findFirst({
+      where: {
+        itemId: params.itemId,
+        fabricationId: params.fabricationId,
+        orderNo: params.orderNo,
+        lotNo: params.lotNo,
+        chargeNo: params.chargeNo,
+        areaId: params.areaId,
+        locationId: params.locationId,
+        boxId: null,
+      },
+    });
+
+    if (existing) {
+      return tx.finishedGoodsLot.update({
+        where: { id: existing.id },
+        data: {
+          [params.qtyField]: { increment: params.qty },
+          ...(params.trialLotNo !== undefined ? { trialLotNo: params.trialLotNo } : {}),
+          ...(params.invoiceNo ? { invoiceNo: params.invoiceNo } : {}),
+          ...(params.incomingDate ? { incomingDate: params.incomingDate } : {}),
+          ...(params.manufactureDate ? { manufactureDate: params.manufactureDate } : {}),
+          ...(params.reason ? { reason: params.reason } : {}),
+          ...(params.remarks !== undefined ? { remarks: params.remarks } : {}),
+          updatedBy: params.userId,
+        },
+      });
+    }
+
+    return tx.finishedGoodsLot.create({
+      data: {
+        itemId: params.itemId,
+        fabricationId: params.fabricationId,
+        orderNo: params.orderNo,
+        lotNo: params.lotNo,
+        chargeNo: params.chargeNo,
+        trialLotNo: params.trialLotNo ?? '',
+        invoiceNo: params.invoiceNo ?? null,
+        areaId: params.areaId,
+        locationId: params.locationId,
+        boxId: null,
+        [params.qtyField]: params.qty,
+        incomingDate: params.incomingDate ?? null,
+        manufactureDate: params.manufactureDate ?? null,
+        reason: params.reason ?? '-',
+        remarks: params.remarks ?? null,
+        createdBy: params.userId,
+      },
+    });
+  }
+
   // ----------------------------------------------------
   // MUTATION: 1. Manual-In
   // ----------------------------------------------------
@@ -441,7 +633,7 @@ export class FinishedGoodsInventoryService {
         lot: null,
         destinationLot: null,
         transaction: null,
-        userErrors: [createError(validationError, undefined, "INVALID_INPUT")],
+        userErrors: [createError(validationError, undefined, 'INVALID_INPUT')],
       };
     }
 
@@ -449,63 +641,42 @@ export class FinishedGoodsInventoryService {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
       const qty = new Prisma.Decimal(input.quantity);
       const qtyField =
-        input.status === "AVAILABLE"
-          ? "availableQty"
-          : input.status === "CHECKING"
-            ? "checkingQty"
-            : "defectiveQty";
+        input.status === 'AVAILABLE'
+          ? 'availableQty'
+          : input.status === 'CHECKING'
+            ? 'checkingQty'
+            : 'defectiveQty';
 
-      const txNo = generateFGTransactionNo("MIN");
+      const txNo = generateFGTransactionNo('MIN');
 
       const result = await this.prisma.$transaction(async (tx) => {
-        const lot = await tx.finishedGoodsLot.upsert({
-          where: {
-            itemId_fabricationId_orderNo_lotNo_chargeNo_areaId_locationId_boxId: {
-              itemId: input.itemId,
-              fabricationId: input.fabricationId,
-              orderNo: input.orderNo.trim(),
-              lotNo: input.lotNo.trim(),
-              chargeNo: input.chargeNo.trim(),
-              areaId: input.areaId,
-              locationId: input.locationId,
-              boxId: input.boxId ?? null as any,
-            },
-          },
-          update: {
-            [qtyField]: { increment: qty },
-            ...(input.trialLotNo !== undefined ? { trialLotNo: input.trialLotNo?.trim() ?? "" } : {}),
-            ...(input.invoiceNo ? { invoiceNo: input.invoiceNo.trim() } : {}),
-            ...(input.incomingDate ? { incomingDate: new Date(input.incomingDate) } : {}),
-            ...(input.manufactureDate ? { manufactureDate: new Date(input.manufactureDate) } : {}),
-            reason: input.reason.trim(),
-            remarks: input.remarks?.trim() ?? null,
-            updatedBy: userId !== "SYSTEM" ? userId : null,
-          },
-          create: {
-            itemId: input.itemId,
-            fabricationId: input.fabricationId,
-            orderNo: input.orderNo.trim(),
-            lotNo: input.lotNo.trim(),
-            chargeNo: input.chargeNo.trim(),
-            trialLotNo: input.trialLotNo?.trim() ?? "",
-            invoiceNo: input.invoiceNo?.trim() ?? null,
-            areaId: input.areaId,
-            locationId: input.locationId,
-            boxId: input.boxId ?? null,
-            [qtyField]: qty,
-            incomingDate: input.incomingDate ? new Date(input.incomingDate) : null,
-            manufactureDate: input.manufactureDate ? new Date(input.manufactureDate) : null,
-            reason: input.reason.trim(),
-            remarks: input.remarks?.trim() ?? null,
-            createdBy: userId !== "SYSTEM" ? userId : null,
-          },
+        const lot = await this.upsertLot(tx, {
+          itemId: input.itemId,
+          fabricationId: input.fabricationId,
+          orderNo: input.orderNo.trim(),
+          lotNo: input.lotNo.trim(),
+          chargeNo: input.chargeNo.trim(),
+          areaId: input.areaId,
+          locationId: input.locationId,
+          boxId: input.boxId,
+          qtyField,
+          qty,
+          trialLotNo: input.trialLotNo?.trim() ?? '',
+          invoiceNo: input.invoiceNo?.trim() ?? null,
+          incomingDate: input.incomingDate ? new Date(input.incomingDate) : null,
+          manufactureDate: input.manufactureDate
+            ? new Date(input.manufactureDate)
+            : null,
+          reason: input.reason.trim(),
+          remarks: input.remarks?.trim() ?? null,
+          userId: userId !== 'SYSTEM' ? userId : null,
         });
 
         const transaction = await tx.finishedGoodsTransaction.create({
           data: {
             transactionNo: txNo,
-            transactionType: "MANUAL_IN",
-            direction: "INBOUND",
+            transactionType: 'MANUAL_IN',
+            direction: 'INBOUND',
             transactionDate: new Date(),
             itemId: input.itemId,
             fabricationId: input.fabricationId,
@@ -523,7 +694,7 @@ export class FinishedGoodsInventoryService {
             reason: input.reason.trim(),
             remarks: input.remarks?.trim() ?? null,
             referenceNo: input.orderNo.trim(),
-            createdBy: userId !== "SYSTEM" ? userId : null,
+            createdBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
@@ -533,10 +704,10 @@ export class FinishedGoodsInventoryService {
       this.loader.clear(result.lot.id);
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
-        action: "FINISHED_GOODS_MANUAL_IN",
-        method: "GRAPHQL_MUTATION",
-        tableName: "FinishedGoodsLot",
+        userId: userId ?? 'SYSTEM',
+        action: 'FINISHED_GOODS_MANUAL_IN',
+        method: 'GRAPHQL_MUTATION',
+        tableName: 'FinishedGoodsLot',
         recordId: String(result.lot.id),
         description: `Manual In ${input.quantity} of Lot ${input.lotNo} as ${input.status}`,
         values: result as any,
@@ -573,7 +744,7 @@ export class FinishedGoodsInventoryService {
         lots: [],
         transactions: [],
         count: 0,
-        userErrors: [createError(validationError, undefined, "INVALID_INPUT")],
+        userErrors: [createError(validationError, undefined, 'INVALID_INPUT')],
       };
     }
 
@@ -587,62 +758,43 @@ export class FinishedGoodsInventoryService {
         for (const item of input.items) {
           const qty = new Prisma.Decimal(item.quantity);
           const qtyField =
-            item.status === "AVAILABLE"
-              ? "availableQty"
-              : item.status === "CHECKING"
-                ? "checkingQty"
-                : "defectiveQty";
+            item.status === 'AVAILABLE'
+              ? 'availableQty'
+              : item.status === 'CHECKING'
+                ? 'checkingQty'
+                : 'defectiveQty';
 
-          const txNo = generateFGTransactionNo("BMIN");
+          const txNo = generateFGTransactionNo('BMIN');
 
-          const lot = await tx.finishedGoodsLot.upsert({
-            where: {
-              itemId_fabricationId_orderNo_lotNo_chargeNo_areaId_locationId_boxId: {
-                itemId: input.itemId,
-                fabricationId: input.fabricationId,
-                orderNo: input.orderNo.trim(),
-                lotNo: item.lotNo.trim(),
-                chargeNo: item.chargeNo.trim(),
-                areaId: item.areaId,
-                locationId: item.locationId,
-                boxId: item.boxId ?? null as any,
-              },
-            },
-            update: {
-              [qtyField]: { increment: qty },
-              ...(item.trialLotNo !== undefined ? { trialLotNo: item.trialLotNo?.trim() ?? "" } : {}),
-              ...(item.invoiceNo ? { invoiceNo: item.invoiceNo.trim() } : {}),
-              ...(item.incomingDate ? { incomingDate: new Date(item.incomingDate) } : {}),
-              ...(item.manufactureDate ? { manufactureDate: new Date(item.manufactureDate) } : {}),
-              reason: item.reason?.trim() ?? input.reason.trim(),
-              remarks: item.remarks?.trim() ?? input.remarks?.trim() ?? null,
-              updatedBy: userId !== "SYSTEM" ? userId : null,
-            },
-            create: {
-              itemId: input.itemId,
-              fabricationId: input.fabricationId,
-              orderNo: input.orderNo.trim(),
-              lotNo: item.lotNo.trim(),
-              chargeNo: item.chargeNo.trim(),
-              trialLotNo: item.trialLotNo?.trim() ?? "",
-              invoiceNo: item.invoiceNo?.trim() ?? null,
-              areaId: item.areaId,
-              locationId: item.locationId,
-              boxId: item.boxId ?? null,
-              [qtyField]: qty,
-              incomingDate: item.incomingDate ? new Date(item.incomingDate) : null,
-              manufactureDate: item.manufactureDate ? new Date(item.manufactureDate) : null,
-              reason: item.reason?.trim() ?? input.reason.trim(),
-              remarks: item.remarks?.trim() ?? input.remarks?.trim() ?? null,
-              createdBy: userId !== "SYSTEM" ? userId : null,
-            },
+          const lot = await this.upsertLot(tx, {
+            itemId: input.itemId,
+            fabricationId: input.fabricationId,
+            orderNo: input.orderNo.trim(),
+            lotNo: item.lotNo.trim(),
+            chargeNo: item.chargeNo.trim(),
+            areaId: item.areaId,
+            locationId: item.locationId,
+            boxId: item.boxId,
+            qtyField,
+            qty,
+            trialLotNo: item.trialLotNo?.trim() ?? '',
+            invoiceNo: item.invoiceNo?.trim() ?? null,
+            incomingDate: item.incomingDate
+              ? new Date(item.incomingDate)
+              : null,
+            manufactureDate: item.manufactureDate
+              ? new Date(item.manufactureDate)
+              : null,
+            reason: item.reason?.trim() ?? input.reason.trim(),
+            remarks: item.remarks?.trim() ?? input.remarks?.trim() ?? null,
+            userId: userId !== 'SYSTEM' ? userId : null,
           });
 
           const transaction = await tx.finishedGoodsTransaction.create({
             data: {
               transactionNo: txNo,
-              transactionType: "BATCH_IN",
-              direction: "INBOUND",
+              transactionType: 'BATCH_IN',
+              direction: 'INBOUND',
               transactionDate: new Date(),
               itemId: input.itemId,
               fabricationId: input.fabricationId,
@@ -660,7 +812,7 @@ export class FinishedGoodsInventoryService {
               reason: item.reason?.trim() ?? input.reason.trim(),
               remarks: item.remarks?.trim() ?? input.remarks?.trim() ?? null,
               referenceNo: input.orderNo.trim(),
-              createdBy: userId !== "SYSTEM" ? userId : null,
+              createdBy: userId !== 'SYSTEM' ? userId : null,
             },
           });
 
@@ -674,10 +826,10 @@ export class FinishedGoodsInventoryService {
       this.loader.clear();
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
-        action: "FINISHED_GOODS_BATCH_MANUAL_IN",
-        method: "GRAPHQL_MUTATION",
-        tableName: "FinishedGoodsLot",
+        userId: userId ?? 'SYSTEM',
+        action: 'FINISHED_GOODS_BATCH_MANUAL_IN',
+        method: 'GRAPHQL_MUTATION',
+        tableName: 'FinishedGoodsLot',
         recordId: `${input.itemId}-${input.fabricationId}`,
         description: `Batch Manual In ${result.lots.length} lots for Order ${input.orderNo}`,
         values: result as any,
@@ -714,7 +866,7 @@ export class FinishedGoodsInventoryService {
         lot: null,
         destinationLot: null,
         transaction: null,
-        userErrors: [createError(validationError, undefined, "INVALID_INPUT")],
+        userErrors: [createError(validationError, undefined, 'INVALID_INPUT')],
       };
     }
 
@@ -723,24 +875,24 @@ export class FinishedGoodsInventoryService {
       const qty = new Prisma.Decimal(input.quantity);
 
       const fromField =
-        input.fromStatus === "AVAILABLE"
-          ? "availableQty"
-          : input.fromStatus === "ALLOCATED"
-            ? "allocatedQty"
-            : input.fromStatus === "CHECKING"
-              ? "checkingQty"
-              : "defectiveQty";
+        input.fromStatus === 'AVAILABLE'
+          ? 'availableQty'
+          : input.fromStatus === 'ALLOCATED'
+            ? 'allocatedQty'
+            : input.fromStatus === 'CHECKING'
+              ? 'checkingQty'
+              : 'defectiveQty';
 
       const toField =
-        input.toStatus === "AVAILABLE"
-          ? "availableQty"
-          : input.toStatus === "ALLOCATED"
-            ? "allocatedQty"
-            : input.toStatus === "CHECKING"
-              ? "checkingQty"
-              : "defectiveQty";
+        input.toStatus === 'AVAILABLE'
+          ? 'availableQty'
+          : input.toStatus === 'ALLOCATED'
+            ? 'allocatedQty'
+            : input.toStatus === 'CHECKING'
+              ? 'checkingQty'
+              : 'defectiveQty';
 
-      const txNo = generateFGTransactionNo("STAT");
+      const txNo = generateFGTransactionNo('STAT');
 
       const result = await this.prisma.$transaction(async (tx) => {
         const currentLot = await tx.finishedGoodsLot.findUnique({
@@ -748,7 +900,9 @@ export class FinishedGoodsInventoryService {
         });
 
         if (!currentLot) {
-          throw new Error(`Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`);
+          throw new Error(
+            `Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`,
+          );
         }
 
         const currentFromQty = new Prisma.Decimal(currentLot[fromField]);
@@ -765,15 +919,15 @@ export class FinishedGoodsInventoryService {
             [toField]: { increment: qty },
             reason: input.reason.trim(),
             remarks: input.remarks?.trim() ?? currentLot.remarks,
-            updatedBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
         const transaction = await tx.finishedGoodsTransaction.create({
           data: {
             transactionNo: txNo,
-            transactionType: "STATUS_CHANGE",
-            direction: "INTERNAL",
+            transactionType: 'STATUS_CHANGE',
+            direction: 'INTERNAL',
             transactionDate: new Date(),
             itemId: updatedLot.itemId,
             fabricationId: updatedLot.fabricationId,
@@ -794,7 +948,7 @@ export class FinishedGoodsInventoryService {
             balanceAfter: Number(updatedLot[toField]),
             reason: input.reason.trim(),
             remarks: input.remarks?.trim() ?? null,
-            createdBy: userId !== "SYSTEM" ? userId : null,
+            createdBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
@@ -804,10 +958,10 @@ export class FinishedGoodsInventoryService {
       this.loader.clear(result.lot.id);
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
-        action: "FINISHED_GOODS_STATUS_CHANGE",
-        method: "GRAPHQL_MUTATION",
-        tableName: "FinishedGoodsLot",
+        userId: userId ?? 'SYSTEM',
+        action: 'FINISHED_GOODS_STATUS_CHANGE',
+        method: 'GRAPHQL_MUTATION',
+        tableName: 'FinishedGoodsLot',
         recordId: String(result.lot.id),
         description: `Status change for Lot ${result.lot.lotNo}: ${input.quantity} from ${input.fromStatus} to ${input.toStatus}`,
         values: result as any,
@@ -844,14 +998,14 @@ export class FinishedGoodsInventoryService {
         lot: null,
         destinationLot: null,
         transaction: null,
-        userErrors: [createError(validationError, undefined, "INVALID_INPUT")],
+        userErrors: [createError(validationError, undefined, 'INVALID_INPUT')],
       };
     }
 
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
       const qty = new Prisma.Decimal(input.quantity);
-      const txNo = generateFGTransactionNo("MOUT");
+      const txNo = generateFGTransactionNo('MOUT');
 
       const result = await this.prisma.$transaction(async (tx) => {
         const currentLot = await tx.finishedGoodsLot.findUnique({
@@ -859,7 +1013,9 @@ export class FinishedGoodsInventoryService {
         });
 
         if (!currentLot) {
-          throw new Error(`Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`);
+          throw new Error(
+            `Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`,
+          );
         }
 
         const availableQty = new Prisma.Decimal(currentLot.availableQty);
@@ -875,15 +1031,15 @@ export class FinishedGoodsInventoryService {
             availableQty: { decrement: qty },
             reason: input.reason.trim(),
             remarks: input.remarks?.trim() ?? currentLot.remarks,
-            updatedBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
         const transaction = await tx.finishedGoodsTransaction.create({
           data: {
             transactionNo: txNo,
-            transactionType: "MANUAL_OUT",
-            direction: "OUTBOUND",
+            transactionType: 'MANUAL_OUT',
+            direction: 'OUTBOUND',
             transactionDate: new Date(),
             itemId: updatedLot.itemId,
             fabricationId: updatedLot.fabricationId,
@@ -895,13 +1051,13 @@ export class FinishedGoodsInventoryService {
             fromAreaId: updatedLot.areaId,
             fromLocationId: updatedLot.locationId,
             fromBoxId: updatedLot.boxId,
-            fromStatus: "AVAILABLE",
+            fromStatus: 'AVAILABLE',
             quantity: qty,
             balanceAfter: Number(updatedLot.availableQty),
             reason: input.reason.trim(),
             remarks: input.remarks?.trim() ?? null,
             referenceNo: input.referenceNo?.trim() ?? updatedLot.orderNo,
-            createdBy: userId !== "SYSTEM" ? userId : null,
+            createdBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
@@ -911,10 +1067,10 @@ export class FinishedGoodsInventoryService {
       this.loader.clear(result.lot.id);
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
-        action: "FINISHED_GOODS_MANUAL_OUT",
-        method: "GRAPHQL_MUTATION",
-        tableName: "FinishedGoodsLot",
+        userId: userId ?? 'SYSTEM',
+        action: 'FINISHED_GOODS_MANUAL_OUT',
+        method: 'GRAPHQL_MUTATION',
+        tableName: 'FinishedGoodsLot',
         recordId: String(result.lot.id),
         description: `Manual Out ${input.quantity} from Lot ${result.lot.lotNo}`,
         values: result as any,
@@ -951,14 +1107,14 @@ export class FinishedGoodsInventoryService {
         lot: null,
         destinationLot: null,
         transaction: null,
-        userErrors: [createError(validationError, undefined, "INVALID_INPUT")],
+        userErrors: [createError(validationError, undefined, 'INVALID_INPUT')],
       };
     }
 
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
       const qty = new Prisma.Decimal(input.quantity);
-      const txNo = generateFGTransactionNo("DISC");
+      const txNo = generateFGTransactionNo('DISC');
 
       const result = await this.prisma.$transaction(async (tx) => {
         const currentLot = await tx.finishedGoodsLot.findUnique({
@@ -966,7 +1122,9 @@ export class FinishedGoodsInventoryService {
         });
 
         if (!currentLot) {
-          throw new Error(`Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`);
+          throw new Error(
+            `Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`,
+          );
         }
 
         const defectiveQty = new Prisma.Decimal(currentLot.defectiveQty);
@@ -982,15 +1140,15 @@ export class FinishedGoodsInventoryService {
             defectiveQty: { decrement: qty },
             reason: input.reason.trim(),
             remarks: input.remarks?.trim() ?? currentLot.remarks,
-            updatedBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
         const transaction = await tx.finishedGoodsTransaction.create({
           data: {
             transactionNo: txNo,
-            transactionType: "DISCARD",
-            direction: "OUTBOUND",
+            transactionType: 'DISCARD',
+            direction: 'OUTBOUND',
             transactionDate: new Date(),
             itemId: updatedLot.itemId,
             fabricationId: updatedLot.fabricationId,
@@ -1002,12 +1160,12 @@ export class FinishedGoodsInventoryService {
             fromAreaId: updatedLot.areaId,
             fromLocationId: updatedLot.locationId,
             fromBoxId: updatedLot.boxId,
-            fromStatus: "DEFECTIVE",
+            fromStatus: 'DEFECTIVE',
             quantity: qty,
             balanceAfter: Number(updatedLot.defectiveQty),
             reason: input.reason.trim(),
             remarks: input.remarks?.trim() ?? null,
-            createdBy: userId !== "SYSTEM" ? userId : null,
+            createdBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
@@ -1017,10 +1175,10 @@ export class FinishedGoodsInventoryService {
       this.loader.clear(result.lot.id);
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
-        action: "FINISHED_GOODS_DISCARD",
-        method: "GRAPHQL_MUTATION",
-        tableName: "FinishedGoodsLot",
+        userId: userId ?? 'SYSTEM',
+        action: 'FINISHED_GOODS_DISCARD',
+        method: 'GRAPHQL_MUTATION',
+        tableName: 'FinishedGoodsLot',
         recordId: String(result.lot.id),
         description: `Discarded ${input.quantity} defective units from Lot ${result.lot.lotNo}`,
         values: result as any,
@@ -1057,24 +1215,24 @@ export class FinishedGoodsInventoryService {
         lot: null,
         destinationLot: null,
         transaction: null,
-        userErrors: [createError(validationError, undefined, "INVALID_INPUT")],
+        userErrors: [createError(validationError, undefined, 'INVALID_INPUT')],
       };
     }
 
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
       const qty = new Prisma.Decimal(input.quantity);
-      const statusToMove = input.status ?? "AVAILABLE";
+      const statusToMove = input.status ?? 'AVAILABLE';
       const qtyField =
-        statusToMove === "AVAILABLE"
-          ? "availableQty"
-          : statusToMove === "ALLOCATED"
-            ? "allocatedQty"
-            : statusToMove === "CHECKING"
-              ? "checkingQty"
-              : "defectiveQty";
+        statusToMove === 'AVAILABLE'
+          ? 'availableQty'
+          : statusToMove === 'ALLOCATED'
+            ? 'allocatedQty'
+            : statusToMove === 'CHECKING'
+              ? 'checkingQty'
+              : 'defectiveQty';
 
-      const txNo = generateFGTransactionNo("MOV");
+      const txNo = generateFGTransactionNo('MOV');
 
       const result = await this.prisma.$transaction(async (tx) => {
         const sourceLot = await tx.finishedGoodsLot.findUnique({
@@ -1082,11 +1240,18 @@ export class FinishedGoodsInventoryService {
         });
 
         if (!sourceLot) {
-          throw new Error(`Source Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`);
+          throw new Error(
+            `Source Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`,
+          );
         }
 
-        if (sourceLot.areaId === input.toAreaId && sourceLot.locationId === input.toLocationId) {
-          throw new Error("Destination Area and Location must be different from source");
+        if (
+          sourceLot.areaId === input.toAreaId &&
+          sourceLot.locationId === input.toLocationId
+        ) {
+          throw new Error(
+            'Destination Area and Location must be different from source',
+          );
         }
 
         const currentQty = new Prisma.Decimal(sourceLot[qtyField]);
@@ -1100,52 +1265,37 @@ export class FinishedGoodsInventoryService {
           where: { id: sourceLot.id },
           data: {
             [qtyField]: { decrement: qty },
-            updatedBy: userId !== "SYSTEM" ? userId : null,
+            updatedBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
-        const destinationLot = await tx.finishedGoodsLot.upsert({
-          where: {
-            itemId_fabricationId_orderNo_lotNo_chargeNo_areaId_locationId_boxId: {
-              itemId: sourceLot.itemId,
-              fabricationId: sourceLot.fabricationId,
-              orderNo: sourceLot.orderNo,
-              lotNo: sourceLot.lotNo,
-              chargeNo: sourceLot.chargeNo,
-              areaId: input.toAreaId,
-              locationId: input.toLocationId,
-              boxId: sourceLot.boxId ?? null as any,
-            },
-          },
-          update: {
-            [qtyField]: { increment: qty },
-            updatedBy: userId !== "SYSTEM" ? userId : null,
-          },
-          create: {
-            itemId: sourceLot.itemId,
-            fabricationId: sourceLot.fabricationId,
-            orderNo: sourceLot.orderNo,
-            lotNo: sourceLot.lotNo,
-            chargeNo: sourceLot.chargeNo,
-            trialLotNo: sourceLot.trialLotNo,
-            invoiceNo: sourceLot.invoiceNo,
-            areaId: input.toAreaId,
-            locationId: input.toLocationId,
-            boxId: sourceLot.boxId,
-            [qtyField]: qty,
-            incomingDate: sourceLot.incomingDate,
-            manufactureDate: sourceLot.manufactureDate,
-            reason: input.reason?.trim() ?? `Transfer from Area ${sourceLot.areaId}/Loc ${sourceLot.locationId}`,
-            remarks: input.remarks?.trim() ?? sourceLot.remarks,
-            createdBy: userId !== "SYSTEM" ? userId : null,
-          },
+        const destinationLot = await this.upsertLot(tx, {
+          itemId: sourceLot.itemId,
+          fabricationId: sourceLot.fabricationId,
+          orderNo: sourceLot.orderNo,
+          lotNo: sourceLot.lotNo,
+          chargeNo: sourceLot.chargeNo,
+          areaId: input.toAreaId,
+          locationId: input.toLocationId,
+          boxId: sourceLot.boxId,
+          qtyField,
+          qty,
+          trialLotNo: sourceLot.trialLotNo ?? undefined,
+          invoiceNo: sourceLot.invoiceNo,
+          incomingDate: sourceLot.incomingDate,
+          manufactureDate: sourceLot.manufactureDate,
+          reason:
+            input.reason?.trim() ??
+            `Transfer from Area ${sourceLot.areaId}/Loc ${sourceLot.locationId}`,
+          remarks: input.remarks?.trim() ?? sourceLot.remarks,
+          userId: userId !== 'SYSTEM' ? userId : null,
         });
 
         const transaction = await tx.finishedGoodsTransaction.create({
           data: {
             transactionNo: txNo,
-            transactionType: "MOVEMENT",
-            direction: "INTERNAL",
+            transactionType: 'MOVEMENT',
+            direction: 'INTERNAL',
             transactionDate: new Date(),
             itemId: sourceLot.itemId,
             fabricationId: sourceLot.fabricationId,
@@ -1166,7 +1316,7 @@ export class FinishedGoodsInventoryService {
             balanceAfter: Number(updatedSourceLot[qtyField]),
             reason: input.reason?.trim() ?? null,
             remarks: input.remarks?.trim() ?? null,
-            createdBy: userId !== "SYSTEM" ? userId : null,
+            createdBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
@@ -1177,10 +1327,10 @@ export class FinishedGoodsInventoryService {
       this.loader.clear(result.destinationLot.id);
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
-        action: "FINISHED_GOODS_MOVEMENT",
-        method: "GRAPHQL_MUTATION",
-        tableName: "FinishedGoodsLot",
+        userId: userId ?? 'SYSTEM',
+        action: 'FINISHED_GOODS_MOVEMENT',
+        method: 'GRAPHQL_MUTATION',
+        tableName: 'FinishedGoodsLot',
         recordId: String(result.sourceLot.id),
         description: `Moved ${input.quantity} of Lot ${result.sourceLot.lotNo} from Area ${result.sourceLot.areaId}/Loc ${result.sourceLot.locationId} to Area ${input.toAreaId}/Loc ${input.toLocationId}`,
         values: result as any,
@@ -1217,7 +1367,7 @@ export class FinishedGoodsInventoryService {
         lots: [],
         transactions: [],
         count: 0,
-        userErrors: [createError(validationError, undefined, "INVALID_INPUT")],
+        userErrors: [createError(validationError, undefined, 'INVALID_INPUT')],
       };
     }
 
@@ -1230,24 +1380,26 @@ export class FinishedGoodsInventoryService {
 
         for (const item of input.items) {
           const qty = new Prisma.Decimal(item.quantity);
-          const statusToMove = item.status ?? "AVAILABLE";
+          const statusToMove = item.status ?? 'AVAILABLE';
           const qtyField =
-            statusToMove === "AVAILABLE"
-              ? "availableQty"
-              : statusToMove === "ALLOCATED"
-                ? "allocatedQty"
-                : statusToMove === "CHECKING"
-                  ? "checkingQty"
-                  : "defectiveQty";
+            statusToMove === 'AVAILABLE'
+              ? 'availableQty'
+              : statusToMove === 'ALLOCATED'
+                ? 'allocatedQty'
+                : statusToMove === 'CHECKING'
+                  ? 'checkingQty'
+                  : 'defectiveQty';
 
-          const txNo = generateFGTransactionNo("BMOV");
+          const txNo = generateFGTransactionNo('BMOV');
 
           const sourceLot = await tx.finishedGoodsLot.findUnique({
             where: { id: item.finishedGoodsLotId },
           });
 
           if (!sourceLot) {
-            throw new Error(`Source Lot with ID ${item.finishedGoodsLotId} not found`);
+            throw new Error(
+              `Source Lot with ID ${item.finishedGoodsLotId} not found`,
+            );
           }
 
           const currentQty = new Prisma.Decimal(sourceLot[qtyField]);
@@ -1261,52 +1413,37 @@ export class FinishedGoodsInventoryService {
             where: { id: sourceLot.id },
             data: {
               [qtyField]: { decrement: qty },
-              updatedBy: userId !== "SYSTEM" ? userId : null,
+              updatedBy: userId !== 'SYSTEM' ? userId : null,
             },
           });
 
-          const destinationLot = await tx.finishedGoodsLot.upsert({
-            where: {
-              itemId_fabricationId_orderNo_lotNo_chargeNo_areaId_locationId_boxId: {
-                itemId: sourceLot.itemId,
-                fabricationId: sourceLot.fabricationId,
-                orderNo: sourceLot.orderNo,
-                lotNo: sourceLot.lotNo,
-                chargeNo: sourceLot.chargeNo,
-                areaId: input.toAreaId,
-                locationId: input.toLocationId,
-                boxId: sourceLot.boxId ?? null as any,
-              },
-            },
-            update: {
-              [qtyField]: { increment: qty },
-              updatedBy: userId !== "SYSTEM" ? userId : null,
-            },
-            create: {
-              itemId: sourceLot.itemId,
-              fabricationId: sourceLot.fabricationId,
-              orderNo: sourceLot.orderNo,
-              lotNo: sourceLot.lotNo,
-              chargeNo: sourceLot.chargeNo,
-              trialLotNo: sourceLot.trialLotNo,
-              invoiceNo: sourceLot.invoiceNo,
-              areaId: input.toAreaId,
-              locationId: input.toLocationId,
-              boxId: sourceLot.boxId,
-              [qtyField]: qty,
-              incomingDate: sourceLot.incomingDate,
-              manufactureDate: sourceLot.manufactureDate,
-              reason: input.reason?.trim() ?? `Batch transfer to Area ${input.toAreaId}`,
-              remarks: input.remarks?.trim() ?? sourceLot.remarks,
-              createdBy: userId !== "SYSTEM" ? userId : null,
-            },
+          const destinationLot = await this.upsertLot(tx, {
+            itemId: sourceLot.itemId,
+            fabricationId: sourceLot.fabricationId,
+            orderNo: sourceLot.orderNo,
+            lotNo: sourceLot.lotNo,
+            chargeNo: sourceLot.chargeNo,
+            areaId: input.toAreaId,
+            locationId: input.toLocationId,
+            boxId: sourceLot.boxId,
+            qtyField,
+            qty,
+            trialLotNo: sourceLot.trialLotNo ?? undefined,
+            invoiceNo: sourceLot.invoiceNo,
+            incomingDate: sourceLot.incomingDate,
+            manufactureDate: sourceLot.manufactureDate,
+            reason:
+              input.reason?.trim() ??
+              `Batch transfer to Area ${input.toAreaId}`,
+            remarks: input.remarks?.trim() ?? sourceLot.remarks,
+            userId: userId !== 'SYSTEM' ? userId : null,
           });
 
           const transaction = await tx.finishedGoodsTransaction.create({
             data: {
               transactionNo: txNo,
-              transactionType: "MOVEMENT",
-              direction: "INTERNAL",
+              transactionType: 'MOVEMENT',
+              direction: 'INTERNAL',
               transactionDate: new Date(),
               itemId: sourceLot.itemId,
               fabricationId: sourceLot.fabricationId,
@@ -1327,7 +1464,7 @@ export class FinishedGoodsInventoryService {
               balanceAfter: Number(updatedSourceLot[qtyField]),
               reason: input.reason?.trim() ?? null,
               remarks: input.remarks?.trim() ?? null,
-              createdBy: userId !== "SYSTEM" ? userId : null,
+              createdBy: userId !== 'SYSTEM' ? userId : null,
             },
           });
 
@@ -1341,10 +1478,10 @@ export class FinishedGoodsInventoryService {
       this.loader.clear();
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
-        action: "FINISHED_GOODS_BATCH_MOVEMENT",
-        method: "GRAPHQL_MUTATION",
-        tableName: "FinishedGoodsLot",
+        userId: userId ?? 'SYSTEM',
+        action: 'FINISHED_GOODS_BATCH_MOVEMENT',
+        method: 'GRAPHQL_MUTATION',
+        tableName: 'FinishedGoodsLot',
         recordId: `${input.toAreaId}-${input.toLocationId}`,
         description: `Batch moved ${result.lots.length} lots to Area ${input.toAreaId}/Loc ${input.toLocationId}`,
         values: result as any,
@@ -1381,13 +1518,13 @@ export class FinishedGoodsInventoryService {
         lot: null,
         destinationLot: null,
         transaction: null,
-        userErrors: [createError(validationError, undefined, "INVALID_INPUT")],
+        userErrors: [createError(validationError, undefined, 'INVALID_INPUT')],
       };
     }
 
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
-      const txNo = generateFGTransactionNo("BOX");
+      const txNo = generateFGTransactionNo('BOX');
 
       const result = await this.prisma.$transaction(async (tx) => {
         const currentLot = await tx.finishedGoodsLot.findUnique({
@@ -1395,21 +1532,175 @@ export class FinishedGoodsInventoryService {
         });
 
         if (!currentLot) {
-          throw new Error(`Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`);
+          throw new Error(
+            `Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`,
+          );
         }
 
         const oldBoxId = currentLot.boxId;
         const newBoxId = input.boxId ?? null;
 
-        const updatedLot = await tx.finishedGoodsLot.update({
-          where: { id: currentLot.id },
-          data: {
-            boxId: newBoxId,
-            reason: input.reason?.trim() ?? currentLot.reason,
-            remarks: input.remarks?.trim() ?? currentLot.remarks,
-            updatedBy: userId !== "SYSTEM" ? userId : null,
-          },
-        });
+        if (oldBoxId === newBoxId) {
+          return { lot: currentLot, destinationLot: null, transaction: null };
+        }
+
+        const statusField =
+          input.status === 'AVAILABLE'
+            ? 'availableQty'
+            : input.status === 'ALLOCATED'
+              ? 'allocatedQty'
+              : input.status === 'CHECKING'
+                ? 'checkingQty'
+                : input.status === 'DEFECTIVE'
+                  ? 'defectiveQty'
+                  : null;
+
+        if (statusField) {
+          const statusQty = Number(currentLot[statusField]);
+          const targetQty =
+            input.quantity != null && input.quantity > 0
+              ? input.quantity
+              : statusQty;
+
+          if (targetQty <= 0) {
+            throw new Error(
+              `Lot ${currentLot.lotNo} has no quantity in status ${input.status}`,
+            );
+          }
+          if (targetQty > statusQty) {
+            throw new Error(
+              `Requested quantity (${targetQty}) exceeds quantity in status ${input.status} (${statusQty})`,
+            );
+          }
+
+          const hasOtherStatuses =
+            (statusField !== 'availableQty' && Number(currentLot.availableQty) > 0) ||
+            (statusField !== 'allocatedQty' && Number(currentLot.allocatedQty) > 0) ||
+            (statusField !== 'checkingQty' && Number(currentLot.checkingQty) > 0) ||
+            (statusField !== 'defectiveQty' && Number(currentLot.defectiveQty) > 0) ||
+            targetQty < statusQty;
+
+          if (hasOtherStatuses) {
+            const updatedSourceLot = await tx.finishedGoodsLot.update({
+              where: { id: currentLot.id },
+              data: {
+                [statusField]: { decrement: new Prisma.Decimal(targetQty) },
+                updatedBy: userId !== 'SYSTEM' ? userId : null,
+              },
+            });
+
+            const destinationLot = await this.upsertLot(tx, {
+              itemId: currentLot.itemId,
+              fabricationId: currentLot.fabricationId,
+              orderNo: currentLot.orderNo,
+              lotNo: currentLot.lotNo,
+              chargeNo: currentLot.chargeNo,
+              areaId: currentLot.areaId,
+              locationId: currentLot.locationId,
+              boxId: newBoxId,
+              qtyField: statusField,
+              qty: new Prisma.Decimal(targetQty),
+              trialLotNo: currentLot.trialLotNo ?? '',
+              invoiceNo: currentLot.invoiceNo,
+              incomingDate: currentLot.incomingDate,
+              manufactureDate: currentLot.manufactureDate,
+              reason: input.reason?.trim() ?? 'Updated Box Type',
+              remarks: input.remarks?.trim() ?? currentLot.remarks,
+              userId: userId !== 'SYSTEM' ? userId : null,
+            });
+
+            const transaction = await tx.finishedGoodsTransaction.create({
+              data: {
+                transactionNo: txNo,
+                transactionType: 'BOX_UPDATE',
+                direction: 'INTERNAL',
+                transactionDate: new Date(),
+                itemId: currentLot.itemId,
+                fabricationId: currentLot.fabricationId,
+                finishedGoodsLotId: destinationLot.id,
+                orderNo: currentLot.orderNo,
+                lotNo: currentLot.lotNo,
+                chargeNo: currentLot.chargeNo,
+                invoiceNo: currentLot.invoiceNo,
+                fromAreaId: currentLot.areaId,
+                toAreaId: currentLot.areaId,
+                fromLocationId: currentLot.locationId,
+                toLocationId: currentLot.locationId,
+                fromBoxId: oldBoxId,
+                toBoxId: newBoxId,
+                fromStatus: input.status,
+                toStatus: input.status,
+                quantity: new Prisma.Decimal(targetQty),
+                balanceAfter: Number(destinationLot[statusField]),
+                reason: input.reason?.trim() ?? 'Updated Box Type',
+                remarks: input.remarks?.trim() ?? null,
+                createdBy: userId !== 'SYSTEM' ? userId : null,
+              },
+            });
+
+            return { lot: updatedSourceLot, destinationLot, transaction };
+          }
+        }
+
+        // Entire lot is being reboxed (or only status present is the targeted one)
+        let existingDest: any = null;
+        if (newBoxId !== null) {
+          existingDest = await tx.finishedGoodsLot.findUnique({
+            where: {
+              itemId_fabricationId_orderNo_lotNo_chargeNo_areaId_locationId_boxId: {
+                itemId: currentLot.itemId,
+                fabricationId: currentLot.fabricationId,
+                orderNo: currentLot.orderNo,
+                lotNo: currentLot.lotNo,
+                chargeNo: currentLot.chargeNo,
+                areaId: currentLot.areaId,
+                locationId: currentLot.locationId,
+                boxId: newBoxId,
+              },
+            },
+          });
+        } else {
+          existingDest = await tx.finishedGoodsLot.findFirst({
+            where: {
+              itemId: currentLot.itemId,
+              fabricationId: currentLot.fabricationId,
+              orderNo: currentLot.orderNo,
+              lotNo: currentLot.lotNo,
+              chargeNo: currentLot.chargeNo,
+              areaId: currentLot.areaId,
+              locationId: currentLot.locationId,
+              boxId: null,
+            },
+          });
+        }
+
+        let updatedLot: any;
+        if (existingDest && existingDest.id !== currentLot.id) {
+          updatedLot = await tx.finishedGoodsLot.update({
+            where: { id: existingDest.id },
+            data: {
+              availableQty: { increment: currentLot.availableQty },
+              allocatedQty: { increment: currentLot.allocatedQty },
+              checkingQty: { increment: currentLot.checkingQty },
+              defectiveQty: { increment: currentLot.defectiveQty },
+              updatedBy: userId !== 'SYSTEM' ? userId : null,
+            },
+          });
+
+          await tx.finishedGoodsLot.delete({
+            where: { id: currentLot.id },
+          });
+        } else {
+          updatedLot = await tx.finishedGoodsLot.update({
+            where: { id: currentLot.id },
+            data: {
+              boxId: newBoxId,
+              reason: input.reason?.trim() ?? currentLot.reason,
+              remarks: input.remarks?.trim() ?? currentLot.remarks,
+              updatedBy: userId !== 'SYSTEM' ? userId : null,
+            },
+          });
+        }
 
         const totalQty =
           Number(updatedLot.availableQty) +
@@ -1420,8 +1711,8 @@ export class FinishedGoodsInventoryService {
         const transaction = await tx.finishedGoodsTransaction.create({
           data: {
             transactionNo: txNo,
-            transactionType: "BOX_UPDATE",
-            direction: "INTERNAL",
+            transactionType: 'BOX_UPDATE',
+            direction: 'INTERNAL',
             transactionDate: new Date(),
             itemId: updatedLot.itemId,
             fabricationId: updatedLot.fabricationId,
@@ -1438,22 +1729,25 @@ export class FinishedGoodsInventoryService {
             toBoxId: newBoxId,
             quantity: new Prisma.Decimal(totalQty),
             balanceAfter: totalQty,
-            reason: input.reason?.trim() ?? "Updated Box Type",
+            reason: input.reason?.trim() ?? 'Updated Box Type',
             remarks: input.remarks?.trim() ?? null,
-            createdBy: userId !== "SYSTEM" ? userId : null,
+            createdBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
-        return { lot: updatedLot, transaction };
+        return { lot: updatedLot, destinationLot: null, transaction };
       });
 
       this.loader.clear(result.lot.id);
+      if (result.destinationLot) {
+        this.loader.clear(result.destinationLot.id);
+      }
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
-        action: "FINISHED_GOODS_UPDATE_BOX_TYPE",
-        method: "GRAPHQL_MUTATION",
-        tableName: "FinishedGoodsLot",
+        userId: userId ?? 'SYSTEM',
+        action: 'FINISHED_GOODS_UPDATE_BOX_TYPE',
+        method: 'GRAPHQL_MUTATION',
+        tableName: 'FinishedGoodsLot',
         recordId: String(result.lot.id),
         description: `Updated Box Type for Lot ${result.lot.lotNo} to Box ID ${input.boxId}`,
         values: result as any,
@@ -1463,8 +1757,8 @@ export class FinishedGoodsInventoryService {
 
       return {
         lot: result.lot as any,
-        destinationLot: null,
-        transaction: result.transaction as any,
+        destinationLot: (result.destinationLot ?? null) as any,
+        transaction: (result.transaction ?? null) as any,
         userErrors: [],
       };
     } catch (error) {
@@ -1489,13 +1783,19 @@ export class FinishedGoodsInventoryService {
         lot: null,
         destinationLot: null,
         transaction: null,
-        userErrors: [createError("Valid Finished Goods Lot ID is required", undefined, "INVALID_INPUT")],
+        userErrors: [
+          createError(
+            'Valid Finished Goods Lot ID is required',
+            undefined,
+            'INVALID_INPUT',
+          ),
+        ],
       };
     }
 
     try {
       const { userId, ipAddress, userAgent } = extractContextInfo(context);
-      const txNo = generateFGTransactionNo("STK");
+      const txNo = generateFGTransactionNo('STK');
 
       const result = await this.prisma.$transaction(async (tx) => {
         const currentLot = await tx.finishedGoodsLot.findUnique({
@@ -1503,7 +1803,9 @@ export class FinishedGoodsInventoryService {
         });
 
         if (!currentLot) {
-          throw new Error(`Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`);
+          throw new Error(
+            `Finished Goods Lot with ID ${input.finishedGoodsLotId} not found`,
+          );
         }
 
         const updatedLot = await tx.finishedGoodsLot.update({
@@ -1511,8 +1813,8 @@ export class FinishedGoodsInventoryService {
           data: {
             stickerPrinted: true,
             stickerPrintedAt: new Date(),
-            stickerPrintedBy: userId !== "SYSTEM" ? userId : "SYSTEM",
-            updatedBy: userId !== "SYSTEM" ? userId : null,
+            stickerPrintedBy: userId !== 'SYSTEM' ? userId : 'SYSTEM',
+            updatedBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
@@ -1525,8 +1827,8 @@ export class FinishedGoodsInventoryService {
         const transaction = await tx.finishedGoodsTransaction.create({
           data: {
             transactionNo: txNo,
-            transactionType: "STICKER_PRINT",
-            direction: "INTERNAL",
+            transactionType: 'STICKER_PRINT',
+            direction: 'INTERNAL',
             transactionDate: new Date(),
             itemId: updatedLot.itemId,
             fabricationId: updatedLot.fabricationId,
@@ -1543,9 +1845,9 @@ export class FinishedGoodsInventoryService {
             toBoxId: updatedLot.boxId,
             quantity: new Prisma.Decimal(totalQty),
             balanceAfter: totalQty,
-            reason: "Sticker Printed",
+            reason: 'Sticker Printed',
             remarks: input.remarks?.trim() ?? null,
-            createdBy: userId !== "SYSTEM" ? userId : null,
+            createdBy: userId !== 'SYSTEM' ? userId : null,
           },
         });
 
@@ -1555,10 +1857,10 @@ export class FinishedGoodsInventoryService {
       this.loader.clear(result.lot.id);
 
       await this.auditService.log({
-        userId: userId ?? "SYSTEM",
-        action: "FINISHED_GOODS_PRINT_STICKER",
-        method: "GRAPHQL_MUTATION",
-        tableName: "FinishedGoodsLot",
+        userId: userId ?? 'SYSTEM',
+        action: 'FINISHED_GOODS_PRINT_STICKER',
+        method: 'GRAPHQL_MUTATION',
+        tableName: 'FinishedGoodsLot',
         recordId: String(result.lot.id),
         description: `Printed sticker for Lot ${result.lot.lotNo}`,
         values: result as any,

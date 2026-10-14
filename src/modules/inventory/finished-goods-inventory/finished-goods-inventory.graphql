@@ -352,6 +352,8 @@ input BatchMoveFinishedGoodsInput {
 input UpdateFinishedGoodsBoxTypeInput {
   finishedGoodsLotId: Int!
   boxId: Int
+  status: FinishedGoodsStatus
+  quantity: Float
   reason: String
   remarks: String
 }

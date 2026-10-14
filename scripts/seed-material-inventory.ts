@@ -16,6 +16,37 @@ async function main() {
   console.log("🌱 Seeding Material Inventory sample data...");
 
   try {
+    // 0. Ensure MaterialGroup and Supplier exist
+    await prisma.materialGroup.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        id: 1,
+        name: "General Metals & Raw Stocks",
+        code: "GRP-RAW",
+      },
+    });
+
+    await prisma.supplier.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        id: 1,
+        name: "Apex Precision Alloys Co.",
+        code: "SUP-APX-01",
+        serviceType: "Raw Material Supplier",
+        contactPerson: "Harold Smith",
+        contactNumber: "+1-555-8901",
+        telephoneNumber: "+1-555-8900",
+        faxNumber: "+1-555-8902",
+        emailAddress: "sales@apexalloys.example.com",
+        address: "100 Industrial Parkway, Detroit, MI",
+        country: "USA",
+        paymentTerms: "Net 30",
+        currency: "USD",
+      },
+    });
+
     // 1. Ensure Materials exist
     const mat1 = await prisma.material.upsert({
       where: { id: 1 },

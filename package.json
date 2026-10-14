@@ -36,6 +36,8 @@
     "lint": "oxlint --type-aware src/ test/",
     "seed": "npx tsx scripts/seed-masters.ts",
     "seed:master": "npx tsx scripts/seed-masters.ts",
+    "seed:all": "npx tsx scripts/reset-and-seed-all.ts",
+    "db:reset-seed": "npx tsx scripts/reset-and-seed-all.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
